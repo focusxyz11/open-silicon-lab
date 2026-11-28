@@ -399,5 +399,6 @@
  "sk.ev.peer": "peer-reviewed",
  "sk.ev.none": "no source in the lab yet",
  "sk.land.waits": "counts in the scores from season {n}",
- "sk.land.share": "These {n} chips are very different, yet they make the same four choices: the genes are coarse, and the finer settings decide the rest."
+ "sk.land.share": "These {n} chips are very different, yet they make the same four choices: the genes are coarse, and the finer settings decide the rest.",
+ "sk.grow.t": "Grow an architecture"
 }

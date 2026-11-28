@@ -40,6 +40,7 @@ import * as SL from '../../engines/stacklens.js';
 import * as PU from './purpose.js';
 import { PIC, passedPic, makePen, glyph } from './pics.js';
 import * as FX from './faces.js';
+import * as GR from './grow.js';
 
 const NR = RUNGS.length, KEY = 'osl-stack';
 const lerp = (a, b, u) => a + (b - a) * u, ease = u => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2), smooth = u => { u = clamp(u, 0, 1); return u * u * (3 - 2 * u); };
@@ -90,14 +91,25 @@ export function createStack(host, opts = {}) {
   const recol = () => { COL = PU.columnOf(opts.purposes ? opts.purposes() : null, POP); SHEET.x1 = WID + 5 + (COL ? CSTEP : 0); };
   recol();
   const brought = () => A.broughtOf(opts.done ? opts.done() : {});
-  const fresh = () => ({ F: Object.assign({}, EXAMPLE), g: Object.assign({}, A.TODAY), aim: 'any', A: A.start(A.TODAY, brought()), T: A.treeOf(A.TODAY), focus: [], stones: brought(), first: {} });
+  const fresh = () => { const a = A.start(A.TODAY, brought()); return { F: Object.assign({}, EXAMPLE), g: Object.assign({}, A.TODAY), aim: 'any', A: a, T: A.treeOf(A.TODAY), focus: [], stones: brought(), first: {}, H: A.histOf(a), slip: null, slipKey: null }; };
   const S = fresh();
-  try { const k = JSON.parse(localStorage.getItem(KEY) || 'null'); if (k && k.A && A.isKey(A.keyOf(k.A.g)) && NEEDS.includes(k.aim)) { Object.assign(S.F, k.F); S.g = k.A.g; S.A = A.bring(k.A, brought()); S.T = k.T || A.treeOf(S.g); S.aim = k.aim; S.focus = k.focus || []; S.stones = Object.assign({}, k.stones || {}, brought()); S.first = k.first || {}; } } catch (e) { /* a fresh start */ }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ F: S.F, aim: S.aim, A: S.A, T: S.T, focus: S.focus, stones: S.stones, first: S.first })); } catch (e) { /* not kept */ } };
+  try { const k = JSON.parse(localStorage.getItem(KEY) || 'null'); if (k && k.A && A.isKey(A.keyOf(k.A.g)) && NEEDS.includes(k.aim)) { Object.assign(S.F, k.F); S.g = k.A.g; S.A = A.bring(k.A, brought()); S.T = k.T || A.treeOf(S.g); S.aim = k.aim; S.focus = k.focus || []; S.stones = Object.assign({}, k.stones || {}, brought()); S.first = k.first || {}; S.H = k.H && k.H.start ? k.H : null; S.slip = k.slip || null; S.slipKey = k.slipKey || null; } } catch (e) { /* a fresh start */ }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ F: S.F, aim: S.aim, A: S.A, T: S.T, focus: S.focus, stones: S.stones, first: S.first, H: S.H, slip: S.slip, slipKey: S.slipKey })); } catch (e) { /* not kept */ } };
   const extra = (F, g) => { const spec = SW.normal({ mat: F.mat, shape: F.shape, mech: F.mech, own: F.own }); return { F, g, spec, sw: SW.switchOf(spec), M: SW.MATERIALS.find(m => m.id === spec.mat) }; };
   const make = (F, g, aim) => { const R = carry(F, g, aim); return { R, V: see(R), D: extra(R.fine, R.recipe) }; };
   let Y = make(S.F, S.g, S.aim), Yprev = Y, marks = [], QB = {}, lens = null, CEN = null, proposals = null, portOn = false, purposeOn = false, PFORM = PU.loadForm(), PSLIP = '', wave = null, pings = [], grewAt = -1e9;
   const R = () => Y.R;
+  /* Grow an architecture, played here (#450, src/v2/stack/grow.js): the history of the line being grown, for the ledger
+     (arch.js histOf: begun again at every start, a year's focus at every year, a fork or a stone at the year grown
+     before it), and the two challenges, won here as soon as their goal is met */
+  const restartH = () => { S.H = A.histOf(S.A); }, changeH = c => { if (S.H) S.H.changes.push(c); };
+  const slipKey = () => (S.H ? JSON.stringify([S.H.start, S.H.years.length, S.H.changes.filter(c => c.gene != null)]) : '');
+  let keepNo = null;
+  function goals() { if (!opts.win) return; for (const id of GR.GOAL_IDS) if (A.goalOf(S.A, id).met && opts.win(id)) say(t('ar.done.' + id)); }
+  function growHtml() {
+    const won = opts.done ? opts.done() : {}, slip = S.slip && S.slipKey === slipKey() && opts.archSlip ? opts.archSlip(S.slip) : '';
+    return GR.growHtml({ st: S.A, tree: S.T, done: id => !!won[id], title: id => (opts.titleOf ? opts.titleOf(id) : id), keep: { on: !!opts.keepArch && A.novelty(S.g) > 0 && S.A.year > 0 && !!S.H, slip, no: keepNo, sign: opts.signHtml ? opts.signHtml() : '' } });
+  }
   const mineKey = () => A.keyOf(S.g), mineRi = () => RIDX.get(mineKey()), aimN = () => NEEDS.indexOf(S.aim);
   const mineAtt = () => ({ key: mineKey(), g: S.g, st: S.A, by: 'you', mine: true });
   const recount = () => { CEN = census(POP, mineAtt()); };
@@ -267,7 +279,7 @@ export function createStack(host, opts = {}) {
     Yprev = Y; Y = make(S.F, S.g, S.aim);
     QB = marksOf(R(), lensesAt);
     if (from != null && !still()) wave = { k: from, t0: performance.now() };
-    if (stoneOf(S.F, S.g) && !S.stones.device) { S.stones.device = A.KEPT_SWITCH; S.A = A.bring(S.A, { device: A.KEPT_SWITCH }); if (A.novelty(S.g)) say(t('sk.say.stone')); }
+    if (stoneOf(S.F, S.g) && !S.stones.device) { S.stones.device = A.KEPT_SWITCH; S.A = A.bring(S.A, { device: A.KEPT_SWITCH }); if (S.A.year) changeH({ at: S.A.year, stone: A.KEPT_SWITCH }); else restartH(); if (A.novelty(S.g)) say(t('sk.say.stone')); }
     recount(); save(); dirty = true; ui(); if (card().changed) card().changed();
   }
   const sayOnce = {};
@@ -286,14 +298,14 @@ export function createStack(host, opts = {}) {
     if (S.g[k] === o) return;
     const g2 = Object.assign({}, S.g, { [k]: o }), wasOn = onMine(), yr = S.A.year;
     let msg;
-    if (!yr) { S.A = A.start(g2, S.stones); S.T = A.treeStart(S.T, g2); }
-    else { const lost = A.LINK[k].filter(d => S.A.tries[d] > 0); S.A = A.forkOf(S.A, k, o); S.T = A.treeFork(S.T, g2, yr); msg = lost.length ? t('ar.say.fork', { gene: t('ar.gene.' + k).toLowerCase(), option: optName(k, o).toLowerCase(), dirs: dirList(lost) }) : t('ar.say.forkFree', { gene: t('ar.gene.' + k).toLowerCase(), option: optName(k, o).toLowerCase() }); }
+    if (!yr) { S.A = A.start(g2, S.stones); S.T = A.treeStart(S.T, g2); restartH(); }
+    else { const lost = A.LINK[k].filter(d => S.A.tries[d] > 0); S.A = A.forkOf(S.A, k, o); S.T = A.treeFork(S.T, g2, yr); changeH({ at: yr, gene: k, option: o }); msg = lost.length ? t('ar.say.fork', { gene: t('ar.gene.' + k).toLowerCase(), option: optName(k, o).toLowerCase(), dirs: dirList(lost) }) : t('ar.say.forkFree', { gene: t('ar.gene.' + k).toLowerCase(), option: optName(k, o).toLowerCase() }); }
     S.g = S.A.g; proposals = null;
     const aimMsg = fixAim(); S.focus = A.novelty(S.g) ? A.suggest(S.A, 'archniche').dirs.slice() : [];
     refresh(GENE_AT[k][0]);
     if (!msg) { const kn = A.knownOf(S.g), sc = A.scoreOf(S.A)[S.aim];
       msg = !A.novelty(S.g) ? t('sk.say.today') : kn ? t('ar.say.known', { name: t('ar.known.' + kn.id) }) : sc.could < 1 && !NEEDS.some(n => A.scoreOf(S.A)[n].could >= 1) ? t('ar.say.newNone') : t('sk.say.newOne', { v: times(sc.now), need: asNeed(S.aim), could: times(sc.could) }); }
-    say(aimMsg || msg);
+    say(aimMsg || msg); goals();
     if (wasOn && view.level !== 'field') { const lv = view.level, i = view.i; goStack(aimN(), mineRi(), 1200); if (lv === 'rung') { view.level = 'rung'; view.i = i; anim.to = poseRung(view.n, view.r, i); } } else { view.n = aimN(); view.r = mineRi(); }
     ui();
   }
@@ -302,21 +314,35 @@ export function createStack(host, opts = {}) {
     let msg = '';
     for (let k = 0; k < n && S.A.year < 80; k++) {
       const firstTry = !S.A.year && !A.knownOf(S.g) && !POP.some(a => a.key === mineKey()) && !S.first[mineKey()];
-      S.A = A.year(S.A, S.focus); S.T = A.treeYear(S.T, A.winsOf(S.A));
+      S.A = A.year(S.A, S.focus); S.T = A.treeYear(S.T, A.winsOf(S.A)); if (S.H) S.H.years.push(S.focus.slice());
       const L = S.A.log[S.A.log.length - 1], sc = A.scoreOf(S.A)[S.aim];
       if (firstTry) { S.first[mineKey()] = 1; msg = t('sk.say.first'); }
       if (L.fresh.length) msg = t('sk.say.win', { y: S.A.year, need: asNeed(L.fresh[0]), p: Math.round(S.A.people) });
       else if (!msg || !firstTry) msg = L.focus.length ? t('sk.say.year', { y: S.A.year, n: fmtNum(L.attempts), dirs: dirList(L.focus), v: times(sc.now), need: asNeed(S.aim) }) : t('ar.say.idle', { y: S.A.year });
     }
-    grewAt = performance.now(); proposals = null; recount(); save(); say(msg); dirty = true; ui();
+    grewAt = performance.now(); proposals = null; recount(); save(); say(msg); goals(); dirty = true; ui(); if (card().changed) card().changed();
   }
-  function restart() { S.A = A.start(S.g, S.stones); S.T = A.treeStart(S.T, S.g); proposals = null; recount(); save(); dirty = true; ui(); }
+  function restart() { S.A = A.start(S.g, S.stones); S.T = A.treeStart(S.T, S.g); restartH(); proposals = null; recount(); save(); dirty = true; ui(); }
   function resetAll() { Object.assign(S, fresh()); proposals = null; if (card().putDown) card().putDown(); refresh(0); say(t('sk.say.reset')); goStack(aimN(), mineRi(), 1000); }
   function takeOver() {
     const sh = shown(); if (sh.mine) return;
-    S.g = Object.assign({}, sh.g); S.A = sh.att ? JSON.parse(JSON.stringify(sh.att.st)) : A.start(sh.g, S.stones); S.T = A.treeStart(S.T, sh.g);
+    S.g = Object.assign({}, sh.g); S.A = sh.att ? JSON.parse(JSON.stringify(sh.att.st)) : A.start(sh.g, S.stones); S.T = A.treeStart(S.T, sh.g); if (S.A.year) S.H = null; else restartH();
     S.aim = POT[view.n][view.r] > 0 ? NEEDS[view.n] : S.aim; fixAim(); S.focus = A.novelty(S.g) ? A.suggest(S.A, 'archniche').dirs.slice() : []; SK = null;
     refresh(0); say(t('sk.say.taken', { y: S.A.year })); view.n = aimN(); view.r = mineRi(); ui();
+  }
+  /* a node of the family tree: a new start from that recipe, a branch of the tree from it */
+  function backTo(id) {
+    const n = A.nodeOf(S.T, id); if (!n) return;
+    const g = A.recipeOf(n.g); S.A = A.start(g, S.stones); S.T = A.treeStart(S.T, S.A.g, n.id); S.g = S.A.g; restartH(); proposals = null;
+    S.focus = A.novelty(S.g) ? A.suggest(S.A, 'archniche').dirs.slice() : []; fixAim();
+    refresh(0); say(t('ar.say.back', { name: recipeName(S.g) })); if (view.level !== 'field') goStack(aimN(), mineRi(), 900); else { view.n = aimN(); view.r = mineRi(); }
+  }
+  /* keep this attempt in the ledger (signed; the ledger grows its history again before it counts) */
+  function keepAttempt(b) {
+    if (!opts.keepArch || !S.H) return;
+    const r = opts.keepArch(A.histClaim(S.H, A.winsOf(S.A)), 'arch ' + A.keyOf(S.g).split('/').join(' '), b.closest('.sk-keep') || b.parentNode);
+    keepNo = r.ok ? null : r.why; if (r.ok) { S.slip = r.id; S.slipKey = slipKey(); save(); }
+    if (card().changed) card().changed();
   }
   /* propose what it is for (#481): the card with the dials, over the field */
   function propose() {
@@ -802,6 +828,9 @@ export function createStack(host, opts = {}) {
     SPL.addEventListener('pointermove', e => { if (splitDrag) splitAt(...local(e)); });
     const end = () => { splitDrag = false; }; SPL.addEventListener('pointerup', end); SPL.addEventListener('pointercancel', end); }
   root.addEventListener('click', e => {
+    /* the family tree's nodes (SVG, not buttons): start again from that recipe; the kept attempt's slip */
+    const nd = e.target.closest && e.target.closest('[data-sk-node]'); if (nd) { backTo(+nd.dataset.skNode); return; }
+    if (e.target.closest && e.target.closest('.sk-kept') && opts.slipClick && opts.slipClick(e, redraw => { if (redraw) S.slip = null; save(); if (card().changed) card().changed(); })) return;
     if (purposeOn && e.target.closest('.sk-purpose')) {
       if (e.target.closest('[data-pclose]')) { purposeOn = false; ui(); return; }
       if (e.target.closest('[data-pkeep]')) { const r = opts.keepPurpose ? opts.keepPurpose(PU.fieldsOf(PFORM), $('.sk-purpose')) : null;
@@ -814,6 +843,7 @@ export function createStack(host, opts = {}) {
     const d = b.dataset;
     if (d.skfork) { const [gn, o] = d.skfork.split(':'); setForkOpt(gn, o); return; }
     if (d.skneed) { setNeedB(d.skneed); return; }
+    if (b.hasAttribute('data-sk-keep')) { keepAttempt(b); return; }
     if (d.face) setFace(d.face);
     else if (d.go) { if (d.go === 'field') goField(); else if (d.go === 'niche') goNear(view.level === 'field' ? aimN() : view.n, view.level === 'field' ? mineRi() : view.r); else goStack(aimN(), mineRi()); }
     else if (d.rung) { if (view.level === 'field') { goStack(aimN(), mineRi(), 600); } goRung(+d.rung); }
@@ -890,7 +920,7 @@ export function createStack(host, opts = {}) {
   function setSplit(v) { split = clamp(v, 0.05, 0.95); const r = $('.sk-splitr'); if (r && document.activeElement !== r) r.value = Math.round(split * 100); dirty = true; place(); }
   function setForkOpt(gene, o) { if (!A.OPTIONS[gene] || !A.OPTIONS[gene].includes(o)) return; forkAsk[gene] = o; PS = null; dirty = true; ui(); if (mode() === 'ask' && card().changed) card().changed(); }
   function setNeedB(n) { if (!NEEDS.includes(n)) return; needB = n; if (mode() === 'ask' && card().changed) card().changed(); }
-  const api = { S, view, cam, A, setLens, outlines: () => Object.assign({}, OUTL), landmarks: () => POP.filter(a => a.built).map(a => ({ key: a.key, ids: a.landmarks.map(k => k.id), ev: pointEv(a), waits: !!a.waits })), card: () => $('.sk-card').hidden ? '' : $('.sk-card').textContent, plotOf: key => ({ n: aimN(), ri: RIDX.get(key) }), paintNow: () => (lens && SL.REPAINT.includes(lens.id) ? SL.paint(R(), lens.id, whoAt) : null), pair: () => { const P = pairNow(shown()); return P && { shape: P.shape, measure: P.measure, gene: P.gene || null, option: P.option || null, chain: P.chain || null, left: P.left, right: P.right || null, split, front: P.shape === 'front' ? frontNow() : null }; }, setSplit, setForkOpt, setNeedB, face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, propose, purpose: () => ({ col: COL, form: PFORM, on: purposeOn }), field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
+  const api = { S, view, cam, A, setLens, outlines: () => Object.assign({}, OUTL), landmarks: () => POP.filter(a => a.built).map(a => ({ key: a.key, ids: a.landmarks.map(k => k.id), ev: pointEv(a), waits: !!a.waits })), card: () => $('.sk-card').hidden ? '' : $('.sk-card').textContent, plotOf: key => ({ n: aimN(), ri: RIDX.get(key) }), paintNow: () => (lens && SL.REPAINT.includes(lens.id) ? SL.paint(R(), lens.id, whoAt) : null), pair: () => { const P = pairNow(shown()); return P && { shape: P.shape, measure: P.measure, gene: P.gene || null, option: P.option || null, chain: P.chain || null, left: P.left, right: P.right || null, split, front: P.shape === 'front' ? frontNow() : null }; }, setSplit, setForkOpt, setNeedB, grown: () => ({ st: S.A, tree: S.T, hist: S.H, slip: S.slip }), backTo, face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, propose, purpose: () => ({ col: COL, form: PFORM, on: purposeOn }), field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
   /* the questions on the stack, for the card: the strongest at a rung (or across the stack), the one marked at a rung */
   const marksAt = (key, n = 6) => (view.level === 'field' || !onMine() ? [] : stackMarks(QB, n, RUNGS.includes(key) ? [key] : null));
   return {
@@ -898,7 +928,7 @@ export function createStack(host, opts = {}) {
     ctl: CTL, view, reframe, marksAt, mine: onMine,
     markOf: (rung, q) => (QB[rung] || []).find(m => m.id === q) || null,
     /* the lens open in the card: its rung lit, the others dimmed; with a second held, the pair's shape (#449) */
-    setLens, pairHtml,
+    setLens, pairHtml, growHtml,
     /* what you are looking at: the line the foot said before the card, and the opened recipe's figures */
     rest: () => rest, shown: () => (view.level === 'field' ? null : shown()),
     /* the face every plate is turned to (#456), and what a rung shows on it: its way, figures and mark, or why it has none */

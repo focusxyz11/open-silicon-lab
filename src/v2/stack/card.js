@@ -34,7 +34,9 @@ const readOf = k => { const x = isRung(k) ? EXPERIMENTS.find(e => levelsOf(e).so
    when the stack opens. The stack is then not filed as one place of the island: its way up and its path lead back to
    the first page, the loop in the bar lights no stage, and it opens on the ladder alone (the genes, fifty years of
    polish and the agents one step away) */
-const FROM = 'osl-stack-from';
+const FROM = 'osl-stack-from', DO = 'osl-stack-do';
+/* reached from a challenge of Grow an architecture (its door, src/v2/labs/arch.js): the stack opens on its Do (#450) */
+const toGrow = () => { try { const f = sessionStorage.getItem(DO) === 'grow'; sessionStorage.removeItem(DO); return f; } catch (e) { return false; } };
 const fromFirst = () => { try { const f = sessionStorage.getItem(FROM) === 'first'; sessionStorage.removeItem(FROM); return f; } catch (e) { return false; } };
 
 export function wear(V, host, view, o = {}) {
@@ -81,8 +83,18 @@ export function wear(V, host, view, o = {}) {
   }
   const read = k => { const r = readOf(k); return '<a class="askline" href="' + esc(r.href) + '"><span class="q">' + esc(r.q) + '</span></a>'; };
 
+  /* Do for the whole stack (#450): Grow an architecture, played here, its two challenges, the curve, the attempt kept
+     and the family tree (src/v2/stack/grow.js); the rungs' own challenges under them */
+  function growFace() {
+    fr.doing();
+    fr.dock.innerHTML = '<div class="player sk-do sk-growd"><p class="kicker">' + esc(t('frame.doAt', { level: t('sk.title') })) + '</p><h3>' + esc(t('sk.grow.t')) + '</h3>' + view.growHtml() +
+      '<p class="kicker">' + esc(t('sk.card.rungs')) + '</p><div class="dolist">' + RUNGS.slice().reverse().map(r => '<a class="dochip" href="#/stack/' + r + '"><b>' + esc(t('sk.do.' + r)) + '</b><span class="small muted">' + esc(rungName(r)) + '</span></a>').join('') + '</div>' +
+      '<div class="nav"><button type="button" class="btn ghost" data-mode="look">' + esc(t('frame.backToLook')) + '</button></div></div>';
+    return true;
+  }
   /* Do: the rung's challenge on its plate, its controls in the card */
   function doFace() {
+    if (key === 'stack' && view.mine() && view.growHtml) return growFace();
     if (!isRung(key) || !view.mine()) return false;
     fr.doing();
     const d = fr.dock;
@@ -130,7 +142,7 @@ export function wear(V, host, view, o = {}) {
   window.addEventListener('hashchange', () => { if (/^#\/stack(\/|$)/.test(location.hash)) return; if (first || ladder) { first = false; ladder = false; showWhole(true); file(); } });
   /* Do at a rung is its controls, whichever way it is asked for: the tab, the caption's Do, a goal of the stack's */
   el.addEventListener('click', e => {
-    const d = e.target.closest('.modes3 [data-mode="do"], .f2acts .f2do'); if (!d || !isRung(key)) return;
+    const d = e.target.closest('.modes3 [data-mode="do"], .f2acts .f2do'); if (!d || !(isRung(key) || key === 'stack')) return;
     if (doFace()) { e.preventDefault(); e.stopPropagation(); }
   }, true);
   /* the card's home or size changed: the camera frames the stack in the room it leaves */
@@ -147,8 +159,10 @@ export function wear(V, host, view, o = {}) {
       if (k === key) return;
       const was = key; key = k; el.hidden = false;
       fr.level(k);
+      /* reached from a challenge of Grow an architecture: its Do, at once */
+      if (k === 'stack' && view.mine() && toGrow()) doFace();
       /* a rung opened is played: its controls in hand. Leaving it, back to Look */
-      if (isRung(k) && view.mine() && (!isRung(was) || fr.mode() === 'do')) doFace();
+      else if (isRung(k) && view.mine() && (!isRung(was) || fr.mode() === 'do')) doFace();
       /* out on the field, every attempt: no question opened, the caption says where you stand */
       else if (k === 'field') { fr.look(); if (el.peekDown) el.peekDown(); }
       else if (fr.mode() !== 'ask') { fr.look(); if (el.peekDown) el.peekDown(); }   /* on a phone the sheet folds to its peek, giving the picture back */
@@ -168,8 +182,8 @@ export function wear(V, host, view, o = {}) {
     putDown() { if (fr.mode() === 'ask') fr.look(); },
     /* the plates turned to another face: Do holds that face's controls, the caption says it */
     turned() { if (fr.mode() === 'do' && isRung(key)) doFace(); else if (fr.mode() === 'look') fr.look(); },
-    /* what you built changed: the question opened says what it is now */
-    changed() { if (fr.mode() === 'ask') fr.level(key); else if (fr.mode() === 'look') fr.look(); },
+    /* what you built changed: the question opened says what it is now; Grow an architecture shows where it stands */
+    changed() { if (fr.mode() === 'ask') fr.level(key); else if (fr.mode() === 'look') fr.look(); else if (fr.mode() === 'do' && key === 'stack') doFace(); },
     hide() { el.hidden = true; key = null; }
   };
 }

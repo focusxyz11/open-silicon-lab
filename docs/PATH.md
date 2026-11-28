@@ -233,6 +233,14 @@ Each line is meant to become one task issue, in order.
    *Trust without inspection* and *Compute beats cleverness*.)
 8. **The ways in:** from the Lab, Hold's last block and the dive's chip; the lattice as an arrangement of the ladder;
    *Grow an architecture*'s race and map retired into the stack.
+   (Built in part, #450: *Grow an architecture*'s own race and map of 400 retired, kept on the branch
+   `claude/before-stack-2026-11`; its two challenges, the family tree, the curve and keeping an attempt in the ledger
+   are played in the stack's Do for the whole stack (`src/v2/stack/grow.js`), a goal met there won like any other
+   challenge, and the challenge's own page is a door showing its goal as it stands on your stack and leading into that
+   Do (`src/v2/labs/arch.js`); its smoke checks moved to `scripts/smoke/stack.mjs`. The island's Lab offers *Your stack*
+   beside *Go inside*; Hold's last block lands on the ladder (#524); every layer of the lattice opens its rung, and
+   silicon, the spine, opens it from each of its cells. Still to build: the dive's chip *out and up* to the machine and
+   the mind, and the lattice drawn as the ladder itself rather than a grid of its own.)
 9. **Challenges as stepping stones** on their rungs, inking the plate's edge. (Built: a challenge's rung is the rung of the layer the lattice places
    it in, `rungOfChallenge`; a won one inks a square under its plate and shows in the rung's card.)
 10. **The open genome's form** (after the first forks carry): a GitHub form and port tool to propose a gene option

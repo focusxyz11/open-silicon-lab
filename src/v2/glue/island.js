@@ -166,7 +166,8 @@ export function create() {
            (the next round the loop first) */
         const one1 = id !== 'lab' && id !== 'village' && id !== 'idea' && dos.length === 1 ? dos[0] : null;
         const doB = one1 ? '<a class="btn f2do" href="' + esc(V.doHref(one1)) + '">' + esc(t('frame2.doOne', { what: titleOf(one1) })) + '</a>' : nDo ? '<button type="button" class="btn f2do" data-door="do">' + esc(t('frame2.doN', { n: nDo })) + '</button>' : '';
-        h += '<p class="line">' + esc(one) + '</p>' + mine + '<div class="f2acts">' + goIn + '<button type="button" class="btn" data-more="1">' + esc(t('frame2.more')) + '</button>' + doB + '</div>' + around;
+        const stackB = id === 'lab' ? '<a class="btn labstack" href="#/stack">' + esc(t('lab.stack.t')) + '</a>' : '';
+        h += '<p class="line">' + esc(one) + '</p>' + mine + '<div class="f2acts">' + goIn + stackB + '<button type="button" class="btn" data-more="1">' + esc(t('frame2.more')) + '</button>' + doB + '</div>' + around;
         V.sheet.innerHTML = h + '</div>'; V.sheet.hidden = false; V.sheet.scrollTop = 0; V.sheet.classList.remove('inside', 'part'); return;
       }
       h += '<p class="line">' + esc(words) + '</p><div class="f2acts"><button type="button" class="btn" data-more="0">' + esc(t('frame2.less')) + '</button></div>' + mine +
@@ -176,6 +177,9 @@ export function create() {
         /* where the loop starts there are two ways in: what someone needs, and what has just become possible */
         /* the sandbank: a stake for every question nobody can try yet, the first few as cards */
         (id === 'idea' ? (() => { const W = Exp.EXPERIMENTS.filter(x => Exp.stateOf(x) === 'wanted'); return W.length ? '<p class="kicker">' + esc(t('map.idea.staked', { n: W.length })) + '</p><div class="qcards">' + W.slice(0, 4).map(x => Read.card(x)).join('') + '</div>' + (W.length > 4 ? '<a class="more" href="#/read">' + esc(t('map.idea.all')) + '</a>' : '') : ''; })() : '') +
+        /* the stack stands at the Lab (#450, docs/PATH.md "How it joins the lab"): your computer from the atom to the mind,
+           the spine of the lab; out of it, the field of every attempt */
+        (id === 'lab' ? '<a class="look labstack" href="#/stack"><b>' + esc(t('lab.stack.t')) + '</b><span class="small">' + esc(t('lab.stack.d')) + '</span></a>' : '') +
         (id === 'lab' ? '<div class="ways2"><button type="button" class="look" data-door="do"><b>' + esc(t('lab.pull.t')) + '</b><span class="small">' + esc(t('lab.pull.d', { n: C.jobs.length + C.engines.length })) + '</span></button><button type="button" class="look" data-door="ask"><b>' + esc(t('lab.push.t')) + '</b><span class="small">' + esc(t('lab.push.d', { n: WAYS.length })) + '</span></button></div>' : '') + insideHtml(id);
     } else {
       /* at the Lab, what has just become possible comes first: it is one of the two ways the loop starts */
