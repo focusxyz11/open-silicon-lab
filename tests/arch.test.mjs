@@ -27,7 +27,7 @@ test('four genes make 400 recipes; today\'s computer is one of them, and a few o
   assert.equal(A.novelty(A.TODAY), 0);
   assert.ok(A.KNOWN.length >= 8 && A.KNOWN.length < 20, 'a few built, the rest open');
   assert.equal(new Set(A.KNOWN.map(k => A.keyOf(k.g))).size, A.KNOWN.length, 'each built recipe once');
-  for (const k of A.KNOWN) {
+  for (const k of A.LANDMARKS) {
     assert.ok(['product', 'lab'].includes(k.status), k.id);
     if (k.fact) assert.ok(factOf(k.fact), k.id + ': facts.json ' + k.fact);
     for (const g of A.GENES) assert.ok(A.OPTIONS[g].includes(k.g[g]), k.id + ' ' + g);

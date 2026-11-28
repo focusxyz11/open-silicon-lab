@@ -1,0 +1,23 @@
+{
+  "kind": "gene",
+  "gene": "carrier",
+  "option": "noise",
+  "name": "Noise (p-bits)",
+  "what": "A value carried by a switch left to flicker in the heat: a p-bit, a 0 or a 1 at random, leaning toward what its neighbours ask. A machine of them samples likely answers and searches for good ones without exact sums, and a p-bit with nothing to do spends almost nothing.",
+  "effect": {
+    "energy": 3,
+    "flex": 0.4,
+    "exact": 0.15,
+    "adapt": 1.5,
+    "idle": true
+  },
+  "carry": {
+    "matter": "silicon",
+    "delay": 100
+  },
+  "by": "Open Silicon Lab nightly build",
+  "github": "focusxyz11",
+  "made": "ai",
+  "ai": "Written by Claude Opus 5.5 in the nightly build for #496, through propose_gene. The traits and the delay are guesses: the facts prob-chips and extropic-z1 say the chips exist, not what they do for a whole machine. Its stepping stone is Let the noise compute.",
+  "words": "Shipped: Extropic's XTR-0, a desktop system around its X0 chip, is with early adopters. Taped out: Normal Computing's CN101 and Extropic's Z1, early access planned for 2027. Projected: the energy savings, from the makers' own simulations; no peer-reviewed benchmark yet."
+}

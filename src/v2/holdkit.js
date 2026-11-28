@@ -9,8 +9,8 @@ import { ARR, CHALS, CH_AT, COST, COSTSRC, D2011, D71, D94, DGAR, DWALL, ERAS, F
 import { figVars, money } from './figures.js';
 
 /* the page's words (hd.*, src/i18n/<lang>/hold.json, with the figures it shares with the blueprint, src/v2/figures.js)
-   and the core questions (home.q.*, one at a time) */
-export const w = (k, v) => t('hd.' + k, v ? { ...figVars(), ...v } : figVars()), Q = id => t('home.q.' + id);
+   and the core questions (home.q.*, one at a time, each a way to its card, #/q/<id>) */
+export const w = (k, v) => t('hd.' + k, v ? { ...figVars(), ...v } : figVars()), Q = id => '<a href="#/q/' + id + '">' + t('home.q.' + id) + '</a>';
 /* "247 million" times: in French and Spanish a number in words takes "de" before what it counts */
 export const xOf = f => (f < 1000 ? nf(f) : f >= 1e6 ? w('cq.xof', { x: sig(f, 2) }) : sig(f, 2));
 export const $ = (s, r = ROOT || document) => r.querySelector(s), $$ = (s, r = ROOT || document) => [...r.querySelectorAll(s)];

@@ -15,7 +15,10 @@ const kept = W => (W.arch || []).map(id => W.byId[id]);
 
 test('every point on the field is a built recipe or an attempt the ledger keeps, grown again by the engine', () => {
   const W = settled(), P = F.population(kept(W));
-  assert.equal(P.filter(a => a.built).length, A.KNOWN.length);
+  /* one point per recipe someone has built, however many landmarks stand on it (#495) */
+  assert.equal(P.filter(a => a.built).length, A.FIELD_LANDMARKS.length);
+  assert.equal(new Set(P.filter(a => a.built).map(a => a.key)).size, A.FIELD_LANDMARKS.length);
+  assert.equal(P.filter(a => a.built).reduce((n, a) => n + a.landmarks.length, 0), A.LANDMARKS.length, 'every landmark on the field');
   const L = P.filter(a => a.by === 'ledger');
   assert.equal(L.length, W.arch.length, 'one point per attempt kept');
   for (const a of L) {

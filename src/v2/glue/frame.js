@@ -69,8 +69,8 @@ export function create() {
     if (wd && WORLD_IDS.includes(wd)) h += '<a class="qlread" href="' + esc(followW(f.stop)) + '"><span class="small">' + esc(t('frame.lens.read')) + '</span><b>' + esc(t('thread.' + wd + '.root')) + '</b></a>';
     /* what it repaints, with one control and what it moves, from an engine (src/v2/lenspaint.js) */
     h += Paint.instrument(q, d);
-    /* the question behind it, small */
-    h += '<p class="qlq">' + esc(t(frameQ(q).word)) + '</p>';
+    /* the question behind it, small: its card, the lens pulled back out of every level (#/q/<id>, src/v2/qcard.js) */
+    h += '<p class="qlq"><a href="#/q/' + esc(q) + '">' + esc(t(frameQ(q).word)) + '</a></p>';
     const chs = x.challenges.map(V.chOf).filter(Boolean);
     if (chs.length) h += '<p class="kicker">' + esc(t('frame.lens.play')) + '</p><div class="dolist">' + chs.map(c => '<a class="dochip" href="' + esc(V.doHref(c)) + '"><b>' + esc(titleOf(c)) + '</b><span class="small muted">' + esc(V.whereOf(c)) + '</span></a>').join('') + '</div>';
     if (x.meets) { const inner = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(frameQ(x.meets).icon) + '"/></svg><span>' + esc(t('frame.lens.meets', { q: t('frame.q.' + x.meets) })) + (x.meet ? '<small>' + esc(t('frame.meet.' + x.meet)) + '</small>' : '') + '</span>';

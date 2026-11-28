@@ -113,6 +113,10 @@ export default function lab(L) {
       '<p class="small pbkey"><span><i class="pb"></i>' + esc(t('pb.grow.pbits')) + '</span><span><i class="ex"></i>' + esc(t('pb.e.exact')) + '</span></p>' +
       '<p class="small muted">' + esc(rp == null ? t('pb.grow.noneD', { x: Math.round(rx) }) : t('pb.grow.d', { x: Math.round(rx), p: rp.toFixed(1) })) + '</p></div>';
   }
+  /* the stepping stone (#496): noise as a carrier, proposed in the open genome as a ledger entry, is shown under the
+     carrier in your stack (src/v2/stack/genome.js) because the ledger has it; this lab only leads there, to the rung
+     whose stepping stones hold this lab's challenges */
+  const genome = () => '<p class="small pbgenome">' + esc(t('pb.genome')) + ' <a href="#/stack/switch">' + esc(t('pb.genome.go')) + ' →</a></p>';
   function bench() {
     const o = set(), R = goalOf(size, o.b, o.w), V = live(), beta = P.BETAS[o.b];
     let h = head() + '<p class="small pbintro">' + esc(t(size === 'large' ? 'pb.intro.big' : 'pb.intro')) + '</p>' + goalbox(R) + figure(V);
@@ -122,7 +126,7 @@ export default function lab(L) {
     h += '<p class="small pbmsg ' + (R.met ? 'good' : msg === 'long' ? '' : 'bad') + '">' + esc(t('pb.msg.' + msg, { v: Math.round(R.st.right * 100) })) + '</p>' + reads(R) + growth(o);
     if (!S.done[ch.id]) h += view.hint ? '<p class="small hint">' + esc(t('pb.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
     else h += '<p class="small good">' + esc(t(size === 'large' ? 'pb.done.big' : 'pb.done')) + '</p>';
-    return h + '<p class="small muted">' + esc(t('pb.note')) + '</p>' + doneNote() + reward();
+    return h + '<p class="small muted">' + esc(t('pb.note')) + '</p>' + genome() + doneNote() + reward();
   }
   /* a dial moved: the engine's check on the new settings decides, and a fresh network runs with them */
   const after = () => { const o = set(); if (goalOf(size, o.b, o.w).met) win(); draw(); fx(); start(); return true; };

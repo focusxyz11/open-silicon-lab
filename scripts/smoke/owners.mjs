@@ -8,9 +8,9 @@
 
 /* the browser smoke test's sections, as scripts/smoke.mjs names them (NAMES) */
 export const SECTIONS = ['old', 'home', 'blueprint', 'stations', 'explore-desktop', 'explore-phone', 'joins', 'break', 'slow',
-  'motion', 'seams', 'labs', 'search', 'ways', 'frame', 'flights', 'machines', 'stack'];
+  'motion', 'seams', 'labs', 'search', 'ways', 'frame', 'flights', 'machines', 'stack', 'qcard'];
 /* sections not yet in any of CI's groups, each with the issue that brings it in; their files are core meanwhile */
-export const NOT_IN_CI = { stack: 489 };
+export const NOT_IN_CI = { stack: 489, qcard: 517 };
 
 /* words and documents: the logic and words tests check them (tests/ only runs there) */
 export const WORDS = ['**/*.md', 'docs/**', 'content/**', 'community/**', 'src/i18n/**', 'tests/**'];

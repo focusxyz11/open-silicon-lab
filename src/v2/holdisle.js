@@ -46,6 +46,8 @@ const DRAW = {
     const hot = Math.floor(T * 1.5) % 6; P2.flat().forEach((p, i) => { const on = lit && i === hot; c.fillStyle = on ? K.red : K.plate; c.strokeStyle = on ? K.red : K.ink; c.lineWidth = 2.5; c.beginPath(); c.arc(p[0], p[1], 7.5, 0, 7); c.fill(); c.stroke(); }); }
 };
 
+/* a way into the stack from here is marked, so the stack opens as reached from the first page (src/v2/stack/card.js, #524) */
+const fromHere = () => { try { sessionStorage.setItem('osl-stack-from', 'first'); } catch (e) { /* no storage */ } };
 export const ISLAND = {
   frame: () => [w('pl.island'), w('isle.lit', { n: RUNGS.filter(mine).length, of: N })],
   paint(c, T) {
@@ -64,6 +66,7 @@ export const ISLAND = {
       a.onpointerenter = () => { hov = r; }; a.onpointerleave = () => { if (hov === r) hov = null; }; a.onfocus = a.onpointerenter; a.onblur = a.onpointerleave; host.appendChild(a); return a; });
     /* the way in, as the lab draws it everywhere; and quieter, the island and the Map */
     const go = h('a', 'goin'); go.href = '#/stack'; go.dataset.go = 'stack'; go.innerHTML = '<span class="wia" aria-hidden="true">↑</span><b>' + w('isle.go') + '</b>'; host.appendChild(go);
+    host.addEventListener('click', e => { if (e.target.closest('a[href^="#/stack"]')) fromHere(); });
     const more = h('div', 'sk-more mono', '<a href="#/island">' + w('isle.walk') + '</a><a href="#/log">' + w('isle.map') + '</a>'); at(more, 50, 96); host.appendChild(more); let geo = '';
     const lay = () => { const k = innerWidth <= 760 ? 'p' : 'd'; if (k === geo) return; geo = k; G = GEO[k]; H = G.h; rows.forEach(a => at(a, X0 / 10, top(a.dataset.rung) / 10, (X1 - X0) / 10, H / 10)); at(go, 50, G.go); at(more, 50, G.more); };
     pl.sync = () => { lay(); rows.forEach(a => { const r = a.dataset.rung, lit = mine(r); a.classList.toggle('lit', lit); put(a.querySelector('.tg'), met(r) ? '<i></i>' + w('sk.' + r + '.m') : ''); }); };
@@ -78,7 +81,7 @@ const REPO = 'https://github.com/focusxyz11/open-silicon-lab';
 export function landing(end, sources) {
   if (end) { const f = h('footer', '', '<button type="button" class="bbtn mono">' + w('sources') + '</button><a href="' + REPO + '" target="_blank" rel="noopener">GitHub ↗</a><a href="' + REPO + '/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">' + w('foot.join') + ' ↗</a><a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">' + w('foot.mit') + '</a>');   // i18n-ok: GitHub is a name
     f.firstChild.onclick = sources; end.appendChild(f); }
-  return () => { location.hash = '#/stack'; };
+  return () => { fromHere(); location.hash = '#/stack'; };
 }
 
 /* the field of every attempt at an architecture in one line, on the arrangements block (#480): how many of the recipes

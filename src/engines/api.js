@@ -321,7 +321,7 @@ export function growArchitecture(a = {}) {
   const R = archRead(a || {}); if (!R) return archNo();
   const { h, st } = R, sc = Arch.scoreOf(st), M = Arch.maturityOf(st), kn = Arch.knownOf(st.g), L = archAttempts(settled()), key = Arch.keyOf(st.g);
   return {
-    recipe: recipeOut(st.g), built: kn ? { name: t('ar.known.' + kn.id), status: t('ar.st.' + kn.status) } : null, genesFromToday: Arch.novelty(st.g), year: st.year, people: Math.round(st.people), attemptsAYear: Math.round(st.people * Arch.ATTEMPTS),
+    recipe: recipeOut(st.g), built: kn ? { name: t('ar.known.' + kn.id), status: t('ar.st.' + kn.status) } : null, landmarks: Arch.landmarksOf(st.g).map(k => ({ id: k.id, name: t('ar.known.' + k.id), status: t('ar.st.' + k.status), fact: k.fact, countsFromSeason: k.from || 1 })), genesFromToday: Arch.novelty(st.g), year: st.year, people: Math.round(st.people), attemptsAYear: Math.round(st.people * Arch.ATTEMPTS),
     needs: Arch.NEEDS.map(n => ({ need: n, name: t('ar.need.' + n), now: sig(sc[n].now), could: sig(sc[n].could), can: sc[n].can, wins: sc[n].wins, lacks: Arch.missesOf(st.g, n) })),
     wins: Arch.winsOf(st), polish: Object.fromEntries(Arch.DIRS.map(d => [d, sig(M[d])])), suggest: Arch.novelty(st.g) ? Arch.suggest(st, 'archniche') : null,
     goals: Object.fromEntries(Object.keys(Arch.GOALS).map(id => [id, Arch.goalOf(st, id)])),
