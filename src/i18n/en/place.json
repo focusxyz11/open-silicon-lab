@@ -310,6 +310,8 @@
  "society.checkedBy": "checked by {who}",
  "society.builtOn": "built on {who}",
  "lab.pull.t": "Someone needs it",
+ "lab.stack.t": "Your stack",
+ "lab.stack.d": "Your computer from the atom to the mind, each rung made of the one below. Change one and watch the rest rebuild; zoom out to every attempt.",
  "lab.pull.d": "{n} pieces of the shared computer that nobody has built yet",
  "lab.push.t": "It has become possible",
  "lab.push.d": "{n} new ways to compute that people are trying, still looking for what they are best at",

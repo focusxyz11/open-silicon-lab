@@ -14,7 +14,7 @@ import { still } from '../../core/ui.js';
 import { rungOfChallenge } from '../../engines/path.js';
 import { purposesOf } from '../../engines/ledger.js';
 import * as Arch from '../../engines/arch.js';
-import { keep, signHtml, signOf, slipHtml, slipClick, refusal } from '../commons.js';
+import { keep, signHtml, signOf, slipHtml, slipClick, refusal, draftOf } from '../commons.js';
 
 const here = () => /^#\/stack(\/|$)/.test(location.hash);
 export function create() {
@@ -36,6 +36,12 @@ export function create() {
         keepPurpose: (fields, box) => { const r = keep(V.S, fields, 'purpose ' + fields.purpose, signOf(box)); if (r.ok) V.save(); return { ok: r.ok, why: r.ok ? '' : refusal(r.r), slip: r.ok ? slipHtml(V.S, r.e.id) : '' }; },
         slipClick: (ev, done) => slipClick(ev, V.S, redraw => { V.save(); done(redraw); }),
         done: () => V.S.done || {},
+        /* Grow an architecture, played in the stack's Do (#450): a challenge met there is won like any other, and an
+           attempt kept goes into the ledger as the architecture lab kept it (a try with its history, grown again there) */
+        titleOf: id => { const c = Game.CHALLENGES.find(x => x.id === id); return c ? Game.titleOf(c) : id; },
+        win: id => { const c = Game.CHALLENGES.find(x => x.id === id); if (!c || (V.S.done || {})[id]) return false; V.S.done[id] = true; V.save(); if (V.won) V.won(c); return true; },
+        keepArch: (claim, label, box) => { const r = keep(V.S, { kind: 'try', arch: claim, season: Arch.VERSION, words: '' }, label, signOf(box)); if (r.ok && V.kept) V.kept(r.e); else if (r.ok) V.save(); return { ok: r.ok, why: r.ok ? '' : refusal(r.r), id: r.ok ? r.e.id : null }; },
+        archSlip: id => (id && draftOf(V.S, id) ? slipHtml(V.S, id) : ''),
         moved: () => V.hud(),
         stones: rung => (ON[rung] || []).map(c => ({ id: c.id, href: '#/do/' + c.id, title: Game.titleOf(c), won: Game.isDone(V.S, c.id) })) };
       Game.CHALLENGES.forEach(c => { const r = rungOfChallenge(c.id); if (r) (ON[r] = ON[r] || []).push(c); });

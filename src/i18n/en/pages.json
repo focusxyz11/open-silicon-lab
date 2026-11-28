@@ -201,6 +201,8 @@
  "page.lat.l.intelligence.t": "Intelligence",
  "page.lat.l.intelligence.d": "it learns",
  "page.lat.levels": "Levels",
+ "page.lat.rung": "Open this rung of your stack",
+ "page.lat.inStack": "On your stack",
  "page.lat.more": "{n} more",
  "page.lat.real": "Real elsewhere",
  "page.lat.open": "Open",

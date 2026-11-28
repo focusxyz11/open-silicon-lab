@@ -59,6 +59,21 @@
      chip's energy an instruction; where it computes divides the energy of moving data and sets the memory's distance;
      a shape divides the machine's energy and sets its units. Every fork's contract is a guess until a fact backs it,
      and every rung built on a guess is marked a guess too.
+   - Moving bits and heat (#494): every rung hands up moving, the share of its energy spent moving bits, and heat, its
+     power over its own area (W a cm²). The atom and the switch make a bit and move none, and nothing switches there
+     yet (0 and 0). The gate: GATE_WIRE of today's gate charges the wire to the next gates, a guess (src/data/fidelity.js
+     GUESSES), its wire growing as the root of its area (a stacked pair's shorter); its heat if it switched as fast as
+     it can, a quarter of its switches every TICK of its own delays, over its switches at the line's density: a gate
+     can always burn more than a chip can shed, which is why most of a chip waits. The block: its gates' wires, and the
+     trip between the memory and the sums, the share of a register read spent on the wires between them, set by where
+     it computes (TRIP, a guess: shorter as memory moves near, almost nothing computing in it); its heat at its own
+     pace. The chip: the same split over its instruction's energy, its heat at its clock over its logic's area. The
+     machine: memory far or near (the carry's fetches) on top of the chip's own; its heat through one footprint, its
+     chips busy as much as memory lets them, as many tiers on one another as its shape stacks (TIERS: the stack shape
+     is the tiers lab's four tiers of logic, src/engines/tiers.js SHAPE_AT). The mind: its thinking's share as the chip's,
+     and its weights fetched; it runs on the machine's heat. A forked rung hands up today's, its heat less by its
+     energy's factor and its slowness. HEAT_LIMIT, about what a cold plate takes off a chip, is a guess too; coolant
+     inside the silicon takes up to three times as much (facts.json in-chip-cooling).
    - Against today's computer: one number, the architecture engine's (arch.js scoreOf): what the recipe could become for
      the need once as polished as today's computer (could), and, given a state grown in it, where it stands now (now).
      The stack computes no second one.
@@ -108,6 +123,11 @@ export const IPM = { 1: 0.15, 2: 0.6, 4: 1.5, 8: 3.5 };    // instructions a mul
 export const ACC = [[1, 0.86], [2, 0.93], [4, 0.965], [8, 0.972]];   // how often right, at each width of weights
 export const MISS = 0.01, CTRL = 1200, CPI = { 1: 1, 3: 1.12, 5: 1.25 };
 export const FA = { nand: [9, 9], rich: [5, 8] };          // gates of a full adder, and gates switching in one
+/* moving bits and heat (#494): the gate's wire share and the block's trip are guesses (src/data/fidelity.js GUESSES),
+   as is the heat a cold plate takes off a chip, W a cm²; the tiers each shape stacks on one footprint */
+export const GATE_WIRE = 0.3, TRIP = { far: 0.6, near: 0.35, in: 0.08, flow: 0.25 }, ACT = 0.25, TICK = 12, HEAT_LIMIT = 150;
+export const TIERS = { few: 1, grid: 1, stack: 4, swarm: 1 };   // the stack: the tiers lab's SHAPE_AT (a test keeps them one)
+const cm2 = (gates, G) => gates * G.switches * G.area / DENSITY.perMm2 / 100;
 export const LIB = { nand: { delay: 1, energy: 1, switches: 4 }, rich: { delay: 1.15, energy: 1.1, switches: 6 } };
 /* the switch's current at V against its own scale: a smooth turn-on, quadratic above the threshold */
 export function Irel(sw, V) {
@@ -151,7 +171,7 @@ function forkHands(rung, factor, slow) {
   const base = X0.rungs[rung].hands, out = {};
   for (const [k, u] of HANDS[rung]) {
     const v = base[k];
-    out[k] = u === 'J' ? v / factor : u === 's' ? v * slow : u === 'Hz' || u === 'per s' ? v / slow : u === 'W' ? v / factor / slow : u === 'p' ? 0 : v;
+    out[k] = u === 'J' ? v / factor : u === 's' ? v * slow : u === 'Hz' || u === 'per s' ? v / slow : u === 'W' || u === 'W/cm2' ? v / factor / slow : u === 'p' ? 0 : v;
   }
   return out;
 }
@@ -173,19 +193,20 @@ function carryOf(g, F, aim, ref, made) {
   let G;
   if (charge) {
     const spec = SW.normal({ mat: F.mat, shape: F.shape, mech: F.mech, own: F.own }), sw = SW.switchOf(spec), M = sw.mat;
-    put('atom', { gap: M.eg, electrons: M.me, holes: M.mh, traps: M.dit }, { mat: M.id },
+    put('atom', { gap: M.eg, electrons: M.me, holes: M.mh, traps: M.dit, moving: 0, heat: 0 }, { mat: M.id },
       { fid: M.own ? { f: 'idea', by: 'switch', status: 'guess' } : { f: 'figures', by: 'switch', fact: M.fact } });
     /* the switch as made on your line: its copies spread as the print's noise, its lowest clean voltage three spreads
        above the threshold the design set (today's line: the switch engine's own numbers) */
     const sigma = sw.sigma * line.spread, vmin = line.spread === 1 ? sw.vmin : sw.clean ? sw.vt + 3 * sigma / 1000 : NaN;
-    const S = put('switch', { vmin, vt: sw.vt, swing: sw.swing, sigma, ion: sw.ion, pair: sw.pair, survives: sw.survives },
+    const S = put('switch', { vmin, vt: sw.vt, swing: sw.swing, sigma, ion: sw.ion, pair: sw.pair, survives: sw.survives, moving: 0, heat: 0 },
       { spec: SW.specKey(spec), clean: sw.clean, status: sw.status, designed: { sigma: sw.sigma, vmin: sw.vmin }, care: line.care }, { fid: sw.own ? { f: 'idea', by: 'switch', status: 'guess' } : { f: 'computed', by: 'switch' } });
     if (sw.own) guessed = true;
     if (!sw.clean) { R.broken = 'switch'; cannot('switch'); R.against = againstOf(g, aim); return R; }
     /* the gate, made of the switch's contract at your voltage */
     const V = F.V, L = LIB[F.lib], vtb = S.vt - 3 * S.sigma / 1000, z = 6 * (V - vtb) / (S.vmin - vtb);
     const p = V <= vtb ? 0.5 : Math.min(0.5, Q(z)), d = (V / VREF) * IREF / Math.max(Irel(S, V), 1e-30), en = Math.pow(V / VREF, 2);
-    G = put('gate', { delay: T0 * d * L.delay * 1e-12, energy: EG0 * en * (S.pair ? 1 : 4) * L.energy * 1e-15, fail: p, switches: L.switches, area: sw.area }, { lib: F.lib, V });
+    const gd = T0 * d * L.delay * 1e-12, ge = EG0 * en * (S.pair ? 1 : 4) * L.energy * 1e-15, w = GATE_WIRE * Math.sqrt(sw.area);
+    G = put('gate', { delay: gd, energy: ge, fail: p, switches: L.switches, area: sw.area, moving: w / (w + 1 - GATE_WIRE), heat: ge * ACT / (TICK * gd) / cm2(1, { switches: L.switches, area: sw.area }) }, { lib: F.lib, V });
   } else {
     put('atom', null, { matter: C.matter });
     if (!skips.length) { put('switch', null, { matter: C.matter }); G = put('gate', forkHands('gate', eC, C.delay), { matter: C.matter }); }
@@ -209,20 +230,24 @@ function carryOf(g, F, aim, ref, made) {
     if (F.vote) { const pv = fails(p, 32 * 4); Pw = Math.min(1, 3 * Pw * Pw + pv); aluG = aluG * 3 + 128; aluD += 2 * tg; aluE = aluE * 3 + 128 * 0.25 * Eg; }
     const RG = F.regs, fileG = RG * 32 * 10 + 2 * 32 * (RG - 1), lg = Math.log2(RG), wire = 0.02 * Math.sqrt(fileG) * tg, readD = (2 * lg + 2) * tg + wire;
     const readE = (32 * lg * 2 + 32 * 10 * 0.1) * 0.25 * Eg + Math.sqrt(fileG) * 0.04 * Eg, Pr = fails(p, 32 * lg * 2 * 0.5);
-    B = put('block', { aluDelay: aluD * 1e-12, aluEnergy: aluE * 1e-15, aluWrong: Pw, readDelay: readD * 1e-12, readEnergy: readE * 1e-15, readWrong: Pr, wireShare: wire / readD, gates: aluG + fileG },
+    /* moving bits: the gates' own wires, and the trip between the memory and the sums (where it computes sets it) */
+    const tr = TRIP[g.where] ?? TRIP.far, gw = G.moving, bMove = gw * (aluE + 3 * readE * (1 - tr)) + 3 * readE * tr;
+    B = put('block', { aluDelay: aluD * 1e-12, aluEnergy: aluE * 1e-15, aluWrong: Pw, readDelay: readD * 1e-12, readEnergy: readE * 1e-15, readWrong: Pr, wireShare: wire / readD, gates: aluG + fileG,
+      moving: bMove / (aluE + 3 * readE), heat: (aluE + readE) * 1e-3 / Math.max(aluD, readD) / cm2(aluG + fileG, G) },
       { sums: { gates: aluG, adder: F.adder, vote: F.vote }, memory: { gates: fileG, regs: RG } });
 
     /* the chip: one core of that block and its control, told what to do one way or another */
     const SG = A.CARRY.told[g.told].stages ? F.stages : 1, path = readD + 6 * tg + aluD + 2 * tg, period = Math.max(SG === 1 ? path : path / SG + 6 * tg, 12 * tg);
     const pipeG = SG > 1 ? SG * 128 * 10 : 0, coreG = aluG + fileG + CTRL + pipeG;
-    const Ei = (aluE + 3 * readE + CTRL * 0.1 * Eg + pipeG * 0.25 * Eg + 2000 * 0.05 * Eg * (SG > 1 ? 1 : 0.6)) / eT;
+    const Eall = aluE + 3 * readE + CTRL * 0.1 * Eg + pipeG * 0.25 * Eg + 2000 * 0.05 * Eg * (SG > 1 ? 1 : 0.6), Ei = Eall / eT;
     /* the chance an instruction goes wrong: the same product as 1 - (1 - Pw)(1 - Pr)^2(1 - control's), kept exact when it is
        tiny (log1p and expm1, so one wrong copy in 10^40 does not round to never: Perfect fails reads it, #449) */
     const q = Math.min(1, -Math.expm1(Math.log1p(-Math.min(Pw, 1 - 1e-16)) + 2 * Math.log1p(-Math.min(Pr, 1 - 1e-16)) + Math.log1p(-Math.min(fails(p, CTRL * 0.1), 1 - 1e-16))));
     /* its die, cut from a wafer of your line: how many come out whole, and what a good one costs */
     const area = areaOf(coreG, G.switches, G.area), T = L.die && Math.abs(L.die.area - area) <= 1e-12 * area ? L.die : null;
     const die = T ? { area: T.area, defects: line.defects, dies: T.dies, yield: T.yield, wafer: T.wafer, cost: T.cost } : dieAt(area, line.defects, line.pace);
-    K = put('chip', { clock: 1e12 / period, cpi: CPI[SG], energy: Ei * 1e-15, wrong: q, gates: coreG, area: die.area, yield: die.yield, cost: die.cost / (ref || die.cost) },
+    K = put('chip', { clock: 1e12 / period, cpi: CPI[SG], energy: Ei * 1e-15, wrong: q, gates: coreG, area: die.area, yield: die.yield, cost: die.cost / (ref || die.cost),
+      moving: (bMove + gw * (Eall - aluE - 3 * readE)) / Eall, heat: Ei * 1e-15 * (1e12 / period) / CPI[SG] / cm2(coreG, G) },
       { core: { stages: SG, period: period * 1e-12 }, die });
   } else K = R.rungs.chip.hands;
 
@@ -230,12 +255,13 @@ function carryOf(g, F, aim, ref, made) {
   const units = A.CARRY.shape[g.shape].units[F.ui], lat = A.CARRY.where[g.where].latency, fq = K.clock;
   const stall = MISS * lat * fq, ips = units * fq / (K.cpi + stall), Ef = 2 * E16.dram * 1e-12;
   const think = K.energy / eS, move = MISS * Ef / (eW * eS), Emi = think + move;
-  const Mh = put('machine', { ips, energy: Emi, power: ips * Emi, moveShare: move / Emi, fetch: Ef * 0.25 / (eW * eS), wrong: K.wrong }, { units, latency: lat, think, move });
+  const Mh = put('machine', { ips, energy: Emi, power: ips * Emi, moveShare: move / Emi, fetch: Ef * 0.25 / (eW * eS), wrong: K.wrong,
+    moving: (move + think * K.moving) / Emi, heat: K.heat * K.cpi / (K.cpi + stall) / eS * (TIERS[g.shape] || 1) }, { units, latency: lat, think, move, tiers: TIERS[g.shape] || 1 });
 
   /* the mind: a small network on that machine */
   const bits = F.bits, instr = MACS * IPM[bits] + 200, fetches = Math.ceil(MACS * bits / 32);
-  const Ea = instr * Mh.energy * (1 - Mh.moveShare) + fetches * Mh.fetch, lam = Mh.wrong * instr, bEff = Math.max(1, bits + Math.log2(R.traits.exact));
-  put('mind', { aps: Mh.ips / instr, energy: Ea, right: 0.1 + (baseAcc(bEff) - 0.1) * Math.exp(-lam / 8) }, { bits, instructions: instr, lam, bitsInEffect: bEff });
+  const Ea1 = instr * Mh.energy * (1 - Mh.moveShare), Ea = Ea1 + fetches * Mh.fetch, lam = Mh.wrong * instr, bEff = Math.max(1, bits + Math.log2(R.traits.exact));
+  put('mind', { aps: Mh.ips / instr, energy: Ea, right: 0.1 + (baseAcc(bEff) - 0.1) * Math.exp(-lam / 8), moving: (Ea1 * K.moving + fetches * Mh.fetch) / Ea, heat: Mh.heat }, { bits, instructions: instr, lam, bitsInEffect: bEff });
   R.against = againstOf(g, aim);
   return R;
 }

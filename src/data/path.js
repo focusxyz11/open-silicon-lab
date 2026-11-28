@@ -37,16 +37,21 @@ export const PARTS = { block: ['sums', 'memory'], chip: ['core'] };
 
 /* what each rung hands up: [field, unit]. Units: eV; cm2/Vs; per cm2 per eV; V; mV; x (against today's silicon fin, or
    for a cost against the lab's example); yes (true or false); s; J; p (a chance, 0 to 1); n (a count); share (0 to 1);
-   Hz; per s; W; cm2. The switch's spread and lowest clean voltage are as made, on your line; the chip's area, yield
-   and cost are its die's, cut from the wafer (#455). */
+   Hz; per s; W; cm2; W/cm2. The switch's spread and lowest clean voltage are as made, on your line; the chip's area,
+   yield and cost are its die's, cut from the wafer (#455). Every rung also hands up moving and heat (#494, docs/PATH.md
+   "The carry"): moving, the share of its energy spent moving bits from one place to another (nothing yet at the atom
+   and the switch, which make a bit and move none; wires at the gate; the trip between the sums and the memory at the
+   block; the same inside the core at the chip; memory far or near at the machine; the weights fetched at the mind), and
+   heat, its power over its own area, W a cm² (the gate's at full speed, the block's at its own pace, the chip's at its
+   clock, the machine's through one footprint, so stacked tiers add up; the mind runs on the machine's). */
 export const HANDS = {
-  atom: [['gap', 'eV'], ['electrons', 'cm2/Vs'], ['holes', 'cm2/Vs'], ['traps', 'per cm2 eV']],
-  switch: [['vmin', 'V'], ['vt', 'V'], ['swing', 'mV'], ['sigma', 'mV'], ['ion', 'x'], ['pair', 'yes'], ['survives', 'yes']],
-  gate: [['delay', 's'], ['energy', 'J'], ['fail', 'p'], ['switches', 'n'], ['area', 'x']],
-  block: [['aluDelay', 's'], ['aluEnergy', 'J'], ['aluWrong', 'p'], ['readDelay', 's'], ['readEnergy', 'J'], ['readWrong', 'p'], ['wireShare', 'share'], ['gates', 'n']],
-  chip: [['clock', 'Hz'], ['cpi', 'n'], ['energy', 'J'], ['wrong', 'p'], ['gates', 'n'], ['area', 'cm2'], ['yield', 'share'], ['cost', 'x']],
-  machine: [['ips', 'per s'], ['energy', 'J'], ['power', 'W'], ['moveShare', 'share'], ['fetch', 'J'], ['wrong', 'p']],
-  mind: [['aps', 'per s'], ['energy', 'J'], ['right', 'share']]
+  atom: [['gap', 'eV'], ['electrons', 'cm2/Vs'], ['holes', 'cm2/Vs'], ['traps', 'per cm2 eV'], ['moving', 'share'], ['heat', 'W/cm2']],
+  switch: [['vmin', 'V'], ['vt', 'V'], ['swing', 'mV'], ['sigma', 'mV'], ['ion', 'x'], ['pair', 'yes'], ['survives', 'yes'], ['moving', 'share'], ['heat', 'W/cm2']],
+  gate: [['delay', 's'], ['energy', 'J'], ['fail', 'p'], ['switches', 'n'], ['area', 'x'], ['moving', 'share'], ['heat', 'W/cm2']],
+  block: [['aluDelay', 's'], ['aluEnergy', 'J'], ['aluWrong', 'p'], ['readDelay', 's'], ['readEnergy', 'J'], ['readWrong', 'p'], ['wireShare', 'share'], ['gates', 'n'], ['moving', 'share'], ['heat', 'W/cm2']],
+  chip: [['clock', 'Hz'], ['cpi', 'n'], ['energy', 'J'], ['wrong', 'p'], ['gates', 'n'], ['area', 'cm2'], ['yield', 'share'], ['cost', 'x'], ['moving', 'share'], ['heat', 'W/cm2']],
+  machine: [['ips', 'per s'], ['energy', 'J'], ['power', 'W'], ['moveShare', 'share'], ['fetch', 'J'], ['wrong', 'p'], ['moving', 'share'], ['heat', 'W/cm2']],
+  mind: [['aps', 'per s'], ['energy', 'J'], ['right', 'share'], ['moving', 'share'], ['heat', 'W/cm2']]
 };
 export const fieldsOf = rung => (HANDS[rung] || []).map(h => h[0]);
 
