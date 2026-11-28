@@ -155,6 +155,8 @@ export const FILED = {
   'reversible': ['physics', 'nat'], 'dataflow': ['geo', 'eff'],
   /* build up, not out: tiers stacked until the heat stops you, chiplets against the dust (#482) */
   'tiers': ['geo', 'physics', 'eff'],
+  /* trust it or not: an agent's adder that may hide a trigger, checked within a budget (#497) */
+  'trigger': ['trust', 'dig', 'human'],
   /* spiking neurons and light, new ways to compute (#322) */
   'spikes': ['physics', 'copy'], 'light': ['physics', 'geo']
   }

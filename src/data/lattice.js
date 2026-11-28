@@ -39,7 +39,7 @@ export const PLACED = [
   ['ch:vote', 'silicon', 'logic'], ['ch:prove', 'silicon', 'logic'], ['ch:evolve', 'silicon', 'logic'], ['ch:flaky', 'silicon', 'logic'],
   ['ch:search', 'silicon', 'logic'], ['ch:maskof', 'silicon', 'logic'], ['ch:vias', 'silicon', 'logic'],
   ['lv:datacentre/gate', 'silicon', 'logic'], ['lv:studio/logic', 'silicon', 'logic'], ['lv:studio/gates', 'silicon', 'logic'], ['lv:fab/print', 'silicon', 'logic'],
-  ['ch:half', 'silicon', 'sums'], ['ch:full', 'silicon', 'sums'], ['ch:counter', 'silicon', 'sums'], ['ch:cim', 'silicon', 'sums'],
+  ['ch:half', 'silicon', 'sums'], ['ch:trigger', 'silicon', 'sums'], ['ch:full', 'silicon', 'sums'], ['ch:counter', 'silicon', 'sums'], ['ch:cim', 'silicon', 'sums'],
   ['ch:power-curve', 'silicon', 'sums'], ['ch:chef', 'silicon', 'sums'], ['ch:ear', 'silicon', 'sums'], ['ch:floor', 'silicon', 'sums'],
   ['lv:datacentre/block', 'silicon', 'sums'], ['lv:studio/layout', 'silicon', 'sums'], ['lv:fab/wires', 'silicon', 'sums'],
   ['ch:rvrun', 'silicon', 'processor'], ['ch:corearch', 'silicon', 'processor'], ['ch:halt', 'silicon', 'processor'], ['ch:dataflow', 'silicon', 'processor'], ['ch:tiers', 'silicon', 'processor'],

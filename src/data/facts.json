@@ -2423,6 +2423,42 @@
    "url": "https://www.wevolver.com/article/high-bandwidth-memory",
    "value": "About 7 pJ per bit for HBM, about 25 for DDR",
    "verified": "2026-11-27"
+  },
+  {
+   "id": "design-conductor",
+   "topic": "design",
+   "detail": "Design Conductor (Verkor, arXiv 2603.08716, February 2026): from a 219-word requirements document, an agent produced RISC-V CPU variants (VerCore) meeting timing at 1.48 GHz, verified in simulation and laid out to tape-out-ready GDSII on the academic ASAP7 kit, in 12 hours. Not fabricated.",
+   "kind": "claim",
+   "label": "An agent designs a whole CPU",
+   "source": "arXiv (Verkor team)",
+   "status": "new",
+   "url": "https://arxiv.org/abs/2603.08716",
+   "value": "A Linux-capable RISC-V CPU from a 219-word spec to layout in 12 hours, autonomously (not fabricated)",
+   "verified": "2026-11-28"
+  },
+  {
+   "id": "llm-verilog-backdoor",
+   "topic": "design",
+   "detail": "Yang, Hu, Chen and Xia, Semantic Consensus Decoding (arXiv 2602.04195, February 2026): language models for Verilog can be backdoored in training, and once the code is fabricated the flaws become hardware trojans that cannot be fixed; attacks succeeded 89% of the time on average, under 3% with their defence. Builds on RTL-Breaker (arXiv 2411.17569).",
+   "kind": "reported",
+   "label": "Hidden triggers in generated Verilog",
+   "source": "arXiv (Yang et al.)",
+   "status": "new",
+   "url": "https://arxiv.org/abs/2602.04195",
+   "value": "Backdoored models wrote triggered Verilog 89% of the time; under 3% with a defence",
+   "verified": "2026-11-28"
+  },
+  {
+   "id": "trojangym",
+   "topic": "design",
+   "detail": "TrojanGYM (Sreekumar et al., arXiv 2601.17178, January 2026): cooperating language-model agents insert hardware trojans into RTL (SRAM, AES-128, UART) and refine them against graph-network detectors; up to 83.33% evaded modern detectors.",
+   "kind": "reported",
+   "label": "Agents that hide trojans from detectors",
+   "source": "arXiv (Sreekumar et al.)",
+   "status": "new",
+   "url": "https://arxiv.org/abs/2601.17178",
+   "value": "Up to 83% of agent-made trojans evaded modern detectors",
+   "verified": "2026-11-28"
   }
  ],
  "changes": [
