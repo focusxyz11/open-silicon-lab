@@ -13,6 +13,7 @@ import * as A from '../../engines/arch.js';
 import { recordOf } from '../../engines/chiprecord.js';
 import { build, solutionOf } from '../../engines/design.js';
 import * as PL from '../../engines/placer.js';
+import { proposeArrangement } from '../../engines/floorplan.js';
 import { stackKept, keepGene } from '../stack/keep.js';
 import { mark } from '../fid.js';
 import { sizeOf } from '../../data/atlas.js';
@@ -53,6 +54,8 @@ export function create() {
   let view = null, viewP = null, rec = null, lv = 'chip';
   /* the session's checks of the block (#508): the states tested and what they found, the wire once settled */
   let cover = null, settled = null, settling = 0, runs = 0;
+  /* an agent's proposal waiting for the person (#510): shown, never applied until Take it */
+  let proposal = null;
   const extra = () => ({ cover, settled });
   const ensure = () => viewP || (viewP = import('../studio/view.js').then(m => {
     view = m.createStudio($('studioCanvas'), $('studioLabels'), { words: t, mark, still, inset,
@@ -70,16 +73,18 @@ export function create() {
     /* the controls of the level in view, in one strip at the bottom centre (GUIDE.md §4): at the chip, Arrange, the two
        genes the floorplan is laid out by, each option a button */
     const arrange = lv !== 'chip' ? '' : '<div class="sdarr">' + ARRANGE.map(k => '<div class="sdgene" role="group" aria-label="' + esc(t('ar.gene.' + k)) + '"><p class="kicker">' + esc(t('ar.gene.' + k)) + '</p><div class="sdopts">' +
-      Object.keys(A.CARRY[k]).map(o => '<button type="button" class="chipb' + (D.recipe[k] === o ? ' on' : '') + '" data-gene="' + k + '" data-opt="' + o + '" aria-pressed="' + (D.recipe[k] === o) + '" title="' + esc(t('ar.opt.' + k + '.' + o + '.d')) + '">' + esc(t('ar.opt.' + k + '.' + o)) + '</button>').join('') + '</div></div>').join('') + '</div>';
+      Object.keys(A.CARRY[k]).map(o => '<button type="button" class="chipb' + (D.recipe[k] === o ? ' on' : '') + '" data-gene="' + k + '" data-opt="' + o + '" aria-pressed="' + (D.recipe[k] === o) + '" title="' + esc(t('ar.opt.' + k + '.' + o + '.d')) + '">' + esc(t('ar.opt.' + k + '.' + o)) + '</button>').join('') + '</div></div>').join('') +
+      '</div>' + askBtn('arr');
     /* at the block: the placement by hand, scrambled, settled, and the tests; at the gate: the clock to meet */
     const built = !!(D.cells.length && rec.designed.timing), C = built ? PL.coverageOf(B()) : null;
     const block = lv !== 'block' || !built ? '' : '<div class="sdarr"><div class="sdgene"><p class="kicker">' + esc(t('sd.ctl.place')) + '</p><div class="sdopts">' +
       ['hand', 'scramble', 'settle'].map(k => '<button type="button" class="chipb" data-place="' + k + '"' + (k === 'settle' && settling ? ' disabled' : '') + '>' + esc(t('sd.ctl.' + k)) + '</button>').join('') + '</div></div>' +
-      '<div class="sdgene"><p class="kicker">' + esc(t('sd.ctl.check')) + '</p><div class="sdopts"><button type="button" class="chipb" data-tests="some">' + esc(t('sd.ctl.random', { n: PL.randomCount(C) })) + '</button><button type="button" class="chipb" data-tests="all">' + esc(t('sd.ctl.all')) + '</button></div></div></div>';
+      '<div class="sdgene"><p class="kicker">' + esc(t('sd.ctl.check')) + '</p><div class="sdopts"><button type="button" class="chipb" data-tests="some">' + esc(t('sd.ctl.random', { n: PL.randomCount(C) })) + '</button><button type="button" class="chipb" data-tests="all">' + esc(t('sd.ctl.all')) + '</button></div></div>' +
+      '</div>' + askBtn('place');
     const clocks = built ? PL.clocksOf(B()) : [];
     const gate = lv !== 'gate' || !built ? '' : '<div class="sdarr"><div class="sdgene"><p class="kicker">' + esc(t('sd.ctl.clock')) + '</p><div class="sdopts">' +
       PL.CLOCKS.map((k, i) => '<button type="button" class="chipb' + (D.clock === i ? ' on' : '') + '" data-clock="' + i + '" aria-pressed="' + (D.clock === i) + '">' + esc(t('sd.ctl.clockOpt', { ps: clocks[i], mhz: Math.round(1e6 / clocks[i]) })) + '</button>').join('') + '</div></div></div>';
-    controls(arrange || block || gate);
+    const strip = arrange || block || gate; controls(strip ? agentCard() + strip : '');
     V.swFrame.dock.innerHTML = V.lineHtml(t('sd.k') + ' · ' + nm(lv), line, null, V.aroundRow(
       i > 0 ? '<button type="button" class="chipb" data-key="back" data-sdgo="' + STUDIO_LEVELS[i - 1] + '">↑ ' + esc(nm(STUDIO_LEVELS[i - 1])) + '</button>' : '',
       i < STUDIO_LEVELS.length - 1 ? '<button type="button" class="chipb" data-key="next" data-in data-inname="' + esc(nm(STUDIO_LEVELS[i + 1])) + '" data-sdgo="' + STUDIO_LEVELS[i + 1] + '">↓ ' + esc(nm(STUDIO_LEVELS[i + 1])) + '</button>' : '',
@@ -95,7 +100,7 @@ export function create() {
     const rn = V.routeN, fromIsland = V.arriving; V.arriving = false;
     lv = STUDIO_LEVELS.includes(level) ? level : 'chip';
     return Promise.all([V.withFrame(), ensure()]).then(([, d]) => { if (rn !== V.routeN) return;
-      rec = recordNow(); cover = null; settled = null;
+      rec = recordNow(); cover = null; settled = null; proposal = null;
       V.swFrame = V.frameOf(V.sui, { up: { href: '#/place/studio', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/studio', label: t('map.studio.t') }, { label: t('sd.k') }],
         rail: { label: t('sd.rail'), items: STUDIO_LEVELS.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: sizeOf(k) })) },
         onRail: k => go(k), onLook: drawCard, scroll: true, caption: true });
@@ -103,6 +108,8 @@ export function create() {
         const a = e.target.closest('[data-gene]'); if (a) { e.preventDefault(); arrangeTo(a.dataset.gene, a.dataset.opt); }
         const p = e.target.closest('[data-place]'); if (p) { e.preventDefault(); placeBy(p.dataset.place); }
         const k = e.target.closest('[data-tests]'); if (k) { e.preventDefault(); testBy(k.dataset.tests); }
+        const ag = e.target.closest('[data-agent]'); if (ag) { e.preventDefault(); askAgent(ag.dataset.agent); }
+        const tk = e.target.closest('[data-take]'); if (tk) { e.preventDefault(); if (tk.dataset.take === '1') takeProposal(); else { proposal = null; drawCard(); } }
         const c = e.target.closest('[data-clock]'); if (c) { e.preventDefault(); const d = designNow(); d.clock = +c.dataset.clock; keepDesign(d); remake(); } };
       V.loading(false);
       V.sui.dataset.broken = rec.designed.broken || ''; V.sui.dataset.recipe = A.keyOf(rec.designed.recipe);
@@ -152,6 +159,34 @@ export function create() {
     const wrong = new Set(C.wrong.filter(s => tested.has(s)));
     cover = { cols: C.cols, rows: C.rows, tested, wrong, found: wrong.size > 0, fid: C.fid };
     if (view) view.extra(extra()); tellBlock();
+  }
+  /* ---- an agent in the studio (#510): the same engines the open port answers with (propose_arrangement,
+     propose_placement) try what an agent would and propose; the card shows the proposal beside yours, with what it
+     gains; nothing changes until the person takes it ---- */
+  function askAgent(kind) {
+    const D = rec.designed;
+    if (kind === 'arr') { const P = proposeArrangement(D.recipe, D.fine); proposal = { kind, P }; }
+    else { const R = PL.proposePlacement(B(), placeNow(), D.timing ? D.timing.period : null); proposal = { kind, R }; }
+    drawCard(); V.sui.dataset.proposal = kind;
+  }
+  /* the way to ask, in the strip's corner: only humans decide what is taken */
+  const askBtn = kind => '<button type="button" class="link sdask" data-agent="' + kind + '" title="' + esc(t('sd.ctl.agentK')) + '">' + esc(t('sd.ctl.agent')) + '</button>';
+  function agentCard() {
+    if (!proposal) return '';
+    const p = proposal, num = v => (v < 10 ? v.toFixed(1) : String(Math.round(v)));
+    let say, can = false;
+    if (p.kind === 'arr') { const P = p.P; can = !!P.proposed; say = can ? t('sd.ag.arr', { shape: t('ar.opt.shape.' + P.proposed.shape), where: t('ar.opt.where.' + P.proposed.where), c: Math.round(P.cooler), d: num(P.shorter) }) : t('sd.ag.none'); }
+    else { const R = p.R; can = !!R.better; say = can ? t('sd.ag.place', { w: Math.round(R.shorter), p: Math.round(R.faster) }) : t('sd.ag.nonePlace'); }
+    return '<div class="sdagent" role="group" aria-label="' + esc(t('sd.ag.k')) + '"><p class="kicker">' + esc(t('sd.ag.k')) + '</p><p>' + esc(say) + '</p><div class="sdopts">' +
+      (can ? '<button type="button" class="chipb on" data-take="1">' + esc(t('sd.ag.take')) + '</button>' : '') + '<button type="button" class="chipb" data-take="0">' + esc(t(can ? 'sd.ag.no' : 'sd.ag.ok')) + '</button></div></div>';
+  }
+  /* the person takes it: only here does the record change */
+  function takeProposal() {
+    const p = proposal; proposal = null; if (!p) return;
+    if (p.kind === 'arr' && p.P.proposed) { keepGene(localStorage, 'shape', p.P.proposed.shape); keepGene(localStorage, 'where', p.P.proposed.where); rec = recordNow(); if (view) view.update(rec, extra()); V.sui.dataset.recipe = A.keyOf(rec.designed.recipe); drawCard(); V.hud(); }
+    else if (p.kind === 'place' && p.R.better) { settled = null; placeTo(p.R.place); }
+    else drawCard();
+    V.sui.dataset.proposal = '';
   }
   /* what the checks read from the picture */
   function tellBlock() { const D = rec && rec.designed; if (!D) return; V.sui.dataset.late = D.late ? '1' : ''; V.sui.dataset.wire = D.wire ? String(Math.round(D.wire.now)) : ''; V.sui.dataset.tested = cover ? String(cover.tested.size) : '0'; V.sui.dataset.found = cover && cover.found ? '1' : ''; V.sui.dataset.settled = settled != null ? String(Math.round(settled)) : ''; }

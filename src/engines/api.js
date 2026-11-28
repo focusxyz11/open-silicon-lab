@@ -20,7 +20,9 @@ import * as Pop from './population.js';
 import { geoEffFront } from './lens.js';
 import * as Thousand from './thousand.js';
 import { budget, where as whereEnergy, LEVELS as ENERGY_LEVELS, LEVERS, PLAN, JOB } from './budget.js';
-import { build, projectOf, PROJECTS, starterOf, patterns } from './design.js';
+import { build, projectOf, PROJECTS, starterOf, patterns, solutionOf } from './design.js';
+import { proposeArrangement as arrangeProposal, floorplanOf, heatOf } from './floorplan.js';
+import * as Placer from './placer.js';
 import { TESTS, START_PROGRAM } from './core.js';
 import { live, MISSION_IDS, PERFECT } from './life.js';
 
@@ -347,4 +349,32 @@ export function submitArchitecture(a = {}) {
   /* a claim that is not a list goes to the ledger as it is, to be refused there with a reason */
   const arch = Object.assign(Arch.histClaim(R.h, []), { wins: a.wins == null ? Arch.winsOf(R.st) : a.wins });
   return entryOut(draft({ kind: 'try', arch, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' arch ' + R.h.start.split('/').join(' ')), { recipe: recipeOut(R.st.g), reached: Arch.winsOf(R.st) });
+}
+
+/* ---- an agent in the studio (#510): an arrangement or a placement proposed, scored by the engines beside yours. It
+   changes nothing: the studio shows it, and the person takes it or not. The lab runs no agent of its own ---- */
+const arrOut = (g, F) => { const H = heatOf(floorplanOf(g, F)); return { shape: g.shape, where: g.where, hottest: sig(H.hottest), tripMm: sig(H.trip) }; };
+/* an arrangement (shape and where it computes) for a recipe: the one you bring scored beside the recipe's own, or, if
+   you bring none, the engine's search of all sixteen (the one both cooler and shorter, by the most) */
+export function proposeArrangement({ recipe, ui, shape, where } = {}) {
+  const g = Arch.normal(Object.assign({}, Arch.TODAY, recipe || {})), F = { ui: [0, 1, 2].includes(ui) ? ui : 1 };
+  if (shape != null || where != null) {
+    if ((shape != null && !Arch.CARRY.shape[shape]) || (where != null && !Arch.CARRY.where[where])) return { ok: false, reason: t('api.no.arrangement') };
+    const p = Object.assign({}, g, shape != null ? { shape } : {}, where != null ? { where } : {}), y = arrOut(g, F), q = arrOut(p, F);
+    return { ok: true, yours: y, proposed: q, coolerBy: sig(y.hottest - q.hottest), shorterByMm: sig(y.tripMm - q.tripMm), how: t('api.arrange.how'), note: t('api.propose.take') };
+  }
+  const P = arrangeProposal(g, F), y = arrOut(g, F);
+  if (!P.proposed) return { ok: true, yours: y, proposed: null, how: t('api.arrange.how'), note: t('api.arrange.none') };
+  const q = arrOut(Object.assign({}, g, { shape: P.proposed.shape, where: P.proposed.where }), F);
+  return { ok: true, yours: y, proposed: q, coolerBy: sig(P.cooler), shorterByMm: sig(P.shorter), how: t('api.arrange.how'), note: t('api.propose.take') };
+}
+/* a placement of a job's cells (cell number → { x: site, r: row }): the one you bring scored beside the hand placement,
+   or the engine's settled one; the wire, the longest path and its slack at the lab's clock */
+export function proposePlacement({ job, code, place } = {}) {
+  const p = PROJECTS.includes(job) && job !== 'core' ? job : 'alu', B = build({ p, code: typeof code === 'string' ? code : solutionOf(p) });
+  if (!B.M || !B.ok) return { ok: false, reason: t('api.no.placeDesign') };
+  const hand = Placer.handOf(B), period = Placer.clocksOf(B)[Placer.CLOCK_EXAMPLE], R = Placer.proposePlacement(B, hand, period, place || null);
+  if (!R.proposed) return { ok: false, reason: t('api.no.place'), cells: B.M.cells.length, grid: Placer.gridOf(B) };
+  const o = s => ({ wireSites: sig(s.wire), pathPs: Math.round(s.arrival), slackPs: Math.round(s.slack), meetsClock: s.meets });
+  return { ok: true, job: p, cells: B.M.cells.length, grid: Placer.gridOf(B), clockPs: Math.round(period), yours: o(R.yours), proposed: o(R.proposed), place: R.place, better: R.better, how: t('api.place.how'), note: t('api.propose.take') };
 }
