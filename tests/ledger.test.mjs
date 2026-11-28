@@ -402,3 +402,63 @@ test('an attempt at an architecture is a try with its history: the replay keeps 
   assert.ok(E.people.length >= 1 && E.agents.length >= 1, 'the map is not empty: people\'s and agents\' attempts');
   assert.ok(Object.keys(E.first).length >= 2 && Object.values(E.first).every(id => settled().byId[id].state === 'first'));
 });
+
+test('seasons (#480): every attempt is scored in its own season, and a closed season stays as history', async () => {
+  const { DAY_CAP } = await import('../src/data/field.js'), Pop = await import('../src/engines/population.js');
+  const day = '2026-11-27', grown = (start, years) => { const h = { start, years }; return Arch.histClaim(h, Arch.replay(Object.assign({ wins: [] }, h)).wins); };
+  const at = (arch, name, o = {}) => draft(Object.assign({ kind: 'try', arch, by: 'Ada', made: 'person', words: '' }, o), name, day);
+  const a = at(grown('near/spikes/events/swarm', [['people'], ['people', 'device']]), 'season now', { season: Arch.VERSION });
+  /* the current season is accepted; one the engine has not had, or not a whole number, is refused with a reason */
+  assert.equal(tryEntry(a).ok, true);
+  for (const bad of [0, Arch.VERSION + 1, 1.5, '1', -1]) assert.equal(tryEntry(at(a.arch, 'bad season', { season: bad })).reason, 'season', String(bad));
+  assert.equal(tryEntry(draft({ kind: 'try', puzzle: 'energy', plan: {}, season: 1, by: 'Ada', made: 'person' }, 'p', day)).reason, 'fields', 'only an attempt at an architecture has a season');
+  /* an attempt kept before seasons existed was grown in the first */
+  assert.equal(Arch.seasonOf({}), 1); assert.equal(Arch.seasonOf(a), Arch.VERSION);
+  /* after the engine is retuned (season 2): season 1's attempts are not grown again by today's engine; their standing
+     is their season's record, and a champion of season 1 stays one. Season 2's attempts are scored afresh */
+  const old = at(grown('in/charge/graph/stack', [['people']]), 'season one', { season: 1 });
+  const past = { 1: { closed: '2026-11-27', facts: { [old.id]: { g: 'in/charge/graph/stack', wins: ['model'], years: 1, novelty: 2, built: null, state: 'first', firstTry: true, firstIn: ['model'] } },
+    champ: [{ need: 'model', d: 2, id: old.id, who: 'Ada', now: 1.2 }] } };
+  const two = at(a.arch, 'season two', { season: 2 });
+  const W = settle([old, two], { version: 2, past });
+  assert.deepEqual(W.refused.map(e => e.reason), []);
+  assert.deepEqual(W.archPast, [old.id]); assert.deepEqual(W.arch, [two.id]);
+  assert.equal(W.byId[old.id].state, 'first'); assert.deepEqual(W.byId[old.id].firstIn, ['model']);
+  assert.ok(!W.archFirst.model || W.archFirst.model !== old.id, 'a closed season takes no first in the current one');
+  /* the same history in another season is another attempt; in the same season it is the same */
+  assert.deepEqual(settle([old, at(old.arch, 'again one', { season: 1, by: 'Bo' })], { version: 2, past }).refused.map(e => e.reason), ['same']);
+  assert.equal(settle([old, at(old.arch, 'again two', { season: 2, by: 'Bo' })], { version: 2, past }).arch.length, 1);
+  /* a closed season's attempt the record does not hold is kept as history, unscored, with words for it */
+  const W2 = settle([at(old.arch, 'unrecorded', { season: 1 })], { version: 2, past: {} });
+  assert.equal(W2.entries[0].state, 'past'); assert.equal(W2.entries[0].facts, null); assert.ok(EN['ledger.state.past']);
+  const { useTexts } = await import('../src/core/i18n.js'); useTexts(EN, 'en');
+  assert.ok(Game.entryWords(W2.entries[0], Game.fresh()).length > 0);
+  /* the field shows the current season: a closed season's attempts are not on it; its champions are history */
+  assert.deepEqual(Pop.ledgerAttempts(W.entries).map(x => x.id), [two.id]);
+  assert.deepEqual(Pop.pastChampions(past).map(c => [c.season, c.need, c.d, c.id]), [[1, 'model', 2, old.id]]);
+  assert.deepEqual(Pop.pastChampions({ 1: { champ: [{ need: 'toString', d: 1, id: 'x' }, null, { need: 'model', d: 0, id: 'y' }] } }), [], 'a record\'s bad rows are skipped');
+  /* closing a season writes every scored attempt's facts and each niche's champion */
+  const R = Pop.seasonRecord(settle(ledger().concat([a])), day);
+  assert.ok(R.facts[a.id] && R.facts[a.id].g === 'near/spikes/events/swarm' && R.champ.every(c => Arch.NEEDS.includes(c.need) && c.d > 0));
+  assert.ok(DAY_CAP >= 1);
+});
+
+test('a fair cap (#480): at most DAY_CAP attempts scored per author per day, people and agents alike; the rest kept, not scored', async () => {
+  const { DAY_CAP } = await import('../src/data/field.js');
+  const starts = Arch.allRecipes().filter(g => Arch.novelty(g) >= 2 && !Arch.knownOf(g)).slice(0, DAY_CAP + 3).map(Arch.keyOf);
+  const many = (by, made, day, f) => starts.map((k, i) => draft({ kind: 'try', arch: Arch.histClaim({ start: k, years: [[f]] }, []), season: Arch.VERSION, by, made, ai: made === 'person' ? '' : 'A sweep.', words: '' }, by + ' ' + i, day));
+  const sweep = many('Sweeper', 'program', '2026-11-28', 'people'), person = many('Ada', 'person', '2026-11-28', 'tools'), nextDay = many('sweeper ', 'program', '2026-11-29', 'device');
+  const W = settle(sweep.concat(person, nextDay));
+  assert.deepEqual(W.refused.map(e => e.reason), []);
+  for (const [list, who] of [[sweep, 'an agent'], [person, 'a person'], [nextDay, 'the next day, the same author written differently']]) {
+    const st = list.map(e => W.byId[e.id]);
+    assert.equal(st.filter(e => !e.over).length, DAY_CAP, who + ': DAY_CAP scored');
+    assert.equal(st.filter(e => e.over).length, 3, who + ': the rest over the cap');
+    assert.ok(st.filter(e => e.over).every(e => e.state === 'over' && !e.firstTry && W.archOver.includes(e.id) && !W.arch.includes(e.id)));
+  }
+  /* kept in the ledger, with words, but not on the field */
+  assert.ok(EN['ledger.state.over']);
+  const Pop = await import('../src/engines/population.js'), onField = new Set(Pop.ledgerAttempts(W.arch.map(id => W.byId[id])).map(a => a.id));
+  assert.ok(W.archOver.every(id => !onField.has(id)) && W.archOver.every(id => W.entries.includes(W.byId[id])));
+  assert.equal(archAttempts(W).over.length, 9);
+});

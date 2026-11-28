@@ -158,7 +158,7 @@ export default async function run() {
       const m = document.querySelector('#hd-root .d-world .h-chm[data-blk="next"]'), r = m && m.getBoundingClientRect();
       return st.chip && !st.fly && document.querySelector('#hd-root .d-world').classList.contains('far') && document.querySelectorAll('#hd-root .d-world .h-chm .hc-t').length === 12 && document.querySelectorAll('#hd-root .d-world .h-chm .hc-t.on').length === 12
         && !!r && r.width > 10 && r.left >= 0 && r.right <= innerWidth && getComputedStyle(m).visibility === 'visible' && !document.querySelector('#hd-root [role=dialog]'); });
-    if (!phone && !(await hp.evaluate(() => document.querySelectorAll('#hd-root .b-rail button[data-ch="years"] .hc-r i').length === 7 && document.querySelectorAll('#hd-root .b-rail .hc-r i.on').length === 12))) problems.push(tag + ': the chapters at the left do not carry their challenges\' ticks');
+    if (!phone && !(await hp.evaluate(() => (document.querySelector('#hd-root .b-rail button[data-ch="years"] .hc-r') || {}).textContent === '7/7' && [...document.querySelectorAll('#hd-root .b-rail .hc-r')].reduce((n, e) => n + parseInt(e.textContent), 0) === 12))) problems.push(tag + ': the chapters at the left do not count their challenges');
     await play('the mark of a challenge on the whole chip does not lead to it', () => { const st = window.__hold.state(); if (st.cur === 'next') return !st.fly; const m = document.querySelector('#hd-root .d-world.far .h-chm .hc-t[data-ch="floor"]'); if (!st.fly && m) m.click(); return false; }, null, 20000);
     if (!phone) { /* past the wall the page steps: one control under the picture, the next part named on it, at a tap */
       await hp.evaluate(() => window.__hold.go('leak'));
@@ -170,6 +170,10 @@ export default async function run() {
     await hp.keyboard.press('Escape');
     const side = await hp.evaluate(() => { const p = document.getElementById('home'); return p.scrollWidth - p.clientWidth; });
     if (side > 1) problems.push(tag + ': the first page scrolls sideways by ' + side + ' px');
+    /* the field of every attempt in one line on the arrangements block, read from the ledger after the idle preload,
+       with its way to the field (#480) */
+    await play('the arrangements block does not say how much of the field has been tried', () => { if (window.__hold.state().cur !== 'arr') window.__hold.go('arr'); const e = document.querySelector('#hd-root [data-field]:not([hidden])');
+      return !!e && /\d/.test(e.textContent) && !!e.querySelector('a[href="#/stack/field"]'); }, null, 30000);
     /* the first page in another language, and back */
     await hp.goto(base + 'index.html?lang=zh#/');
     await play('the first page does not show in Chinese', () => document.documentElement.lang === 'zh' && /晶体管/.test((document.querySelector('#hd-root .b-hud .count') || {}).textContent || ''), null, 20000);

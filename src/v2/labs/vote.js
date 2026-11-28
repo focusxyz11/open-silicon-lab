@@ -4,6 +4,7 @@
    failed, the votes that held and the chips that failed anyway. The goal is the engine's own check (evaluate().met).
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
 import * as R from '../../engines/redundancy.js';
+import { mark } from '../fid.js';
 
 const RUNS = 1000;
 
@@ -44,6 +45,24 @@ export default function lab(L) {
   /* the copies of each block, chosen with three buttons */
   const picker = r => '<div class="rdpick">' + R.BLOCKS.map((b, i) => '<div class="rdrow"><span class="small"><b>' + esc(t('rd.b.' + b.id)) + '</b> <span class="muted">' + esc(t('rd.bd', { a: b.area, v: (b.p * 100).toFixed(1) })) + '</span></span><span class="rdseg">' +
     R.COPIES.map(n => '<button type="button" class="chipb" data-rd="' + b.id + ':' + n + '" aria-pressed="' + (r.rows[i].n === n) + '">' + esc(t('rd.n' + n)) + '</button>').join('') + '</span></div>').join('') + '</div>';
+  /* below threshold (#498): the adder's chance of a wrong answer against its parts', for one copy, three and five, the
+     voter made of the same parts; where three and five stop helping, computed by the engine; and error-corrected qubits
+     on the same axes, each with the mark of its source */
+  function thresholdHtml() {
+    const b = R.BLOCKS.find(x => x.id === 'add'), c = R.voterShare(b.area), X0 = 40, X1 = 292, Y0 = 10, Y1 = 150, LX = [Math.log10(5e-4), Math.log10(0.5)], LY = [-6, 0];
+    const px = p => X0 + (X1 - X0) * (Math.log10(p) - LX[0]) / (LX[1] - LX[0]), py = q => Y1 - (Y1 - Y0) * (Math.max(LY[0], Math.log10(Math.max(q, 1e-12))) - LY[0]) / (LY[1] - LY[0]);
+    const ps = Array.from({ length: 61 }, (_, i) => Math.pow(10, LX[0] + (LX[1] - LX[0]) * i / 60)), th = { 3: R.threshold(3, c), 5: R.threshold(5, c) };
+    let s = '<svg viewBox="0 0 300 176" role="img" aria-label="' + esc(t('rd.th.aria', { t3: th[3].toFixed(2), t5: th[5].toFixed(2) })) + '">';
+    for (let e = LY[0]; e <= 0; e += 2) s += '<line class="gl" x1="' + X0 + '" x2="' + X1 + '" y1="' + py(Math.pow(10, e)).toFixed(1) + '" y2="' + py(Math.pow(10, e)).toFixed(1) + '"/><text class="ax" x="' + (X0 - 3) + '" y="' + (py(Math.pow(10, e)) + 3).toFixed(1) + '" text-anchor="end">' + (e ? '10' + String(e).replace('-', '⁻').replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]) : '1') + '</text>';
+    for (let e = -3; e <= -1; e++) s += '<text class="ax" x="' + px(Math.pow(10, e)).toFixed(1) + '" y="' + (Y1 + 12) + '" text-anchor="middle">10' + String(e).replace('-', '⁻').replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]) + '</text>';
+    for (const n of [1, 3, 5]) s += '<polyline class="rdth n' + n + '" points="' + R.sweep(n, c, ps).map(q => px(q.p).toFixed(1) + ',' + py(q.wrong).toFixed(1)).join(' ') + '"/>';
+    for (const n of [3, 5]) { const x = px(th[n]); s += '<line class="rdthv n' + n + '" x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + Y0 + '" y2="' + Y1 + '"/><text class="ax rdthl n' + n + '" x="' + (x - 3).toFixed(1) + '" y="' + (n === 3 ? Y1 - 18 : Y1 - 6) + '" text-anchor="end">' + esc(t('rd.th.at', { n, v: th[n].toFixed(2) })) + '</text>'; }
+    for (const q of R.QUANTUM) { const x = px(q.phys), y = py(q.logical); s += '<path class="rdq" d="M' + x.toFixed(1) + ' ' + (y - 5).toFixed(1) + 'l5 5l-5 5l-5 -5z"/><text class="ax rdql" x="' + (x + 7).toFixed(1) + '" y="' + (y + 3).toFixed(1) + '">' + esc(t('rd.th.q.' + q.id, { n: q.qubits })) + '</text>'; }
+    s += '<text class="ax" x="' + ((X0 + X1) / 2) + '" y="' + (Y1 + 24) + '" text-anchor="middle">' + esc(t('rd.th.x')) + '</text></svg>';
+    return '<div class="rdthbox"><p class="kicker">' + esc(t('rd.th.k')) + '</p><figure class="rdthfig">' + s + '<figcaption class="small muted">' + esc(t('rd.th.legend')) + '</figcaption></figure>' +
+      '<p class="small">' + esc(t('rd.th.say', { t3: th[3].toFixed(2), t5: th[5].toFixed(2), c: Math.round(c * 100) })) + '</p>' +
+      '<p class="small">' + esc(t('rd.th.quantum')) + ' ' + R.QUANTUM.map(q => mark({ f: 'figures', fact: q.fact })).join(' ') + '</p></div>';
+  }
   /* a run of a thousand chips, a few at a time on the clock, so the copies and votes can be seen at work */
   function runLoop(now) {
     const run = view.rdRun; if (!run || !el.isConnected) return;
@@ -57,7 +76,7 @@ export default function lab(L) {
     let h = head() + '<p class="small rdintro">' + esc(t('rd.intro')) + '</p>' + goalbox(r) + figure(r, run && run.last);
     h += '<div class="rdrun"><button type="button" class="btn primary" data-rd-run>' + esc(t(run && run.done < RUNS ? 'rd.running' : 'rd.run', { n: RUNS.toLocaleString('en') })) + '</button>' +
       (run ? '<span class="small"><b class="mono">' + run.done + '</b> ' + esc(t('rd.r.done')) + ' · <b class="mono bad">' + run.bad + '</b> ' + esc(t('rd.r.bad')) + ' · <b class="mono good">' + run.saved + '</b> ' + esc(t('rd.r.saved')) + '</span>' : '<span class="small muted">' + esc(t('rd.r.none')) + '</span>') + '</div>';
-    h += picker(r);
+    h += picker(r) + thresholdHtml();
     const worse = r.rows.find(x => x.worse), msg = r.met ? 'met' : worse ? 'worse' : r.area > R.GOAL.area ? 'big' : r.beats ? 'close' : r.rows.every(x => x.n === 1) ? 'bare' : 'more';
     h += '<p class="small rdmsg ' + (r.met ? 'good' : msg === 'worse' || msg === 'big' ? 'bad' : '') + '">' + esc(t('rd.msg.' + msg, { b: worse ? t('rd.b.' + worse.id) : '' })) + '</p>';
     if (!S.done[ch.id]) h += view.hint ? '<p class="small hint">' + esc(t('rd.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';

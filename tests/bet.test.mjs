@@ -124,3 +124,20 @@ test('the batch bet: one person leaves the arithmetic idle, many people slow eac
   assert.equal(B.checkBatch(B.BATCH_START).ok, false);
   assert.deepEqual(B.normalBetOf('batch', { batch: 99, format: 1, guess: 2 }), { batch: 0, format: 1, guess: 2 });
 });
+
+test('Jevons\' bet reads this year\'s numbers from their facts (#501)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const facts = JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts, fact = id => facts.find(f => f.id === id);
+  const Bet = B, W = Bet.J_WORLD;
+  for (const id of [W.compute.fact, W.perDollar.fact, ...W.power.map(p => p.fact)]) assert.ok(fact(id) && fact(id).url && /^\d{4}-\d{2}-\d{2}$/.test(fact(id).verified), id + ' with its source and date');
+  /* the numbers are the facts' own */
+  assert.match(fact(W.compute.fact).value, new RegExp(W.compute.perYear + '×')); assert.match(fact(W.compute.fact).value, new RegExp(String(Math.round((W.perDollar.perYear - 1) * 100)) + '%'));
+  assert.match(fact(W.power[0].fact).value, /485/); assert.match(fact(W.power[1].fact).value, /1,000/);
+  /* what training asks for outruns what a dollar buys: the gap is what was paid for */
+  const J = Bet.jWorld(2023, 2026);
+  assert.equal(J.ask, 125); assert.ok(Math.abs(J.buy - Math.pow(1.49, 3)) < 1e-9); assert.ok(J.rest > 30);
+  assert.ok(J.powerGrowth > 2, 'the data centres\' electricity doubles by 2030');
+  /* the guess comes first: the lab draws the numbers only once a guess is made */
+  const src = readFileSync(new URL('../src/v2/labs/bets.js', import.meta.url), 'utf8'), at = src.indexOf('function betJevons'), body = src.slice(at, src.indexOf('\n  }\n', at));
+  assert.ok(body.indexOf('worldHtml()') > body.indexOf('b.guess == null'), 'the curves come after the guess');
+});
