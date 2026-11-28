@@ -89,6 +89,8 @@
  "hd.walls.n": "Muro {n} de 4",
  "hd.try.k": "Pruébalo",
  "hd.play": "Juégalo de verdad",
+ "hd.field.line": "Ya se han probado {tried} de las {of} recetas de ordenador, y {beat} superan al ordenador de hoy en algo.",
+ "hd.field.go": "Ver cada intento",
  "hd.q.label": "La pregunta de fondo",
  "hd.q.meet": "Encuéntrala donde vive",
  "hd.ways.k": "Lo que se intenta contra él",

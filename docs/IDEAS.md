@@ -17,7 +17,7 @@ anywhere else, and does it help them think better about where chips are going?
 | Idea | Status |
 | --- | --- |
 | The physics floor | Built: `#floor` and your chip's distance from physics in the passport (November 2026). Next: the same yardstick on other topics. |
-| The community chip | Groundwork built (`#community`, November 2026). Next: a maintainer decision on submitting it. |
+| The community chip | Groundwork built (`#community`, November 2026). Next: a maintainer decision on submitting it, and on which of the open shuttles (several since Efabless closed: [ROADMAP.md](ROADMAP.md), *Long term*); whether it could become a machine of chiplets is an open question. |
 | Evolve a circuit | Built (`#evolve`, November 2026): blind evolution against the human design, opened in the studio. Next: evolve under a transistor or timing budget, and against an AI agent's design. |
 | From need to chip | Later, on top of open engines (idea 8). |
 | A fab you run | Built (November 2026): the `factory` topic, a 3D fab on the tested model `src/engines/fabline.js`, with the inventions that changed it and the ecosystem around it, at four depths. Next: yield and What if? shocks feeding the same line. |

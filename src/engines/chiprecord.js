@@ -55,7 +55,7 @@ function cellNear(B, p) {
 export function designedOf(stack, design) {
   const st = stack || stackOf(), R = carry(st), d = designIn(design), B = d ? build(d) : null;
   const K = R.rungs.chip && R.rungs.chip.hands, G = R.rungs.gate && R.rungs.gate.hands;
-  const die = K && Number.isFinite(K.gates) && G && Number.isFinite(G.switches) ? { gates: K.gates, switches: G.switches, area: areaOf(K.gates, G.switches) } : null;
+  const die = K && Number.isFinite(K.gates) && G && Number.isFinite(G.switches) ? { gates: K.gates, switches: G.switches, area: areaOf(K.gates, G.switches, G.area) } : null;
   const built = !!(B && B.M);
   /* the block placed (yours, or by hand: the lab's example) and timed on its layout against the clock you set (#508) */
   const place = built ? normalPlace(B, d.place) || handOf(B) : null, ck = d && d.clock != null ? d.clock : CLOCK_EXAMPLE;

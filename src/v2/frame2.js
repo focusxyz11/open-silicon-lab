@@ -1,31 +1,6 @@
-/* The frame (#271): one frame, three modes, and one rule: whatever you are working on gets the stage. It is the
-   site's only frame since #276 (the frame before it is kept on the branch claude/before-frame2-2026-11). It wears
-   the frame's own elements (src/v2/frame.js) in its own way, so the views and the labs need not know:
-   - the caption (Look): the card on the picture, bottom left: the place and the size, the level's name (or the step's,
-     in a row of steps), one sentence, its question, the level's search (src/data/seek.js), and Read more and Do. The
-     rest of the card (the rest of the words, what is here, the ways around) waits under Read more, in the side panel.
-     On a phone the caption is the sheet: at rest the level's name and the whole question, a tap opens it.
-   - the side panel (Do, Ask, Read more, a card that is not a level's): the card at the right, full height, its width
-     growing with the screen. The island's sheet and Break it are worn as the same panel (src/styles/frame.css).
-   - the stage (Do, with a lab that declares its instrument): the lab's instrument takes the picture area and its
-     goal stands across the top of it as meters; the controls stay in the side panel; the place behind is hidden,
-     and a small "where you are" where the address was leads back to Look. A lab declares the two in its own HTML,
-     data-f2="instrument" and data-f2="goal" (docs/LABS.md, "Do mode"); its logic is untouched, and a challenge
-     that declares nothing is played in the side panel beside the picture.
-   ?frame=1 and ?frame=2 (when the two frames were compared on the live site) change nothing now, and the choice an
-   earlier visit kept is forgotten. boot(): the class on <html> (the rules of src/styles/frame.css hang from it;
-   index.html sets it and loads the stylesheet before the first paint) and the watchers. attach(host, api, o, x): one
-   frame (createFrame) worn this way; o.caption: the view's card is a level's or a step's, so Look is a caption
-   ('plain': a story told step by step, the caption as it is, with its own way on); x: { wrap, items, at(), here(),
-   step(), doList() } from the frame.
-   - Read (#273): a question's page (#/w/<id>), the questions (#/read, #/read/<id>, #/w), machines (#/machines) and
-     your log (#/log) are a reading page in the frame, not a window over the island: a column of about 70 characters
-     at 18.25 px, its picture pinned beside it on a desktop (at the left, where the stage is in Do) and first on a
-     phone, under the title. The words can try the picture: a button marked data-f2try brings it into view and to the
-     hand, and a part marked data-f2x="<id>" in the words lights the same mark in the picture, and back. The bar says
-     you are reading and lights no stage; a way back leads to where you came from. A page says what its picture is with
-     readHtml({ head, picture, text }); the shell needs no hook: each time it draws the page or the bar, boot()'s
-     watchers wear them the new way (readPage, bar). */
+/* The frame (#271): one frame, three modes, and one rule: whatever you are working on gets the stage. How it wears the
+   frame's elements (the caption, the side panel, the stage, Read), boot() and attach(): docs/SYSTEM.md, §4, "How
+   src/v2/frame2.js wears it" (moved there to keep the first page under its budget). */
 import { still, phone } from '../core/ui.js';
 import { esc } from '../core/esc.js';
 import { t, has } from '../core/i18n.js';
