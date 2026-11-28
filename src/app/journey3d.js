@@ -149,6 +149,10 @@ function makeTray(M, mine) {
   for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { const c = new THREE.BoxGeometry(0.07, 0.015, 0.07); c.translate(-0.18 + i * 0.12, 0.057, -0.11 + j * 0.11); g.add(new THREE.Mesh(c, mine && i === 1 && j === 0 ? M.chip : M.waferOther)); }
   return g;
 }
+/* your design on your wafer (#511): the line's view hands the 3D line a way to draw your wafer after each station
+   (src/v2/studio/wafer.js, from the record of your chip); a new one, when your design or stack changed, redraws them */
+let MADE = null, madeV = 0;
+export function setMade(fn) { MADE = fn; madeV++; }
 /* the wafer (or, after the cut, a chip) */
 function makeWafer(b, mine) { const g = new THREE.CylinderGeometry(0.15, 0.15, 0.012, 40); const m = b.mesh(g, mine ? b.M.wafer : b.M.waferOther, false); m.visible = false; return m; }
 /* drawn a little larger than life, so it can be followed */
@@ -703,6 +707,17 @@ export function createJourney3D(host, before, shared) {
     built.set(i, st); return st;
   }
 
+  /* your wafer at a station: its top face your dies in their state after it, drawn once per design and theme */
+  function mineMat(s, col) {
+    if (!MADE) return M.wafer;
+    if (s.madeV !== madeV || s.madeTheme !== theme) {
+      s.madeV = madeV; s.madeTheme = theme; if (s.madeTex) s.madeTex.dispose();
+      const cv = MADE(s.id, col); s.madeTex = null; s.madeMat = null;
+      if (cv) { const tex = new THREE.CanvasTexture(cv); if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; s.madeTex = tex;
+        s.madeMat = [M.wafer, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45, metalness: 0.15, emissive: new THREE.Color(col.dark ? '#26324a' : '#000000'), emissiveIntensity: col.dark ? 0.5 : 0 }), M.wafer]; }
+    }
+    return s.madeMat || M.wafer;
+  }
   /* everything about one frame: o = { ids, Z, near, dist, run, tm, W, H, dpr, box: { B, cx, cy }, col } */
   function render(o) {
     const col = o.col, key = col.dark ? 'd' : 'l';
@@ -725,7 +740,7 @@ export function createJourney3D(host, before, shared) {
       s.arms.forEach(({ R, move }) => move(f.p && f.hold === R.id ? f.p : R.rest.length > 2 ? R.rest : R.rest.concat([R.h]), dt));
       const w = mine ? s.mineW : s.wafer, ch = s.chip;
       s.wafer.visible = s.mineW.visible = ch.visible = false;
-      if (f.p && !f.home) { const m = f.chip ? ch : w; m.visible = true; m.material = f.chip ? M.chip : mine ? M.wafer : M.waferOther; m.position.copy(V(f.p[0], f.p[1], f.p[2])); }
+      if (f.p && !f.home) { const m = f.chip ? ch : w; m.visible = true; m.material = f.chip ? M.chip : mine ? mineMat(s, col) : M.waferOther; m.position.copy(V(f.p[0], f.p[1], f.p[2])); }
       s.dock.visible = !mine && !s.cfg.nowafer && !s.extra.noPorts;
       if (s.extra.update) s.extra.update(f, mine, o.tm);
       /* the queue: more pods wait where the fab is busier; the line flickers one in and one out */

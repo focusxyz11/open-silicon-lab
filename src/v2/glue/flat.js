@@ -295,12 +295,25 @@ export function create() {
     if (levelsOf('bench').includes(id)) V.Bench.step(id);
     V.Bench.slide(Math.abs(z - d) < 0.002 ? 0 : z - d);
   }
+  /* the record of your chip drawn on your wafer, station by station (src/v2/studio/wafer.js); what the checks read is
+     said on the line's panel: the step each station shows and how many dies Test failed */
+  function madeOnLine() {
+    Promise.all([import('../studio/now.js'), import('../studio/wafer.js'), import('../studio/kit.js'), import('../../app/journey3d.js')]).then(([Now, Wf, Dr, J3]) => {
+      const rec = Now.recordNow(V.S), seen = {};
+      V.vui.dataset.madeBroken = rec.designed.broken || '';
+      J3.setMade((id, col) => { const cv = document.createElement('canvas'), C = Object.assign(Dr.paletteOf(document.documentElement), { wafer: col && col.dark ? '#8fa6d8' : '#c9d7ff' }), info = Wf.drawWafer(cv, rec, id, C);
+        if (info.step) { seen[id] = info.step + (info.failed ? ':' + info.failed : ''); V.vui.dataset.made = Object.entries(seen).map(([k, v]) => k + '=' + v).join(' '); }
+        return info.step ? cv : null; });
+    }).catch(() => { /* the line shows its generic wafer */ });
+  }
   function showFlat(kind, depth, chId, world) {
     V.hideAll(); document.body.classList.add('immersive'); V.flatKind = kind; V.vui.dataset.flat = kind; V.benchCh = null; if (kind === 'dive') V.diveWorld = V.DIVES[world] ? world : 'datacentre';
     $('diveCanvas').hidden = false; V.vui.hidden = false; $('flatLabels').hidden = false;
     V.loading(true); V.lastPlace = kind === 'dive' ? V.DIVES[V.diveWorld].place : { line: 'fab', bench: 'studio' }[kind]; const rn = V.routeN;
     /* made while the visitor moved on (#365): the picture is not started, and its frame not drawn */
     return Promise.all([V.withFrame(), ensureDive(), kind === 'bench' ? import('../bench.js') : null]).then(([, w, BkM]) => { if (rn !== V.routeN) { if (V.vui.hidden) { w.stop(); hide3d(); } return; }
+      /* the line: your design on your wafer at every station, from the record of your chip (#511) */
+      if (kind === 'line') madeOnLine();
       const F = FL(kind); V.WE.setWorld(F.world); w.setMap(null); V.diveFrame && V.diveFrame.dock.classList.remove('supdock'); if (kind !== 'line') hide3d(); V.DS.setBandCaption(false);
       /* the bench: your design, live, on a surface over the studio's picture (src/v2/bench.js); a first visit opens on
          the lab's working example for the first piece, the half adder */

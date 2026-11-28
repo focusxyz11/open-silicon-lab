@@ -10,35 +10,21 @@ import { t } from '../../core/i18n.js';
 import { still } from '../../core/ui.js';
 import * as Way from '../../engines/way.js';
 import * as A from '../../engines/arch.js';
-import { recordOf } from '../../engines/chiprecord.js';
-import { build, solutionOf } from '../../engines/design.js';
+import { build } from '../../engines/design.js';
+import * as Now from '../studio/now.js';
 import * as PL from '../../engines/placer.js';
 import { proposeArrangement } from '../../engines/floorplan.js';
-import { stackKept, keepGene } from '../stack/keep.js';
+import { keepGene } from '../stack/keep.js';
 import { mark } from '../fid.js';
 import { sizeOf } from '../../data/atlas.js';
 import { V, $, showStage, esc } from '../shell.js';
-import * as Game from '../game.js';
 
 export const STUDIO_LEVELS = ['chip', 'block', 'gate', 'switch'];
-/* your stack as the stack view keeps it (src/v2/stack/keep.js, osl-stack): the recipe, the fine settings, the aim */
-const stackNow = () => stackKept(localStorage);
 /* Arrange (#507): the recipe's shape and where it computes, four options each, set here and kept in your stack */
 export const ARRANGE = ['shape', 'where'];
-/* the design the studio draws: yours from the bench once you have written one, else the lab's example, one slice of an
-   ALU placed by hand (GUIDE.md §7); with the placement and the clock you set here, kept for that design (osl-studio) */
-const SKEY = 'osl-studio';
-function designNow() {
-  const b = Game.benchDesign(V.S), d = b.by === 'you' ? { p: b.p, code: b.code } : { p: 'alu', code: solutionOf('alu') };
-  try { const k = JSON.parse(localStorage.getItem(SKEY) || 'null'); if (k && k.key === d.p + '\n' + d.code) { if (k.place) d.place = k.place; if (Number.isInteger(k.clock)) d.clock = k.clock; } } catch (e) { /* none kept */ }
-  return d;
-}
-function keepDesign(d, more) {
-  const k = { key: d.p + '\n' + d.code, place: d.place || null, clock: d.clock != null ? d.clock : null };
-  Object.assign(k, more); try { localStorage.setItem(SKEY, JSON.stringify(k)); } catch (e) { /* not kept */ }
-}
-/* the record of your chip now: your stack and your design */
-export function recordNow() { return recordOf(stackNow(), designNow(), null); }
+/* the record of your chip now, shared with the line (src/v2/studio/now.js) */
+const designNow = () => Now.designNow(V.S), keepDesign = Now.keepDesign;
+export const recordNow = () => Now.recordNow(V.S);
 
 /* the picture's safe area: the frame's, and on a wide screen right of the caption that rests at the bottom left, so the
    part in focus never stands under it, and clear of the ways in and along at the right */
