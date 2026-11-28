@@ -1,4 +1,15 @@
-/* studio.css: the studio walked inside (src/v2/studio3d.js, src/v2/glue/studio.js), loaded with it (src/core/styles.js). */
-/* the studio walked inside (src/v2/studio3d.js, #267): while the camera settles on a corner's screen, the ways on the
-   picture step aside for it; the corners' names on the picture are the parts' own */
-#studioui[data-handoff] :is(.wayin, .wayon) { display: none; }
+/* studio.css: the studio, your chip as designed (src/v2/studio/, src/v2/glue/studio.js, #506), loaded with it
+   (src/core/styles.js). The die is drawn on the lab's ground in dashed accent blue (docs/prototypes/studio-fab/GUIDE.md
+   §6); its words are HTML over it: a name above its part's top left, an aside in italic, a part that stops the line red. */
+#studioCanvas { background: var(--bg); cursor: grab; touch-action: none; }
+#studioCanvas:active { cursor: grabbing; }
+#studioLabels { pointer-events: none; }
+#studioLabels .sdl { position: absolute; transform: translateY(-100%); white-space: nowrap; pointer-events: none;
+  font: 700 13px/1.2 var(--sans); color: var(--ink); text-shadow: 0 0 3px var(--bg), 0 0 6px var(--bg), 0 0 10px var(--bg); }
+#studioLabels .sdl.title { font: 700 20px/1.15 var(--serif); }
+#studioLabels .sdl.aside { font: italic 400 13.5px/1.25 var(--serif); color: var(--muted); transform: none; }
+#studioLabels .sdl.bad { color: var(--bad); }
+@media (max-width: 720px) {
+  #studioLabels .sdl { font-size: 12px; }
+  #studioLabels .sdl.title { font-size: 16px; }
+}

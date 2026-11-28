@@ -1,5 +1,5 @@
-/* The design studio's one plan (#267): its ground floor seen from outside on the island (src/v2/map3d.js) and walked
-   inside (src/v2/studio3d.js) are drawn from these same numbers, as the die is drawn from src/data/die.js. Metres, in
+/* The design studio's one plan (#267): its ground floor seen from outside on the island (src/v2/map3d.js) is drawn from
+   these numbers, as the die is drawn from src/data/die.js (the room walked inside retired for the die as designed, #506). Metres, in
    the studio's own place on the island (its origin is the place's point, x east, z south, the camera looking from the
    south-west).
 

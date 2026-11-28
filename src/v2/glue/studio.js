@@ -1,60 +1,83 @@
-/* The studio, walked inside (src/v2/studio3d.js, #267): from the island's building, down into the room, corner by
-   corner, each corner's screen opening into its bench.
+/* The studio (#/studio/<level>, #506): your chip as designed, one die drawn in dashed outline and zoomed die → block →
+   cells → one cell with no cut (src/v2/studio/view.js; docs/prototypes/studio-fab/GUIDE.md §2). It replaces the room
+   walked through (kept on the branch claude/before-studio2-2026-11). It draws the one record of your chip
+   (src/engines/chiprecord.js, docs/CHIP.md): your stack as the stack keeps it, your design as the bench keeps it, the
+   line's care as your stack sets it. It wears the lab's one frame: the rail holds the four levels it draws, the card
+   says where you are and leads in, out and along (the same level at Make and Use, src/engines/way.js alongTo).
    Glue of the shell (src/v2/app.js): create() runs once, when the view first opens; what it shares with the shell and
    the other views is on V (src/v2/shell.js). */
 import { t } from '../../core/i18n.js';
+import { still } from '../../core/ui.js';
 import * as Way from '../../engines/way.js';
-import { stopsAt } from '../../data/places.js';
-import { VIEW_PARTS, sizeOf } from '../../data/atlas.js';
-import { cornerOf as studioCorner } from '../../data/studio.js';
+import { stackOf } from '../../engines/path.js';
+import { recordOf } from '../../engines/chiprecord.js';
+import { sizeOf } from '../../data/atlas.js';
 import { V, $, showStage, esc } from '../shell.js';
+import * as Game from '../game.js';
 
+export const STUDIO_LEVELS = ['chip', 'block', 'gate', 'switch'];
+/* your stack as the stack view keeps it (src/v2/stack/view.js, osl-stack): the recipe, the fine settings, the aim */
+function stackNow() {
+  try { const k = JSON.parse(localStorage.getItem('osl-stack') || 'null'); if (k && k.A && k.A.g) return stackOf(k.A.g, k.F, k.aim); } catch (e) { /* the lab's example */ }
+  return stackOf();
+}
+/* the record of your chip now: your stack and the design on your bench (the lab's example until you change it) */
+export function recordNow() {
+  const st = stackNow(), b = Game.benchDesign(V.S);
+  return recordOf(st, { p: b.p, code: b.code }, null);
+}
+
+/* the picture's safe area: the frame's, and on a wide screen right of the caption that rests at the bottom left, so the
+   part in focus never stands under it, and clear of the ways in and along at the right */
+function inset() {
+  const I = Object.assign({}, V.frameInset(V.swFrame)), dw = V.swFrame && V.swFrame.dock.parentNode;
+  if (dw && innerWidth >= 1100) { const r = dw.getBoundingClientRect(); if (r.left < innerWidth / 2 && r.bottom > innerHeight - 60) I.l = Math.max(I.l, Math.round(r.right + 28)); I.r = Math.max(I.r, 190); I.b = Math.max(I.b, 40); }
+  return I;
+}
 export function create() {
-  Object.assign(V, { showStudio });
-  let sw = null, swP = null, SW = null, swGoing = false;
-  const ensureSw = () => swP || (swP = import('../studio3d.js').then(m => { SW = m; sw = m.createStudio($('studioCanvas'), $('studioLabels'), { level: lv => swUI(lv),
-    portal: p => { if (V.swFrame && !V.sui.hidden) V.swFrame.inwardAt(p); }, beyond: () => swIn(), swipe: d => { if (!V.sui.hidden && sw) sw.go(V.swLv + d); },
-    /* where the walk is, on the section, to a tenth of a stop (what the smoke test reads to see the flight come in) */
-    depth: z => { const v = z.toFixed(1); if (V.sui.dataset.at !== v) V.sui.dataset.at = v; } }); return sw; }));
-  function swUI(lv) {
-    V.swLv = lv; if (!V.swFrame) return; const step = lv ? SW.STOPS[lv] : null, lvl = step && Way.levelOfStep('bench', step), R = Way.levelsOfSteps('bench');
-    V.swFrame.steps(step); V.swFrame.rail(lvl, lvl ? R.indexOf(lvl) / (R.length - 1) : 0); V.swFrame.level(step); V.here();
-    if (V.swFrame.mode() === 'look') drawRoom();
+  let view = null, viewP = null, rec = null, lv = 'chip';
+  const ensure = () => viewP || (viewP = import('../studio/view.js').then(m => {
+    view = m.createStudio($('studioCanvas'), $('studioLabels'), { words: t, still, inset,
+      level: (l, pos) => { if (V.swFrame) { V.swFrame.rail(l, null, pos); if (l !== lv) { lv = l; V.swFrame.level(l); history.replaceState(null, '', '#/studio/' + l); V.here(); if (V.swFrame.mode() === 'look') drawCard(); } } },
+      tap: l => go(l) });
+    return view;
+  }));
+  const go = l => { if (!view || !STUDIO_LEVELS.includes(l)) return; view.go(l); };
+  /* the card: where you are in one line, then in, out and along */
+  function drawCard() {
+    if (!V.swFrame || !rec) return;
+    const i = STUDIO_LEVELS.indexOf(lv), nm = l => t('depth.' + l + '.name'), D = rec.designed;
+    const line = D.broken === 'empty' ? t('sd.line.empty') : D.broken === 'design' ? t('sd.line.broken') : D.broken === 'switch' ? t('sd.line.switchOff') : t('sd.line.' + lv);
+    const W = Way.whereOf('#/studio/' + lv), make = Way.alongTo(W, 'make'), use = Way.alongTo(W, 'use');
+    V.swFrame.dock.innerHTML = V.lineHtml(t('sd.k') + ' · ' + nm(lv), line, null, V.aroundRow(
+      i > 0 ? '<button type="button" class="chipb" data-key="back" data-sdgo="' + STUDIO_LEVELS[i - 1] + '">↑ ' + esc(nm(STUDIO_LEVELS[i - 1])) + '</button>' : '',
+      i < STUDIO_LEVELS.length - 1 ? '<button type="button" class="chipb" data-key="next" data-in data-inname="' + esc(nm(STUDIO_LEVELS[i + 1])) + '" data-sdgo="' + STUDIO_LEVELS[i + 1] + '">↓ ' + esc(nm(STUDIO_LEVELS[i + 1])) + '</button>' : '',
+      make ? '<a class="chipb" data-along data-alongname="' + esc(t('sd.toMake', { level: nm(lv) })) + '" href="' + esc(make) + '">→ ' + esc(t('sd.toMake', { level: nm(lv) })) + '</a>' : '',
+      use ? '<a class="chipb" href="' + esc(use) + '">' + esc(t('sd.toUse', { level: nm(lv) })) + '</a>' : '',
+      '<a class="chipb" href="#/stack/design/' + esc(lv) + '">' + esc(t('sd.toStack')) + '</a>',
+      D.broken === 'empty' || D.broken === 'design' ? '<a class="chipb" href="#/bench/logic">' + esc(t('sd.toBench')) + '</a>' : ''));
   }
-  function drawRoom() {
-    const lv = V.swLv, id = SW.STOPS[lv], last = lv === SW.STOPS.length - 1, nm = d => t('depth.' + d + '.name');
-    const sp = lv ? studioCorner(id).screen.part : null, pw = sp ? t('part.' + VIEW_PARTS.studio[sp]) : '';
-    V.swFrame.dock.innerHTML = V.lineHtml(t('room.title') + (lv ? ' · ' + nm(id) : ''), t('room.' + id + '.d'), lv ? stopsAt(id)[0] : null, V.aroundRow(
-      lv > 1 ? '<button type="button" class="chipb" data-key="back" data-swgo="' + (lv - 1) + '">← ' + esc(nm(SW.STOPS[lv - 1])) + '</button>' : '',
-      last ? '<a class="chipb" data-key="next" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-along data-swgo="' + (lv + 1) + '">→ ' + esc(nm(SW.STOPS[lv + 1])) + '</button>',
-      lv ? '<a class="chipb" data-in data-swin data-inname="' + esc(pw) + '" href="#/bench/' + id + '">↓ ' + esc(pw) + '</a>' : ''));
-    /* what this corner's screen is, from its one home in the atlas */
-    if (sp) V.swFrame.dock.querySelector('.nav').insertAdjacentHTML('beforebegin', '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2"><li><button type="button" data-swin><b>' + esc(pw) + '</b><span>' + esc(t('what.' + VIEW_PARTS.studio[sp])) + '</span></button></li></ul></div>');
-  }
-  /* the handoff: the camera settles on the screen until it fills the picture, and the bench opens from there */
-  function swIn() {
-    if (swGoing || V.sui.hidden || !sw) return; const lv = Math.round(sw.z); if (lv < 1) return; swGoing = true; V.sui.dataset.handoff = SW.STOPS[lv];
-    const rn = V.routeN; sw.handoff().then(p => { swGoing = false; delete V.sui.dataset.handoff; if (V.sui.hidden || rn !== V.routeN) return; V.portalAt(p); V.nextMove = 'in'; location.hash = '#/bench/' + SW.STOPS[lv]; });
-  }
-  function showStudio(lv, from) {
+  function showStudio(level, from) {
     V.hideAll();
     $('studioCanvas').hidden = $('studioLabels').hidden = false; V.sui.hidden = false; showStage(true); document.body.classList.add('immersive');
     V.loading(true); V.lastPlace = 'studio';
-    const fromIsland = V.arriving, rn = V.routeN; V.arriving = false;
-    /* made while the visitor moved on (#365): left paused, and its frame not drawn */
-    return Promise.all([V.withFrame(), ensureSw()]).then(([, d]) => { if (rn !== V.routeN) { if (V.sui.hidden) d.pause(); return; }
-      const n = Math.max(0, Math.min(SW.STOPS.length - 1, lv || 0));
-      V.swFrame = V.frameOf(V.sui, { up: { href: '#/place/studio', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/studio', label: t('map.studio.t') }, { label: t('room.title') }],
-        rail: { label: t('frame.levels.bench'), optional: true, items: Way.levelsOfSteps('bench').map(k => ({ id: k, label: t('depth.' + k + '.name'), size: sizeOf(k) })) },
-        steps: { label: t('frame.steps.bench'), items: Way.stepsOf('bench').map(k => ({ id: k, label: t('depth.' + k + '.name') })) },
-        onStep: k => d.go(SW.STOPS.indexOf(k)), onRail: k => { const s = Way.stepOfLevel('bench', k, SW.STOPS[V.swLv]); if (s) d.go(SW.STOPS.indexOf(s)); }, onLook: drawRoom, scroll: true, caption: true });
-      V.sui.onclick = e => { const g = e.target.closest('[data-swgo]'); if (g) d.go(+g.dataset.swgo); const a = e.target.closest('[data-swin]'); if (a) { e.preventDefault(); swIn(); } };
-      V.loading(false); d.resume();
-      /* from the island the flight comes down through the opened floor; back from a bench, it starts on that corner's screen */
-      if (from === 'bench' && n >= 1) d.back(n); else if (fromIsland) { d.jump(0); d.go(n || 1); } else d.jump(n);
-      swUI(Math.round(d.z)); $('studioCanvas').focus({ preventScroll: true });
+    const rn = V.routeN, fromIsland = V.arriving; V.arriving = false;
+    lv = STUDIO_LEVELS.includes(level) ? level : 'chip';
+    return Promise.all([V.withFrame(), ensure()]).then(([, d]) => { if (rn !== V.routeN) return;
+      rec = recordNow();
+      V.swFrame = V.frameOf(V.sui, { up: { href: '#/place/studio', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/studio', label: t('map.studio.t') }, { label: t('sd.k') }],
+        rail: { label: t('sd.rail'), items: STUDIO_LEVELS.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: sizeOf(k) })) },
+        onRail: k => go(k), onLook: drawCard, scroll: true, caption: true });
+      V.sui.onclick = e => { const g = e.target.closest('[data-sdgo]'); if (g) { e.preventDefault(); go(g.dataset.sdgo); } };
+      V.loading(false);
+      V.sui.dataset.broken = rec.designed.broken || '';
+      /* from the island the camera comes down onto the die; otherwise it opens at the level the address says */
+      const start = fromIsland && lv !== 'chip' ? 'chip' : lv;
+      d.show(rec, start, true); if (start !== lv) d.go(lv);
+      V.swFrame.rail(lv, null, STUDIO_LEVELS.indexOf(lv)); V.swFrame.level(lv); drawCard(); V.here();
+      $('studioCanvas').focus({ preventScroll: true });
     });
   }
-  const hideSw = () => { $('studioCanvas').hidden = $('studioLabels').hidden = true; V.sui.hidden = true; if (sw) sw.pause(); };
-  Object.assign(V, { hideSw });
+  const hideSw = () => { $('studioCanvas').hidden = $('studioLabels').hidden = true; V.sui.hidden = true; if (view) view.hide(); };
+  Object.assign(V, { showStudio, hideSw, studioRecord: () => rec, studioLevel: () => lv });
 }

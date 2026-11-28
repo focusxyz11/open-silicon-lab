@@ -66,18 +66,18 @@ async function readable() {
   await page.close();
 }
 
-/* the studio seen from outside on a phone (#374): at none of its steps, the strip of steps waits rather than standing
-   empty */
+/* the studio on a phone (#374, #506): the die as designed opens with its card saying where you are, never empty */
 async function studioSteps() {
-  const { browser3d, base, problems } = S, tag = 'explore phone: the studio from outside';
+  const { browser3d, base, problems } = S, tag = 'explore phone: the studio';
   S.at = tag; const page = await browser3d.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'light', reducedMotion: 'reduce', hasTouch: true, isMobile: true });
   await page.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
-  await page.goto(base + 'index.html#/place/studio/0');
-  const st = await page.waitForFunction(() => { if (location.hash !== '#/place/studio/0') location.hash = '#/place/studio/0';
-    const u = document.getElementById('studioui'), n = u && !u.hidden && u.dataset.at === '0.0' && u.querySelector('.steps2');
-    return n ? (getComputedStyle(n).display === 'none' || !!n.querySelector('.stn').textContent.trim() ? 'ok' : 'empty') : false; }, null, { timeout: 90000, polling: 1000 }).then(h => h.jsonValue(), () => null);
-  if (st !== 'ok') problems.push(tag + ': ' + (st === 'empty' ? 'the strip of steps stands empty outside the studio' : 'the studio did not open from outside'));
+  await page.goto(base + 'index.html#/studio');
+  const st = await page.waitForFunction(() => { if (!location.hash.startsWith('#/studio')) location.hash = '#/studio';
+    const u = document.getElementById('studioui'), c = document.getElementById('studioCanvas'), d = u && u.querySelector('.dock .line');
+    return u && !u.hidden && c.dataset.level === 'chip' && d ? (d.textContent.trim() ? 'ok' : 'empty') : false; }, null, { timeout: 90000, polling: 1000 }).then(h => h.jsonValue(), () => null);
+  if (st !== 'ok') problems.push(tag + ': ' + (st === 'empty' ? 'the studio\'s card stands empty' : 'the studio did not open on a phone'));
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the studio scrolls sideways on a phone');
   await page.close();
 }
 

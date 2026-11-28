@@ -9,7 +9,7 @@
    (#/log); the world around the island is the way out from it (#/ecosystem).
    Routes: #/ (Hold, the first page: src/v2/hold.js; #/hold/<block> and #/hold/years/<year> where its camera is), #/blueprint (the blueprint: src/v2/home.js), #/stations (the station map: src/v2/stations.js), #/island (the island), #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
-   #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
+   #/studio/<level> (the die as designed), #/bench/<level>[/<challenge>] (the studio's benches), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
 import { still, theme } from '../core/ui.js';
 import { t, needWords, needAllWords, lang, langName, LANGS } from '../core/i18n.js';
@@ -33,7 +33,7 @@ export function start() {
      (src/core/i18n.js; the first page needs only core); its moves load it, then run; hiding a view never opened does
      nothing. Then the other areas' words load when idle */
   const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame'], 'stack': ['frame']}, glueP = {};
-  const WORDS = { island: ['atlas', 'place', 'design', 'pages', 'shared'], frame: ['atlas', 'place', 'design', 'pages', 'shared'], pages: ['pages', 'hold'], stack: ['stack', 'labs'] };
+  const WORDS = { island: ['atlas', 'place', 'design', 'pages', 'shared'], frame: ['atlas', 'place', 'design', 'pages', 'shared'], pages: ['pages', 'hold'], stack: ['stack', 'labs'], studio: ['studio'] };
   /* and the styles of its view (src/core/styles.js): the frame's with the frame, each view's own with its glue */
   const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'], stack: ['stack'] };
   const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])), needStyles(...(STYLES[k] || [])), beyond())).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
@@ -171,7 +171,7 @@ export function start() {
   const hudEl = $('loop');
   /* the address of what is in view now: moving inside a view (deeper, along the line) changes it too */
   const liveHash = () => !vui.hidden && V.flatKind !== 'supply' && V.WE && V.diveD >= 0 && diveId() ? (V.flatKind === 'dive' ? '#/dive/' + diveId() + (V.diveWorld !== 'datacentre' ? '/' + V.diveWorld : '') : '#/' + V.flatKind + '/' + diveId())
-    : !cui.hidden ? '#/chip/' + V.chipRow + '/build' : !pui.hidden ? '#/place/datacentre/' + V.dcLv : !fui.hidden ? '#/place/phones/' + V.phLv : !kui.hidden ? '#/place/cars/' + V.caLv : !sui.hidden ? '#/place/studio/' + V.swLv : location.hash;
+    : !cui.hidden ? '#/chip/' + V.chipRow + '/build' : !pui.hidden ? '#/place/datacentre/' + V.dcLv : !fui.hidden ? '#/place/phones/' + V.phLv : !kui.hidden ? '#/place/cars/' + V.caLv : !sui.hidden ? '#/studio/' + (V.studioLevel ? V.studioLevel() : 'chip') : location.hash;
   /* a level dropped along at a stage where it does not exist (no gate at the Lab) is carried while you stay there (Way.carryOf) */
   const whereNow = () => { const k = partsOf(location.hash)[0], W0 = Way.whereOf(k === 'ask' || k === 'do' || k === 'supply' ? location.hash : liveHash()), W = W0.view === 'island' && V.cur && !sheet.hidden ? Way.whereOf('#/place/' + V.cur.place) : W0; if (V.alongCarry && V.alongCarry.at !== location.hash) V.alongCarry = null; return Way.carried(W, V.alongCarry); };
   /* the address always says where you are (so it can be shared, and a reload comes back here), and the loop in the
@@ -253,7 +253,9 @@ export function start() {
   const DIVE_LEVELS = Game.DIVE_LEVELS;
   /* a level's address: flown through where its place is (the data centre's board has a view of its own), a shared
      depth in a phone's or a car's own dive, a layer of the chip as made, or else where its depth is shown (Game.viewOfDepth) */
-  const levelHref = (place, l) => { const f = place === 'datacentre' && l.depth === 'board' ? null : (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
+  /* the studio's steps open the die as designed at the level a step shows, or the step's bench (#506) */
+  const levelHref = (place, l) => { if (place === 'studio' && l.world === 'design') { const lv = Way.levelOfStep('bench', l.depth); return lv ? '#/studio/' + lv : '#/bench/' + l.depth; }
+    const f = place === 'datacentre' && l.depth === 'board' ? null : (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
     if (FLAT_WORLDS.includes(l.world)) return '#/dive/' + l.depth + '/' + l.world;
     const c = !DIVE_LEVELS.includes(l.depth) && l.world !== 'design' && l.world !== 'journey' && rowOf(l.depth); return c ? '#/chip/' + c.row + '/build' : Game.viewOfDepth(l.depth); };
   /* the worlds with a flat dive of their own, besides the data centre's */
@@ -339,11 +341,9 @@ export function start() {
      control unit in the footwell and its chip; past the chip the flight carries on into the dive's car chip ---- */
   const kui = $('carui');
 
-  /* ---- the studio, walked inside (src/v2/studio3d.js, #267): the building seen on the island, entered without a cut.
-     Its corners are the design's steps in order along the room, walked along on the line of steps (← →, Next →); the
-     rail holds only the level a step shows. At a corner, the way in (↓, the button by the screen, a push of the wheel)
-     settles the camera on the corner's screen and the step's bench takes over there; the bench's way up comes back
-     to the same corner, starting on its screen ---- */
+  /* ---- the studio (#/studio/<level>, src/v2/glue/studio.js, #506): your chip as designed, one die in dashed outline,
+     zoomed die → block → cells → one cell with no cut. In · out (↑ ↓, the rail, the wheel, a tap) moves through its
+     four levels; along (← →) leads to the same level as made and as used ---- */
   const sui = $('studioui');
 
   /* ---- inside a chip, layer by layer: the levels of the dive as they are made (the lower half of the Make column).
@@ -423,14 +423,15 @@ export function start() {
      Going between views is never a cut: deeper zooms in, higher zooms out, the Turn turns, along slides. */
   const partsOf = h => (h.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   const doPlace = ch => (ch && !ch.need && ch.kind !== 'break' && ch.kind !== 'design' ? Way.doHome(ch) : null);
-  /* the places flown or walked through, entered at one of their levels (#/place/datacentre/2, the studio's third
-     corner #/place/studio/3): the view each is (the place itself opens on the island) */
-  const FLOWN_VIEW = { datacentre: 'dc', phones: 'fly', cars: 'carfly', studio: 'studio' };
+  /* the places flown through, entered at one of their levels (#/place/datacentre/2): the view each is (the place itself
+     opens on the island) */
+  const FLOWN_VIEW = { datacentre: 'dc', phones: 'fly', cars: 'carfly' };
   const flownOf = p => (p[0] === 'place' && /^\d+$/.test(p[2] || '') && FLOWN_VIEW[p[1]]) || null;
   const viewOf = p => { const k = p[0]; if (!k || k === 'home' || k === 'hold' || k === 'stations' || k === 'blueprint') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
     if (k === 'do') { const h = doPlace(chOf(decodeURIComponent(p[1] || ''))); return h ? viewOf(partsOf(h)) : ['map', 0]; }
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
+    if (k === 'studio') return ['studio', 1];
     return k === 'board' ? ['board', 2] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
       : flownOf(p) ? [flownOf(p), 1] : ['map', 0]; };
   let shownAt = null;   /* the address of the view now made, so a question at the same level only changes the dock */
@@ -462,6 +463,7 @@ export function start() {
     if (k === 'stations') return showStations();
     if (k === 'blueprint') return showBlueprint();
     if (k === 'stack') return V.showStack(parts[1]);
+    if (k === 'studio') return V.showStudio(parts[1], from);
     if (k === 'board') return V.showBoard();
     if (k === 'dive') return V.showDive(parts[1], parts[2]);
     if (k === 'supply') return V.showSupply(parts[1]);
@@ -475,7 +477,7 @@ export function start() {
       return showMap(from).then(m => m && openChallenge(ch)); });
     if (k === 'chip') return V.showChip(parts[1] != null ? +parts[1] : null);
     const fl = flownOf(parts), at = +parts[2];
-    if (fl) return fl === 'dc' ? V.showPlace('datacentre', at) : fl === 'fly' ? V.showPhone(at) : fl === 'carfly' ? V.showCar(at) : V.showStudio(at, from);
+    if (fl) return fl === 'dc' ? V.showPlace('datacentre', at) : fl === 'fly' ? V.showPhone(at) : V.showCar(at);
     if (k === 'place' && isPart(parts[1], parts[2])) return showMap(from).then(m => m && V.openPlace(parts[1], 'look', null, null, parts[2]));
     if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(m => m && V.openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
     if (k === 'build') return showMap(from).then(m => m && V.openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
@@ -498,6 +500,10 @@ export function start() {
   function route() {
     /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the first page */
     if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
+    /* the room walked through before the studio was the die as designed (#506): its addresses open the die, at the level
+       its corner showed */
+    const room = /^#\/place\/studio\/(\d+)$/.exec(location.hash);
+    if (room) history.replaceState(null, '', '#/studio/' + (Way.levelOfStep('bench', Way.stepsOf('bench')[+room[1] - 1]) || 'chip'));
     const parts = partsOf(location.hash), k = homeOf(parts), n = ++V.routeN;
     document.body.classList.toggle('firstpage', k === 'home');
     document.body.classList.toggle('langpage', k === 'home' || k === 'blueprint');
@@ -535,7 +541,7 @@ export function start() {
       const go = () => { const f = !page.hidden && page.querySelector('[data-jump]'); if (f) f.focus(); else if (partsOf(location.hash)[0] === 'log' && performance.now() - t0 < 30000) requestAnimationFrame(go); }; requestAnimationFrame(go); return; }
     const host = [vui, cui, pui, bui, sui].find(h => h && !h.hidden) || (!sheet.hidden && !sheet.querySelector('.player') ? sheet : null); if (!host) return;
     if (e.key === 'Escape') { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
-    const W = whereNow(), column = ['dive', 'flight', 'chip'].includes(W.view) && !host.querySelector('.dock .player, .dock .stopx');
+    const W = whereNow(), column = ['dive', 'flight', 'chip', 'studio'].includes(W.view) && !host.querySelector('.dock .player, .dock .stopx');
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { const down = e.key === 'ArrowDown';
       if (column) { const b = host.querySelector('.dock [data-key="' + (down ? 'next' : 'back') + '"]'); if (b) { b.click(); e.preventDefault(); } else if (!down) { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } } return; }
       if (host === sheet) { const a = down && sheet.querySelector('.nav a.btn.primary'); if (a) { a.click(); e.preventDefault(); } return; }

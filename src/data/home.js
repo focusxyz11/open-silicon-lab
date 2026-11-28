@@ -131,7 +131,7 @@ export const TOYS = {
    stroke drawing. A path's progress is the challenges on it the visitor has finished */
 export const PATHS = [
   { id: 'design', line: 'design', icon: 'M4 4h16v16H4zM8 8h3v3H8zM13 13h3v3h-3zM11 9.5h4v3.5M9.5 11v4h3.5',
-    stops: [{ page: ['#/place/studio/1', 'home.path.studio'] }, { ch: 'jobs' }, { ch: 'floor' }, { ch: 'maskof' }, { ch: 'ai-chip' }] },
+    stops: [{ page: ['#/studio', 'home.path.studio'] }, { ch: 'jobs' }, { ch: 'floor' }, { ch: 'maskof' }, { ch: 'ai-chip' }] },
   { id: 'logic', line: 'design', icon: 'M3 8h5M3 16h5M8 4v16h4a8 8 0 0 0 0-16zM20 12h2',
     stops: [{ st: 'gates' }, { ch: 'half' }, { ch: 'evolve' }, { ch: 'counter' }] },
   { id: 'cpu', line: 'design', icon: 'M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4',
@@ -146,7 +146,7 @@ export const PATHS = [
 
 /* what was added to the lab lately, newest first: each leads to it (href, or ch: a challenge). Words home.new.<id>.t/.d */
 export const NEW = [
-  { id: 'studio', href: '#/place/studio/1' },
+  { id: 'studio', href: '#/studio' },
   { id: 'bench', href: '#/bench/logic' },
   { id: 'lenses', href: '#/dive/chip' },
   { id: 'chef', ch: 'chef' }

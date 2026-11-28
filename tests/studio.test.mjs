@@ -1,5 +1,5 @@
-/* The studio's one plan (src/data/studio.js, #267): the room on the island and the room walked inside are drawn from
-   the same numbers, and its corners are the design's steps, in order along the room. */
+/* The studio's one plan (src/data/studio.js, #267): the room the island draws, its corners the design's steps, in order
+   along the room. The room walked inside retired for the die as designed (#506, src/v2/studio/). */
 import './ledger.setup.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,8 +16,8 @@ test('the corners are the design\'s steps, one to one and in order, the last the
   assert.deepEqual(INSIDE.studio.map(l => l.depth), stepsOf('bench'));
   assert.ok(CORNERS.at(-1).house, 'the masks are not at the mask house');
   assert.equal(CORNERS.filter(c => c.house).length, 1);
-  /* each step's corner is its stop in the walk, so the island's way into a step is the same corner */
-  CORNERS.forEach((c, i) => assert.equal(FLOWN.studio[c.id], i + 1, c.id));
+  /* the room is no longer walked (#506): the island's way into a step opens the die as designed, or its bench */
+  assert.equal(FLOWN.studio, undefined);
 });
 
 test('along the room means along the steps: the corners stand in a row from west to east, inside the floor, the walk in front', () => {
@@ -35,7 +35,5 @@ test('every corner has a screen its bench opens on, facing the walk or the sky, 
     const home = VIEW_PARTS.studio[c.screen.part]; assert.ok(home, c.id + ': ' + c.screen.part + ' is no part');
     assert.equal(home.split('.')[0], c.id, c.screen.part + ' does not live at its step');
     assert.ok(EN['part.' + home] && EN['what.' + home], home + ' does not explain itself'); assert.equal(partHome(home).place, 'studio');
-    assert.ok(EN['room.' + c.id + '.d'], c.id + ' has no words in the room');
   }
-  assert.ok(EN['room.outside.d']);
 });

@@ -214,8 +214,7 @@ export function createMap(canvas, host, on = {}) {
   const route = pts => new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)));
 
   /* ---- the stations of the loop ---- */
-  /* ---- furnishing, drawn small but whole: one set shared with the studio walked inside (src/v2/furnish.js), so the
-     rooms seen from here are the rooms walked there ---- */
+  /* ---- furnishing, drawn small but whole (src/v2/furnish.js) ---- */
   const { sheet, plant, corner, CLOTHES, SKIN, headG } = furnisher(P, night, T.leaf);
 
   /* ---- fronts (the art pass): what makes a box read as a building from above. Windows in bands with frames, a sill

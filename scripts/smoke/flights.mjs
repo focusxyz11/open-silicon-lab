@@ -1,6 +1,6 @@
 import { S } from './shared.mjs';
 
-export const about = 'the data centre\'s way in and its flight into the chip; a link to a level landing on it, and a challenge\'s card shown at once; the studio walked inside, with a handoff to a bench; the phone\'s and the car\'s flights into their chips';
+export const about = 'the data centre\'s way in and its flight into the chip; a link to a level landing on it, and a challenge\'s card shown at once; going inside the studio opening the die as designed, and a bench\'s way up back to it; the phone\'s and the car\'s flights into their chips';
 
 export default async function run() {
   const { browser, browser3d, base, problems } = S;
@@ -77,25 +77,17 @@ export default async function run() {
     await page.waitForFunction(() => !!document.querySelector('#sheet:not([hidden]) .player[data-ch="halt"]'), null, { timeout: 120000, polling: 500 })
       .catch(() => problems.push(tg + ': once its lab has come, the challenge on the island is not played in its panel'));
     await page.close(); }
-  /* one studio (#267): Go inside the studio on the island flies down through its opened floor into the room (the walk
-     passes between outside and the first corner, never jumping), the way in by the job's wall of notes settles on it and
-     hands over to the job's bench, and the bench's way up comes back to the same corner of the room. A page of its own */
+  /* one studio (#267, #506): Go inside the studio on the island opens your chip as designed, the die, and a bench's way
+     up comes back to the die at the level its step shows. A page of its own */
   { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } }), tg = 'studio';
     page.on('pageerror', e => problems.push(tg + ': ' + e.message));
     await page.goto(base + 'index.html#/place/studio');
-    await page.evaluate(() => { window.walk = []; new MutationObserver(() => { const s = document.getElementById('studioui'), a = s && s.dataset.at; if (a != null && window.walk[window.walk.length - 1] !== a) window.walk.push(a); if (s && s.dataset.handoff) window.handed = s.dataset.handoff; })
-      .observe(document.getElementById('studioui'), { attributes: true, attributeFilter: ['data-at', 'data-handoff'] }); });
     await page.waitForFunction(() => { if (location.hash === '#/place/studio') { const b = document.querySelector('#sheet:not([hidden]) [data-deeper]'); if (b) b.click(); }
-      return location.hash === '#/place/studio/1' && !document.getElementById('studioui').hidden; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tg + ': going inside the studio on the island does not open the room'));
-    await page.waitForFunction(() => document.getElementById('studioui').dataset.at === '1.0', null, { timeout: 90000, polling: 500 }).catch(() => problems.push(tg + ': the flight into the studio does not come to rest at the first corner'));
-    if (!(await page.evaluate(() => window.walk.length > 2 && window.walk.some(a => +a > 0 && +a < 1)))) problems.push(tg + ': the studio is entered with a cut, not a flight down into the room (' + (await page.evaluate(() => window.walk.join(' '))) + ')');
-    if (!(await page.evaluate(() => { const c = document.querySelector('#studioui .steps2 [aria-current]'), r = document.querySelector('#studioui .rail2 [aria-current]'); return !!c && c.dataset.step === 'need' && !!r && r.dataset.rail === 'chip'; }))) problems.push(tg + ': at the first corner the frame does not say the job, and the chip on the rail');
-    /* the handoff: the way in stands by the screen; taken, the camera settles on it and the job's bench takes over */
-    await page.waitForFunction(() => { const b = document.querySelector('#studioui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/studio/1' && !window.handed) b.click(); return location.hash === '#/bench/need' && !document.getElementById('diveui').hidden; }, null, { timeout: 90000, polling: 2000 })
-      .catch(() => problems.push(tg + ': the way in at the job\'s corner does not hand over to its bench'));
-    if (!(await page.evaluate(() => window.handed === 'need'))) problems.push(tg + ': the bench opened without the camera settling on the corner\'s screen first');
-    await page.waitForFunction(() => { const u = document.querySelector('#diveui .homebtn'); if (u && location.hash === '#/bench/need' && u.getAttribute('href') === '#/place/studio/1') u.click(); return location.hash === '#/place/studio/1' && !document.getElementById('studioui').hidden; }, null, { timeout: 60000, polling: 2000 })
-      .catch(() => problems.push(tg + ': stepping out of the bench does not return to its corner of the room'));
+      const c = document.getElementById('studioCanvas'); return location.hash === '#/studio/chip' && !c.hidden && c.dataset.level === 'chip' && !c.dataset.flying; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tg + ': going inside the studio on the island does not open the die as designed'));
+    if (!(await page.evaluate(() => { const r = document.querySelector('#studioui .rail2 [aria-current]'); return !!r && r.dataset.rail === 'chip'; }))) problems.push(tg + ': on the die the rail does not say the chip');
+    await page.goto(base + 'index.html#/bench/gates');
+    await page.waitForFunction(() => { const u = document.querySelector('#diveui .homebtn'); if (u && location.hash === '#/bench/gates' && u.getAttribute('href') === '#/studio/gate') u.click(); const c = document.getElementById('studioCanvas'); return location.hash === '#/studio/gate' && !c.hidden && c.dataset.level === 'gate'; }, null, { timeout: 60000, polling: 2000 })
+      .catch(() => problems.push(tg + ': stepping out of the gates\' bench does not return to the die at the gate'));
     await page.close(); }
   /* a phone is flown through like the data centre (src/v2/phone3d-flight.js): going inside the phone island opens the
      flight, the way in on the picture goes deeper, and going on past the chip carries the flight into the dive's phone
