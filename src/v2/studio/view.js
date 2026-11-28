@@ -53,7 +53,7 @@ export function createStudio(canvas, labelsEl, o) {
     /* the square on the masks' road keeps moving while it shows (nothing moves by itself with reduced motion) */
     if (labels.moving && shown) kick();
     labelsEl.innerHTML = labels.filter(l => l.x > -200 && l.x < W && l.y > -20 && l.y < H).map(l =>
-      '<span class="sdl ' + l.kind + (l.bad ? ' bad' : '') + '" data-part="' + esc(l.part) + '" style="left:' + l.x.toFixed(1) + 'px;top:' + l.y.toFixed(1) + 'px">' + esc(l.text) + (l.fid && o.mark ? ' ' + o.mark(l.fid) : '') + '</span>').join('');
+      '<span class="sdl ' + l.kind + (l.bad ? ' bad' : '') + '" data-part="' + esc(l.part) + '" data-word="' + esc(l.part) + '" style="left:' + l.x.toFixed(1) + 'px;top:' + l.y.toFixed(1) + 'px">' + esc(l.text) + (l.fid && o.mark ? ' ' + o.mark(l.fid) : '') + '</span>').join('');
     /* a word that would run off the right edge is moved back inside it */
     for (const el of labelsEl.children) { const x = parseFloat(el.style.left), w = el.offsetWidth; if (x + w > W - 8) el.style.left = Math.max(8, W - 8 - w).toFixed(1) + 'px'; }
     tell();

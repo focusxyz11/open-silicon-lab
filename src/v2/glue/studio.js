@@ -16,6 +16,8 @@ import * as PL from '../../engines/placer.js';
 import { proposeArrangement } from '../../engines/floorplan.js';
 import { keepGene, keepFine } from '../stack/keep.js';
 import { CARE, CHOICES } from '../../data/path.js';
+import { STUDIO_MARKS } from '../../data/frame.js';
+import { questionOf } from '../../engines/frame.js';
 import { mark } from '../fid.js';
 import { sizeOf } from '../../data/atlas.js';
 import { V, $, showStage, esc } from '../shell.js';
@@ -28,6 +30,8 @@ export const ARRANGE = ['shape', 'where'];
 /* the record of your chip now, shared with the line (src/v2/studio/now.js) */
 const designNow = () => Now.designNow(V.S), keepDesign = Now.keepDesign;
 export const recordNow = () => Now.recordNow(V.S);
+/* the questions' marks on the studio's and the stations' parts (#514): by the part each bites at, never listed */
+const studioMarks = d => (STUDIO_MARKS[d] || []).map(([id, word]) => ({ id, word, label: t('frame.q.' + id), icon: questionOf(id).icon }));
 
 /* the picture's safe area: the frame's, and on a wide screen right of the caption that rests at the bottom left, so the
    part in focus never stands under it, and clear of the ways in and along at the right */
@@ -48,7 +52,7 @@ export function create() {
   const extra = () => ({ cover, settled });
   const ensure = () => viewP || (viewP = import('../studio/view.js').then(m => {
     view = m.createStudio($('studioCanvas'), $('studioLabels'), { words: t, mark, still, inset,
-      level: (l, pos) => { if (V.swFrame) { V.swFrame.rail(l, null, pos); if (l !== lv) { lv = l; V.swFrame.level(l === 'station' ? null : l); history.replaceState(null, '', fab ? '#/fab/' + fab + '/' + l : '#/studio/' + l); V.here(); if (V.swFrame.mode() === 'look') (fab ? drawFabCard : drawCard)(); } } },
+      level: (l, pos) => { if (V.swFrame) { V.swFrame.rail(l, null, pos); if (l !== lv) { lv = l; V.swFrame.level(l === 'station' ? fab : l); history.replaceState(null, '', fab ? '#/fab/' + fab + '/' + l : '#/studio/' + l); V.here(); if (V.swFrame.mode() === 'look') (fab ? drawFabCard : drawCard)(); } } },
       tap: l => go(l), swap: (a, b) => fab ? null : placeTo(PL.swapOf(B(), placeNow(), +a.slice(1), +b.slice(1))) });
     return view;
   }));
@@ -93,7 +97,7 @@ export function create() {
       rec = recordNow(); cover = null; settled = null; proposal = null;
       V.swFrame = V.frameOf(V.sui, { up: { href: '#/place/studio', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/studio', label: t('map.studio.t') }, { label: t('sd.k') }],
         rail: { label: t('sd.rail'), items: STUDIO_LEVELS.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: sizeOf(k) })) },
-        onRail: k => go(k), onLook: drawCard, scroll: true, caption: true });
+        onRail: k => go(k), onLook: drawCard, scroll: true, caption: true, marksAt: studioMarks });
       V.sui.onclick = e => { const g = e.target.closest('[data-sdgo]'); if (g) { e.preventDefault(); go(g.dataset.sdgo); }
         const a = e.target.closest('[data-gene]'); if (a) { e.preventDefault(); arrangeTo(a.dataset.gene, a.dataset.opt); }
         const p = e.target.closest('[data-place]'); if (p) { e.preventDefault(); placeBy(p.dataset.place); }
@@ -121,14 +125,14 @@ export function create() {
       rec = recordNow(); proposal = null; cover = null; settled = null;
       V.swFrame = V.frameOf(V.sui, { up: { href: '#/line/' + fab, label: t('sd.fab.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/fab', label: t('map.fab.t') }, { href: '#/line/' + fab, label: t('depth.' + fab + '.name') }, { label: t('sd.fab.inside') }],
         rail: { label: t('sd.fab.rail'), items: FAB_LEVELS.map(k => ({ id: k, label: k === 'station' ? t('sd.fab.station') : t('depth.' + k + '.name'), size: k === 'station' ? 0.3 : sizeOf(k) })) },
-        onRail: k => go(k), onLook: drawFabCard, scroll: true, caption: true });
+        onRail: k => go(k), onLook: drawFabCard, scroll: true, caption: true, marksAt: d => (FAB_STEPS.includes(d) ? studioMarks(d) : []) });
       V.sui.onclick = e => { const g = e.target.closest('[data-sdgo]'); if (g) { e.preventDefault(); go(g.dataset.sdgo); }
         const c = e.target.closest('[data-careset]'); if (c) { e.preventDefault(); careTo(+c.dataset.careset); } };
       V.loading(false); careStrip();
       V.sui.dataset.fab = fab; V.sui.dataset.care = String(rec.care); V.sui.dataset.broken = rec.designed.broken || '';
       /* along from the station before (at the same level) the camera holds its depth: it opens there, framed */
       d.show(rec, lv, true, { made: fab });
-      V.swFrame.rail(lv, null, FAB_LEVELS.indexOf(lv)); V.swFrame.level(lv === 'station' ? null : lv); drawFabCard(); V.here();
+      V.swFrame.rail(lv, null, FAB_LEVELS.indexOf(lv)); V.swFrame.level(lv === 'station' ? fab : lv); drawFabCard(); V.here();
       $('studioCanvas').focus({ preventScroll: true });
     });
   }
@@ -208,7 +212,7 @@ export function create() {
     drawCard(); V.sui.dataset.proposal = kind;
   }
   /* the way to ask, in the strip's corner: only humans decide what is taken */
-  const askBtn = kind => '<button type="button" class="link sdask" data-agent="' + kind + '" title="' + esc(t('sd.ctl.agentK')) + '">' + esc(t('sd.ctl.agent')) + '</button>';
+  const askBtn = kind => '<button type="button" class="link sdask" data-word="agent" data-agent="' + kind + '" title="' + esc(t('sd.ctl.agentK')) + '">' + esc(t('sd.ctl.agent')) + '</button>';
   function agentCard() {
     if (!proposal) return '';
     const p = proposal, num = v => (v < 10 ? v.toFixed(1) : String(Math.round(v)));
