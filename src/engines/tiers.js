@@ -8,7 +8,7 @@
      switching   E_OP, the same however the logic is arranged
      wires       E_WIRE1 on one tier. Split the logic over n tiers and each tier's side is 1/sqrt(n) as long, and so is
                  the distance an average signal crosses: the wires' energy falls as 1/sqrt(n). Signals between tiers go
-                 through bonds a few microns apart (facts.json soic-pitch), whose own energy is tiny next to a wire's
+                 through bonds a few microns apart (facts.json hybrid-bond-pitch), whose own energy is tiny next to a wire's
                  (hybrid-bond-pjbit), and is counted as part of the wire.
      memory      MEM_BITS bits from memory per operation. Beside the chip (high-bandwidth memory) each bit costs
                  MEM_BESIDE (facts.json hbm-pjbit); with memory stacked as a tier under the logic, the bit skips the
@@ -39,7 +39,7 @@ export const PUMP = 0.05;                            // pumping coolant between 
 export const T_COOL = 35, T_MAX = 110;               // °C: the coolant, and the hottest a tier may run (junction-limit)
 export const R_SINK = 50, R_BOND = 8, R_BOARD = 400, R_IC = 160;  // K·mm²/W: cold plate, a bond layer, to the board, coolant between tiers
 export const TIERS = [1, 2, 3, 4, 5, 6, 8], CHIPLETS = [1, 2, 4, 8];
-export const FACTS = { limit: 'junction-limit', pitch: 'soic-pitch', link: 'ucie-pjbit', bond: 'hybrid-bond-pjbit', beside: 'hbm-pjbit' };
+export const FACTS = { limit: 'junction-limit', pitch: 'hybrid-bond-pitch', link: 'ucie-pjbit', bond: 'hybrid-bond-pjbit', beside: 'hbm-pjbit' };
 
 const DEFECTS = CLEAN[2];                            // specks per cm²: the split bet's middle line
 export const START = { tiers: 1, memOn: false, cool: false, chiplets: 1 };

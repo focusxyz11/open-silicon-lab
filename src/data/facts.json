@@ -2377,9 +2377,9 @@
    "verified": "2026-11-27"
   },
   {
-   "id": "soic-pitch",
+   "id": "hybrid-bond-pitch",
    "topic": "package",
-   "detail": "TSMC's SoIC hybrid bonding joins stacked dies copper to copper: a 9 µm pitch in 2023 (enough for AMD's Instinct MI300), 6 µm in 2025, and 4.5 µm planned by 2029.",
+   "detail": "TSMC's SoIC hybrid bonding joins stacked dies copper to copper: a 9 µm pitch in 2023 (enough for AMD's Instinct MI300), 6 µm in 2025, and 4.5 µm planned by 2029. Intel's Foveros Direct reached high volume in Clearwater Forest; HBM4 memory stacks stay on microbumps for now.",
    "kind": "reported",
    "label": "The pitch of stacked dies' bonds",
    "source": "Tom's Hardware",
