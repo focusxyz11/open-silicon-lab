@@ -59,6 +59,15 @@ export default async function run() {
       if (b && u.tested !== '64') b.click(); return u.tested === '64' && u.found === '1' && !!document.querySelector('#studioLabels [data-part="found"].bad'); }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
     if (!covered) problems.push(tag + ': testing every state does not find the bug planted in a corner');
     await page.evaluate(() => { const b = document.querySelector('#studioui .sdctl [data-place="hand"]'); if (b) b.click(); });
+    /* an agent (#510): asked, it proposes a settled placement beside yours; the wire changes only when it is taken */
+    const agent = await page.waitForFunction(() => { const u = document.getElementById('studioui').dataset, a = document.querySelector('#studioui .sdctl [data-agent="place"]');
+      if (a && u.proposal !== 'place') { window.wireBefore = u.wire; a.click(); }
+      return u.proposal === 'place' && !!document.querySelector('#studioui .sdagent [data-take="1"]') && u.wire === window.wireBefore; }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
+    if (!agent) problems.push(tag + ': asking an agent does not propose a placement, or changes the block before it is taken');
+    const taken = await page.waitForFunction(() => { const u = document.getElementById('studioui').dataset, k = document.querySelector('#studioui .sdagent [data-take="1"]'); if (k) k.click();
+      return u.proposal === '' && +u.wire < +window.wireBefore; }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
+    if (!taken) problems.push(tag + ': taking the agent\'s placement does not shorten the wire');
+    await page.evaluate(() => { const b = document.querySelector('#studioui .sdctl [data-place="hand"]'); if (b) b.click(); });
     /* the rail takes you to any level: the switch, one cell close, with its words */
     const atSwitch = await page.waitForFunction(() => { const c = document.getElementById('studioCanvas'), b = document.querySelector('#studioui .rail2 [data-rail="switch"]');
       if (c.dataset.level !== 'switch' && !c.dataset.flying && b) b.click();

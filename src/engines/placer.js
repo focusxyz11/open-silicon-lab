@@ -170,3 +170,15 @@ export function testsOf(C, n, seed = 1) {
   let s = seed >>> 0; const R = () => { s = (Math.imul(s, 1103515245) + 12345) >>> 0; return s / 4294967296; };
   const set = new Set(); while (set.size < n) set.add(Math.floor(R() * C.states)); return [...set];
 }
+
+/* ---- what an agent proposes for your block (#510): a placement settled from yours, with what it gains; or a
+   placement it brings, scored beside yours. It changes nothing: the person takes it or not ---- */
+export function scorePlacement(B, place, period) {
+  const T = timeLayout(B, place, period); return { wire: wireOf(B, place), arrival: T.arrival, slack: T.slack, meets: T.meets };
+}
+export function proposePlacement(B, place, period, proposed) {
+  const p = proposed ? normalPlace(B, proposed) : (fr => fr[fr.length - 1])(settleFrames(B, place, { seed: 11 }));
+  if (!p) return { yours: scorePlacement(B, place, period), proposed: null, refused: 'place' };
+  const yours = scorePlacement(B, place, period), theirs = scorePlacement(B, p, period);
+  return { yours, proposed: theirs, place: p, shorter: yours.wire - theirs.wire, faster: yours.arrival - theirs.arrival, better: theirs.wire < yours.wire && theirs.arrival <= yours.arrival + 1e-9 };
+}

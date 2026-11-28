@@ -28,3 +28,7 @@
 @media (max-width: 720px) { #studioui .sdctl { bottom: calc(var(--dockh, 120px) + 12px); padding: 8px 10px; } #studioui .sdopts .chipb { padding: 5px 9px; font-size: 13px; } }
 /* a figure beside the die's neighbours wraps onto two lines rather than running over them (#509) */
 #studioLabels .sdl.wrap { white-space: normal; width: 210px; }
+/* an agent's proposal, above the card's line of words (#510): what it proposes, what it gains, Take it or Not now */
+#studioui .sdagent { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--warm); border-radius: 12px; }
+#studioui .sdagent p:not(.kicker) { margin: 4px 0 8px; font: italic 400 15px/1.4 var(--serif); }
+#studioui .sdctl .sdask { position: absolute; top: 8px; right: 12px; font: 600 13px var(--sans); color: var(--accent); background: none; border: 0; cursor: pointer; padding: 2px 4px; }

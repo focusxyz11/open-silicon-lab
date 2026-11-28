@@ -115,3 +115,20 @@ export function heatOf(fp) {
     trip: tripOf(fp), fid: { hottest: { f: 'idea', by: 'floorplan' }, trip: { f: 'idea', by: 'floorplan' } }
   };
 }
+
+/* ---- what an agent proposes (#510): it tries all sixteen arrangements and proposes the one both cooler and shorter
+   than yours, by the most; null when none is both. It changes nothing: the person takes it or not ---- */
+export function arrangementsOf(recipe, fine) {
+  const g = A.normal(recipe || A.TODAY);
+  return Object.keys(A.CARRY.shape).flatMap(shape => Object.keys(A.CARRY.where).map(where => {
+    const H = heatOf(floorplanOf(Object.assign({}, g, { shape, where }), fine)); return { shape, where, hottest: H.hottest, trip: H.trip };
+  }));
+}
+export function proposeArrangement(recipe, fine) {
+  const g = A.normal(recipe || A.TODAY), mine = heatOf(floorplanOf(g, fine)), all = arrangementsOf(g, fine);
+  const better = all.filter(a => (a.shape !== g.shape || a.where !== g.where) && a.hottest < mine.hottest - 0.5 && a.trip < mine.trip - 0.05);
+  if (!better.length) return { yours: { shape: g.shape, where: g.where, hottest: mine.hottest, trip: mine.trip }, proposed: null };
+  const gain = a => (mine.hottest - a.hottest) / (T_REF - T_AIR) + (mine.trip - a.trip) / Math.max(mine.trip, 1e-9);
+  const best = better.reduce((b, a) => (gain(a) > gain(b) ? a : b));
+  return { yours: { shape: g.shape, where: g.where, hottest: mine.hottest, trip: mine.trip }, proposed: best, cooler: mine.hottest - best.hottest, shorter: mine.trip - best.trip };
+}

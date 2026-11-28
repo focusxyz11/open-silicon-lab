@@ -54,5 +54,15 @@
  "sd.sheet.metal": "metal",
  "sd.road.print": "to Print, as its mask",
  "sd.road.stop": "the line stops here",
- "sd.shuttle": "or share a shuttle: 273 designs rode one chip"
+ "sd.shuttle": "or share a shuttle: 273 designs rode one chip",
+ "sd.ctl.agentK": "Only humans decide",
+ "sd.ctl.agent": "Ask an agent",
+ "sd.ag.k": "An agent's proposal",
+ "sd.ag.arr": "{shape}, {where}: {c} °C cooler, and a value travels {d} mm less to memory.",
+ "sd.ag.none": "It tried all sixteen arrangements: none is both cooler and shorter than yours.",
+ "sd.ag.place": "A settled placement: {w} sites less wire, its longest path {p} ps faster.",
+ "sd.ag.nonePlace": "It tried to settle your placement and found none both shorter and faster.",
+ "sd.ag.take": "Take it",
+ "sd.ag.no": "Not now",
+ "sd.ag.ok": "Put it down"
 }
