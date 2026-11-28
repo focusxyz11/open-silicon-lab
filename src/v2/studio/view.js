@@ -49,7 +49,9 @@ export function createStudio(canvas, labelsEl, o) {
     if (!P || !W) return;
     if (!C) C = paletteOf(canvas);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    const labels = drawDie(ctx, P, cam, { W, H, C, words: o.words });
+    const labels = drawDie(ctx, P, cam, { W, H, C, words: o.words, time: o.still && o.still() ? null : performance.now() });
+    /* the square on the masks' road keeps moving while it shows (nothing moves by itself with reduced motion) */
+    if (labels.moving && shown) kick();
     labelsEl.innerHTML = labels.filter(l => l.x > -200 && l.x < W && l.y > -20 && l.y < H).map(l =>
       '<span class="sdl ' + l.kind + (l.bad ? ' bad' : '') + '" data-part="' + esc(l.part) + '" style="left:' + l.x.toFixed(1) + 'px;top:' + l.y.toFixed(1) + 'px">' + esc(l.text) + (l.fid && o.mark ? ' ' + o.mark(l.fid) : '') + '</span>').join('');
     /* a word that would run off the right edge is moved back inside it */

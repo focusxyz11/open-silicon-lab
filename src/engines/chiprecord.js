@@ -13,7 +13,7 @@
    - madeAt(record, step): your chip after a step of the line, with that step's report.
    - keepOf(record) and fromKept(kept): the record kept as its inputs and made again from them. */
 import { build, normalDesign } from './design.js';
-import { maskSet } from './rules.js';
+import { maskSet, checkRules } from './rules.js';
 import { floorplanOf, heatOf } from './floorplan.js';
 import { handOf, normalPlace, timeLayout, clocksOf, wireOf, CLOCKS, CLOCK_EXAMPLE } from './placer.js';
 import { stackOf, recipeOf, fineOf, aimOf, carry, carryWith, areaOf } from './path.js';
@@ -43,6 +43,14 @@ export function withCare(stack, care) {
   return s;
 }
 
+/* the cell a point of the routed tile stands by (grid units: a row's pins at r x TR + 2, a cell from 2 + its site) */
+function cellNear(B, p) {
+  const P = B.PL, row = Math.max(0, Math.min((Array.isArray(P.rows) ? P.rows.length : P.rows) - 1, Math.round((p.y - 2) / P.TR)));
+  let best = null, d = Infinity;
+  Object.entries(P.pos).forEach(([i, q]) => { if (q.r !== row) return; const e = p.x < 2 + q.x ? 2 + q.x - p.x : p.x > 2 + q.x + q.w ? p.x - 2 - q.x - q.w : 0; if (e < d) { d = e; best = +i; } });
+  return best;
+}
+
 /* ---- as designed ---- */
 export function designedOf(stack, design) {
   const st = stack || stackOf(), R = carry(st), d = designIn(design), B = d ? build(d) : null;
@@ -54,6 +62,9 @@ export function designedOf(stack, design) {
   const timing = built && !B.M.regs.length ? timeLayout(B, place, clocksOf(B)[ck]) : null;
   const cells = built ? B.M.cells.map((c, i) => ({ id: 'c' + i, type: c.type, ins: c.ins.slice(), out: c.out, slot: { x: place[i].x, r: place[i].r, w: place[i].w } })) : [];
   const M = built ? maskSet(B) : null;
+  /* the design rules, checked on the tile the design engine placed and routed (the same tile the masks are drawn from),
+     each break with the cells it stands by, named by id so a view marks them wherever you placed them (#509) */
+  const rules = built && B.PL && B.RT ? checkRules(B.PL, B.RT, B.M).map(r => ({ id: r.id, kind: r.kind, ok: r.ok, n: r.n, cells: [...new Set(r.at.map(p => cellNear(B, p)).filter(i => i != null))].map(i => 'c' + i) })) : [];
   const masks = M ? { total: M.total, drawn: M.drawn, cells: M.cells, groups: M.groups.map(g => ({ id: g.id, masks: g.masks.slice(), n: g.n, drawn: g.drawn.slice() })) } : null;
   const broken = R.broken === 'switch' ? 'switch' : !B ? 'empty' : !B.ok ? 'design' : null;
   /* the floorplan your recipe lays out, and its heat and trips (src/engines/floorplan.js, #507) */
@@ -62,9 +73,9 @@ export function designedOf(stack, design) {
     recipe: recipeOf(st), fine: fineOf(st), aim: aimOf(st), design: d, ok: !broken, broken, errs: B ? B.errs.slice() : [],
     cells, vias: built && B.RT ? B.RT.vias : 0, coverage: built && Number.isFinite(B.coverage) ? B.coverage : null,
     transistors: built && Number.isFinite(B.transistors) ? B.transistors : null, area: built ? B.area : null, masks, die, floorplan: fp, heat,
-    place, wire: built ? { now: wireOf(B, place), hand: wireOf(B, handOf(B)) } : null, clock: ck,
+    rules, place, wire: built ? { now: wireOf(B, place), hand: wireOf(B, handOf(B)) } : null, clock: ck,
     timing: timing ? { path: timing.path.map(i => 'c' + i), arrival: timing.arrival, period: timing.period, slack: timing.slack, meets: timing.meets, wire: timing.wire } : null, late: !!timing && !timing.meets,
-    fid: { cells: C('design'), vias: C('design'), coverage: C('design'), transistors: C('design'), area: C('design'), masks: C('rules'), die: { f: 'idea', by: 'bet' }, hottest: heat.fid.hottest, trip: heat.fid.trip, timing: { f: 'idea', by: 'placer' }, wire: { f: 'computed', by: 'placer' } }
+    fid: { cells: C('design'), vias: C('design'), coverage: C('design'), transistors: C('design'), area: C('design'), masks: C('rules'), die: { f: 'idea', by: 'bet' }, hottest: heat.fid.hottest, trip: heat.fid.trip, timing: { f: 'idea', by: 'placer' }, wire: { f: 'computed', by: 'placer' }, rules: C('rules'), shuttle: { f: 'figures', fact: 'tt-sky26b' } }
   };
 }
 

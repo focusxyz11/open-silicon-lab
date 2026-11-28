@@ -62,3 +62,16 @@ test('changing the design changes what the die draws; an empty or broken design 
   /* the plan is plain data the line can draw too */
   assert.deepEqual(JSON.parse(JSON.stringify(b)), b);
 });
+
+test('the masks the studio draws are the record\'s, the ones Print reads; rule breaks are marked on their cells (#509)', () => {
+  const r = recordOf(stackOf(), ok('alu')), P = planOf(r);
+  assert.equal(P.masks, r.designed.masks, 'one source: the record\'s masks');
+  const pr = r.made.find(m => m.step === 'print').chip.masks;
+  assert.deepEqual(pr, { drawn: P.masks.drawn, total: P.masks.total }, 'and Print reads the same');
+  assert.deepEqual(P.sheets.map(s => s.id), ['silicon', 'gates', 'contacts', 'metal']);
+  const ids = new Set(P.cells.map(c => c.id));
+  for (const rule of r.designed.rules) { assert.ok(Number.isInteger(rule.n)); rule.cells.forEach(id => assert.ok(ids.has(id), rule.id + ': ' + id + ' is a cell')); if (rule.ok) assert.equal(rule.cells.length, 0); }
+  for (const [id, rs] of Object.entries(P.ruleCells)) { assert.ok(ids.has(id)); rs.forEach(x => assert.ok(r.designed.rules.some(q => q.id === x && !q.ok))); }
+  /* a design changed draws other masks */
+  assert.notDeepEqual(planOf(recordOf(stackOf(), ok('half'))).masks.cells, P.masks.cells);
+});

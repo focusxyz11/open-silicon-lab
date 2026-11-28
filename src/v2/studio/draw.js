@@ -54,6 +54,9 @@ export function drawDie(ctx, P, cam, o) {
   /* the trips between them and the memory, dotted */
   if (P.trips.length && dieW >= SHOW.units) { ctx.strokeStyle = alpha(C.accent, 0.4); ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.beginPath(); P.trips.forEach(([a, b]) => { ctx.moveTo(X(a[0]), Y(a[1])); ctx.lineTo(X(b[0]), Y(a[1])); ctx.lineTo(X(b[0]), Y(b[1])); }); ctx.stroke(); }
   if (dieW >= SHOW.units && dieW < 2400) labels.push({ x: X(0), y: Y(DIE) + 10, text: words(P.layers > 1 ? 'sd.layers' : P.n > 1 ? 'sd.units' : 'sd.unit', { n: P.n.toLocaleString('en'), k: P.layers }), kind: 'aside', part: 'units' });
+  /* the masks (#509): four sheets beside the die drawn from the record's masks, on a road leaving for Print with one small
+     square travelling it (12% of its length a second; still with reduced motion), and a side road to a shared shuttle */
+  if (dieW >= SHOW.units && P.masks && !P.empty && masksOf(ctx, P, X, Y, s, C, labels, words, o)) labels.moving = true;
   /* the first unit: your block, its registers, its control */
   if (u0.w * s >= SHOW.block) {
     const bad = P.broken === 'design' || P.broken === 'switch';
@@ -83,9 +86,15 @@ function cellsOf(ctx, P, X, Y, s, C, labels, words, on, bad) {
     ctx.setLineDash([6, 4]); ctx.lineWidth = 1.2; ctx.strokeStyle = bad ? C.bad : alpha(C.accent, 0.9);
     ctx.beginPath(); ctx.rect(X(c.x), Y(c.y), c.w * s, c.h * s); ctx.stroke();
     if (cw >= 44) layoutOf(ctx, c, X, Y, s, C, P.broken === 'switch');
+    /* a design rule broken by this cell's wiring: a red ring, and its rule named once close enough (#509) */
+    const br = P.ruleCells[c.id];
+    if (br) { ctx.setLineDash([3, 3]); ctx.lineWidth = 1.4; ctx.strokeStyle = C.bad; ctx.beginPath(); ctx.rect(X(c.x) - 4, Y(c.y) - 4, c.w * s + 8, c.h * s + 8); ctx.stroke();
+      if (c.w * s >= 110) labels.push({ x: X(c.x), y: Y(c.y + c.h) + 10, text: words('sd.rule', { rule: words('studio.rule.' + br[0]) }), kind: 'aside', part: 'rule:' + c.id, bad: true }); }
     if (c.w * s >= 110) labels.push({ x: X(c.x), y: Y(c.y) - 6, text: words('sd.cell', { type: c.type }), kind: 'name', part: 'cell:' + c.id, bad });
     if (k === 0 && c.w * s >= 300) labels.push({ x: X(c.x), y: Y(c.y + c.h) + 10, text: words('sd.drafted'), kind: 'aside', part: 'drafted' });
   });
+  /* the design rules, in one figure above the block */
+  if (P.rules.length && on(P.block)) { const n = P.rules.filter(r => !r.ok).length; labels.push({ x: X(P.block.x), y: Y(P.block.y) - 46, text: n ? words('sd.fig.rules', { n, m: P.rules.length }) : words('sd.fig.rulesOk', { m: P.rules.length }), kind: 'figure', part: 'rules', fid: P.fid.rules, bad: n > 0 }); }
   /* the path's figure at its last cell, and the wire under the block */
   const T = P.timing, last = T && P.cells.find(c => c.id === T.path[T.path.length - 1]);
   if (last && on(last)) labels.push({ x: X(last.x), y: Y(last.y + last.h) + 6, text: words(P.late ? 'sd.fig.late' : 'sd.fig.spare', { n: Math.round(Math.abs(T.slack)) }), kind: 'figure', part: 'path', fid: P.fid.timing, bad: P.late });
@@ -99,6 +108,44 @@ function cellsOf(ctx, P, X, Y, s, C, labels, words, on, bad) {
     labels.push({ x: X(r.x), y: Y(r.y + pad + V.rows * ch) + 8, text: words('sd.cover.n', { n: V.tested.size, m: V.cols * V.rows }), kind: 'figure', part: 'cover', fid: V.fid });
     labels.push({ x: X(r.x), y: Y(r.y + pad + V.rows * ch) + 30, text: words(V.found ? 'sd.cover.found' : 'sd.cover.none'), kind: 'aside', part: 'found', bad: V.found });
   }
+}
+/* the four sheets, each a drawing of your block's cells on its layer: silicon, gates, contacts, metal */
+function masksOf(ctx, P, X, Y, s, C, labels, words, o) {
+  const b = P.block, stop = !!P.broken, R = P.road;
+  const map = (sh, x, y) => [X(sh.x + sh.w * 0.08 + (x - b.x) / b.w * sh.w * 0.84), Y(sh.y + sh.h * 0.1 + (y - b.y) / b.h * sh.h * 0.8)];
+  /* the road, and the side road to the shuttle */
+  ctx.setLineDash(stop ? [6, 4] : [3, 3]); ctx.lineWidth = 1.4; ctx.strokeStyle = stop ? C.bad : alpha(C.accent, 0.8); ctx.beginPath();
+  ctx.moveTo(X(R.from[0]), Y(R.from[1])); ctx.lineTo(X(stop ? R.at[0] : R.to[0]), Y(R.from[1]));
+  if (!stop) { const sx = R.at[0] - 40; ctx.moveTo(X(sx), Y(R.from[1])); ctx.lineTo(X(sx), Y(P.shuttle.y + P.shuttle.h / 2)); ctx.lineTo(X(P.shuttle.x), Y(P.shuttle.y + P.shuttle.h / 2)); }
+  ctx.stroke();
+  P.sheets.slice().reverse().forEach((sh, k) => {
+    ctx.setLineDash([6, 4]); ctx.lineWidth = 1.2; ctx.strokeStyle = alpha(C.accent, 0.9); ctx.fillStyle = C.bg; ctx.beginPath(); ctx.rect(X(sh.x), Y(sh.y), sh.w * s, sh.h * s); ctx.fill(); ctx.stroke();
+    if (sh.w * s < 60) return;
+    ctx.setLineDash([]); ctx.lineWidth = 1; ctx.strokeStyle = alpha(C.accent, 0.75); ctx.fillStyle = alpha(C.accent, 0.75); ctx.beginPath();
+    P.cells.forEach(c => {
+      const [x0, y0] = map(sh, c.x, c.y), [x1, y1] = map(sh, c.x + c.w, c.y + c.h), w = x1 - x0, h = y1 - y0;
+      if (sh.id === 'silicon') { ctx.rect(x0 + w * 0.12, y0 + h * 0.16, w * 0.76, h * 0.24); ctx.rect(x0 + w * 0.12, y0 + h * 0.6, w * 0.76, h * 0.24); }
+      else if (sh.id === 'gates') { for (const gx of [0.36, 0.6]) { ctx.moveTo(x0 + w * gx, y0 + h * 0.08); ctx.lineTo(x0 + w * gx, y0 + h * 0.92); } }
+      else if (sh.id === 'contacts') { for (const [gx, gy] of [[0.2, 0.28], [0.8, 0.28], [0.2, 0.72], [0.8, 0.72]]) ctx.fillRect(x0 + w * gx - 1, y0 + h * gy - 1, 2, 2); }
+    });
+    if (sh.id === 'metal') P.wires.forEach(wi => wi.pts.forEach((p, i) => { const q = map(sh, p[0], p[1]); if (i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); }));
+    ctx.stroke();
+  });
+  const front = P.sheets[0];
+  const back = P.sheets[P.sheets.length - 1];
+  labels.push({ x: X(front.x), y: Y(back.y) - 50, text: words('sd.fig.masks', { drawn: P.masks.drawn, total: P.masks.total }), kind: 'figure wrap', part: 'masks', fid: P.fid.masks });
+  P.sheets.forEach(sh => { const key = 'sd.sheet.' + sh.id; if (sh.w * s >= 260) labels.push({ x: X(sh.x + sh.w) + 6, y: Y(sh.y) + 12, text: words(key), kind: 'aside', part: 'sheet:' + sh.id }); });
+  if (stop) { labels.push({ x: X(R.at[0]) - 6, y: Y(R.from[1]) - 22, text: words('sd.road.stop'), kind: 'aside', part: 'roadstop', bad: true }); return; }
+  labels.push({ x: X(R.to[0]) + 6, y: Y(R.from[1]) + 7, text: words('sd.road.print'), kind: 'name', part: 'toprint' });
+  /* the shuttle: tiles of many designs on one chip, yours lit */
+  const S = P.shuttle, tw = S.w / S.cols, th = S.h / S.rows;
+  ctx.setLineDash([]); ctx.lineWidth = 1; for (let k = 0; k < S.cols * S.rows; k++) { const x = S.x + (k % S.cols) * tw, y = S.y + Math.floor(k / S.cols) * th;
+    ctx.strokeStyle = alpha(C.accent, 0.6); ctx.strokeRect(X(x) + 1, Y(y) + 1, tw * s - 2, th * s - 2); if (k === S.lit) { ctx.fillStyle = alpha(C.accent, 0.6); ctx.fillRect(X(x) + 1, Y(y) + 1, tw * s - 2, th * s - 2); } }
+  labels.push({ x: X(S.x), y: Y(S.y + S.h) + 10, text: words('sd.shuttle'), kind: 'figure wrap', part: 'shuttle', fid: P.fid.shuttle });
+  /* one small square travels the road */
+  const len = R.to[0] - R.from[0], f = o.time != null ? (o.time / 1000 * 0.12) % 1 : 0, qx = R.from[0] + len * f;
+  ctx.fillStyle = C.accent; ctx.fillRect(X(qx) - 4, Y(R.from[1]) - 4, 8, 8);
+  return true;
 }
 export function layoutOf(ctx, c, X, Y, s, C, badGate) {
   const x = X(c.x), y = Y(c.y), w = c.w * s, h = c.h * s;

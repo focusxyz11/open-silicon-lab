@@ -43,5 +43,16 @@
  "sd.cover.n": "{n} of {m} states tested",
  "sd.cover.none": "no wrong answer yet",
  "sd.cover.found": "a wrong answer, in a corner",
- "sd.line.late": "Your block misses its clock: its longest path is drawn red. The line makes it anyway, and every die fails its test for speed."
+ "sd.line.late": "Your block misses its clock: its longest path is drawn red. The line makes it anyway, and every die fails its test for speed.",
+ "sd.rule": "breaks a rule: {rule}",
+ "sd.fig.rules": "design rules: {n} of {m} broken",
+ "sd.fig.rulesOk": "design rules: all {m} kept",
+ "sd.fig.masks": "masks: your design draws {drawn} of {total}",
+ "sd.sheet.silicon": "silicon",
+ "sd.sheet.gates": "gates",
+ "sd.sheet.contacts": "contacts",
+ "sd.sheet.metal": "metal",
+ "sd.road.print": "to Print, as its mask",
+ "sd.road.stop": "the line stops here",
+ "sd.shuttle": "or share a shuttle: 273 designs rode one chip"
 }

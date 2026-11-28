@@ -26,3 +26,5 @@
 #studioui .sdopts .chipb.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 
 @media (max-width: 720px) { #studioui .sdctl { bottom: calc(var(--dockh, 120px) + 12px); padding: 8px 10px; } #studioui .sdopts .chipb { padding: 5px 9px; font-size: 13px; } }
+/* a figure beside the die's neighbours wraps onto two lines rather than running over them (#509) */
+#studioLabels .sdl.wrap { white-space: normal; width: 210px; }

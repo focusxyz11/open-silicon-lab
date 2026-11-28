@@ -22,6 +22,10 @@ export default async function run() {
       return !!c && !c.hidden && !u.hidden && c.dataset.level === 'chip' && !c.dataset.flying && !!document.querySelector('#studioLabels .sdl.title') && u.dataset.broken === ''; }, null, { timeout: 60000 }).then(() => true, () => false);
     if (!opened) { problems.push(tag + ': #/studio does not open the die as designed'); await page.close(); continue; }
     if (await page.evaluate(() => !document.getElementById('mapCanvas').hidden)) problems.push(tag + ': the island is drawn behind the studio');
+    /* the masks (#509): the record's, beside the die on their road to Print, with a shared shuttle; on a phone they may
+       stand beyond the edge of the view */
+    if (w > 700 && !(await page.evaluate(() => { const m = document.querySelector('#studioLabels [data-part="masks"]'); return !!m && !!m.querySelector('.fid') && !!document.querySelector('#studioLabels [data-part="toprint"]') && !!document.querySelector('#studioLabels [data-part="shuttle"] .fid'); })))
+      problems.push(tag + ': the masks, their road to Print and the shared shuttle are not beside the die, marked');
     if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the studio scrolls sideways');
     if (!(await page.evaluate(() => { const r = document.querySelector('#studioui .rail2 [aria-current]'); return document.querySelectorAll('#studioui .rail2 [data-rail]').length === 4 && (!r || r.dataset.rail === 'chip'); })))
       problems.push(tag + ': the rail does not hold the four levels as designed, the chip lit');
@@ -65,6 +69,8 @@ export default async function run() {
       if (c.dataset.level === 'switch' && !c.dataset.flying) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
       return c.dataset.level === 'gate' && !c.dataset.flying; }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
     if (!atGate) problems.push(tag + ': ↑ does not come out from the switch to the gate');
+    /* the design rules (#509): one figure with its mark, and a cell whose wiring breaks one marked red */
+    if (!(await page.evaluate(() => { const r = document.querySelector('#studioLabels [data-part="rules"]'); return !!r && !!r.querySelector('.fid'); }))) problems.push(tag + ': at the gate, the design rules are not counted with their mark');
     /* along: → leads to the gate as made */
     const made = await page.waitForFunction(() => { if (location.hash.startsWith('#/studio')) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
       return location.hash === '#/chip/2/build'; }, null, { timeout: 30000, polling: 1000 }).then(() => true, () => false);

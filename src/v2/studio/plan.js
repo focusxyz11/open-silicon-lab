@@ -55,7 +55,13 @@ export function planOf(record) {
   /* the camera's targets, one per level: the rectangle each frames */
   const c0 = cells[0], span = c0 ? { w: c0.w, h: c0.h } : { w: block.w / 6, h: block.h / 4 };
   const cx0 = c0 ? c0.x : block.x, cy0 = c0 ? c0.y : block.y;
-  const right = mem.length ? Math.max(DIE, ...mem.map(m => m.x + m.w)) : DIE;
+  const right0 = mem.length ? Math.max(DIE, ...mem.map(m => m.x + m.w)) : DIE;
+  /* the masks (#509): four sheets beside the die, its road leaving the die's right edge for Print, and a side road down
+     to a shared shuttle, a grid of tiles with one lit */
+  const mx = right0 + 60, ry = 780, sheets = ['silicon', 'gates', 'contacts', 'metal'].map((id, k) => ({ id, x: mx + k * 16, y: ry - 85 - k * 16, w: 170, h: 170 }));
+  const road = { from: [DIE, ry], to: [mx + 3 * 16 + 170 + 70, ry], at: [mx, ry] };
+  const shuttle = { x: mx, y: ry + 120, w: 170, h: 90, cols: 6, rows: 3, lit: 8 };
+  const right = road.to[0] + 20;
   const targets = {
     chip: { x: -20, y: -60, w: right + 40, h: DIE + 80 },
     block: { x: u0.x - 10, y: u0.y - 10, w: u0.w + 20, h: u0.h + 20 },
@@ -72,7 +78,8 @@ export function planOf(record) {
   /* the longest path on the layout and its slack, the wire, and whether the block misses its clock (#508) */
   const T = D && D.timing, onPath = new Set(T ? T.path : []);
   wires.forEach(w => { w.path = !!T && onPath.has(w.to) && (w.from == null ? T.path[0] === w.to : onPath.has(w.from) && T.path.indexOf(w.from) === T.path.indexOf(w.to) - 1); });
-  return { shape, where, n, layers: fp.layers, heat: (D && D.heat) || null, timing: T || null, late: !!(D && D.late), wire: (D && D.wire) || null, fid: (D && D.fid) || {}, units, mem, memKind: M.kind, block, regs, ctl, cells, wires, pins, trips, pads: padsAt, targets, empty: !cells.length, broken: (D && D.broken) || null };
+  const ruleCells = {}; ((D && D.rules) || []).forEach(r => { if (!r.ok) r.cells.forEach(id => { (ruleCells[id] = ruleCells[id] || []).push(r.id); }); });
+  return { sheets, road, shuttle, masks: (D && D.masks) || null, rules: (D && D.rules) || [], ruleCells, shape, where, n, layers: fp.layers, heat: (D && D.heat) || null, timing: T || null, late: !!(D && D.late), wire: (D && D.wire) || null, fid: (D && D.fid) || {}, units, mem, memKind: M.kind, block, regs, ctl, cells, wires, pins, trips, pads: padsAt, targets, empty: !cells.length, broken: (D && D.broken) || null };
 }
 
 /* the level a scale stands at, and how far along the levels it is (0 = chip, 3 = switch), continuously: from the scale
