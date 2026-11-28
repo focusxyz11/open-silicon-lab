@@ -227,12 +227,14 @@ export function createHold(host, ctx = {}) {
   function fly(top, smooth) { /* a move you make is where you are from then on, whatever the page was keeping */
     here.a = null; const y0 = host.scrollTop, y1 = clamp(top, 0, host.scrollHeight - vh), far = Math.abs(y1 - y0) / vh;
     if (!smooth || reduce() || far < .02) { land0(); host.scrollTo({ top, behavior: 'instant' }); onScroll(); return; }
-    flying = 1; anim = { y0, y1, t0: performance.now(), ms: clamp(1100 + far * 650, 1400, 4200), e: 0 };
-    /* on the chip, one straight move rising a little, not a pan past every block between */
-    if (Math.min(y0, y1) >= p0 + vh * .85) { const c0 = camAt(y0), c1 = camAt(y1), dd = Math.hypot(c1.x - c0.x, c1.y - c0.y) / S1; anim.c0 = c0; anim.c1 = c1; anim.dip = clamp(dd * .16, 0, .42); anim.ms = clamp(1300 + dd * 520, 1400, 3600); } root.classList.toggle('fly', far > .6); }
+    /* every flight: the page is at once where it is going and only the camera travels, straight and rising a little on a
+       long way, so nothing between (blocks, the count of the fifty years) plays past too fast to follow */
+    const c0 = C || camAt(y0), c1 = camAt(y1), dd = Math.hypot(c1.x - c0.x, c1.y - c0.y) / S1, dk = Math.abs(Math.log(c1.k / c0.k));
+    flying = 1; anim = { y0, y1, c0, c1, e: 0, t0: performance.now(), dip: clamp(dd * .16, 0, .42), ms: clamp(1200 + dd * 520 + dk * 700, 1300, 3600) };
+    root.classList.toggle('fly', far > .6); host.scrollTo({ top: y1, behavior: 'instant' }); onScroll(); }
   const land0 = () => { if (anim) { anim = null; flying = 0; root.classList.remove('fly'); } };
-  TICK.push(() => { if (!anim) return; const k = clamp((performance.now() - anim.t0) / anim.ms, 0, 1), e = (1 - Math.cos(Math.PI * k)) / 2; anim.e = e;
-    host.scrollTop = anim.y0 + (anim.y1 - anim.y0) * e; if (k >= 1) { land0(); onScroll(); } });
+  TICK.push(() => { if (!anim) return; const k = clamp((performance.now() - anim.t0) / anim.ms, 0, 1); anim.e = (1 - Math.cos(Math.PI * k)) / 2;
+    if (k >= 1) land0(); onScroll(true); });
   for (const ev of ['wheel', 'touchstart', 'pointerdown']) host.addEventListener(ev, () => { if (anim) { land0(); onScroll(); } }, { passive: true });
   /* the steps after the wall: the whole chip, then each block as it arrives and its question; after the last, inside */
   function step(dir) { touch(); const y = anim ? anim.y1 : host.scrollTop;
@@ -242,7 +244,7 @@ export function createHold(host, ctx = {}) {
     if (id === 'years') top = sec.offsetTop + yOfD(d || 0);
     else if (ph) top = full ? sec.offsetTop + sec._c[1].offsetTop - parseFloat(getComputedStyle(sec._c[1]).top) + 6 : top;
     else if (full) top = fullY(sec);
-    fly(top, smooth && id !== 'years'); }
+    fly(top, smooth); }
   /* where a block's last card (its question, or else its thing to try) has come to rest */
   function fullY(sec) { const c = sec._c[2] || sec._c[1], st = parseFloat(getComputedStyle(c).top) || 0; c.style.position = 'static'; const nat = c.offsetTop; c.style.position = ''; return Math.max(sec.offsetTop + 2, sec.offsetTop + nat - st + 40); }
   const goOver = () => { touch(); fly(p0 + vh * 1.1, true); };

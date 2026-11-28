@@ -158,7 +158,7 @@ export default async function run() {
       const m = document.querySelector('#hd-root .d-world .h-chm[data-blk="next"]'), r = m && m.getBoundingClientRect();
       return st.chip && !st.fly && document.querySelector('#hd-root .d-world').classList.contains('far') && document.querySelectorAll('#hd-root .d-world .h-chm .hc-t').length === 12 && document.querySelectorAll('#hd-root .d-world .h-chm .hc-t.on').length === 12
         && !!r && r.width > 10 && r.left >= 0 && r.right <= innerWidth && getComputedStyle(m).visibility === 'visible' && !document.querySelector('#hd-root [role=dialog]'); });
-    if (!phone && !(await hp.evaluate(() => document.querySelectorAll('#hd-root .b-rail button[data-ch="years"] .hc-r i').length === 7 && document.querySelectorAll('#hd-root .b-rail .hc-r i.on').length === 12))) problems.push(tag + ': the chapters at the left do not carry their challenges\' ticks');
+    if (!phone && !(await hp.evaluate(() => (document.querySelector('#hd-root .b-rail button[data-ch="years"] .hc-r') || {}).textContent === '7/7' && [...document.querySelectorAll('#hd-root .b-rail .hc-r')].reduce((n, e) => n + parseInt(e.textContent), 0) === 12))) problems.push(tag + ': the chapters at the left do not count their challenges');
     await play('the mark of a challenge on the whole chip does not lead to it', () => { const st = window.__hold.state(); if (st.cur === 'next') return !st.fly; const m = document.querySelector('#hd-root .d-world.far .h-chm .hc-t[data-ch="floor"]'); if (!st.fly && m) m.click(); return false; }, null, 20000);
     if (!phone) { /* past the wall the page steps: one control under the picture, the next part named on it, at a tap */
       await hp.evaluate(() => window.__hold.go('leak'));

@@ -25,16 +25,16 @@ export function marks({ blks, rail, go }) {
   const tick = id => '<button type="button" class="hc-t' + (curve(id) ? ' cv' : '') + '" data-ch="' + id + '"><i></i><span>' + w('ch.' + id) + '</span></button>';
   const groups = Object.keys(on).filter(b => blks[b]).map(b => { const g = h('div', 'h-chm' + (on[b].length > 1 ? ' many' : ''), on[b].map(tick).join('') + (on[b].length > 1 ? '<b class="hc-n mono" aria-hidden="true"></b>' : '')); g.dataset.blk = b; blks[b].appendChild(g); return g; });
   groups.forEach(g => g.addEventListener('click', e => { const t = e.target.closest('.hc-t'); if (t) { e.stopPropagation(); go(t.dataset.ch); } }));
-  /* the rail: each chapter's ticks beside its name, shown with it */
-  if (rail) [...rail.children].forEach(b => { const ids = LINE.filter(id => PW[CH_AT[id][0]].ch === b.dataset.ch), s = b.querySelector('span');
-    if (ids.length && s) { const r = h('em', 'hc-r', ids.map(id => '<i data-ch="' + id + '"' + (curve(id) ? ' class="cv"' : '') + '></i>').join('')); r.setAttribute('aria-hidden', 'true'); s.appendChild(r); } });
+  /* the rail: beside each chapter's name, how many of its challenges are done, quietly (the marks themselves are on the chip) */
+  const RC = rail ? [...rail.children].map(b => { const ids = LINE.filter(id => PW[CH_AT[id][0]].ch === b.dataset.ch), s = b.querySelector('span');
+    if (!ids.length || !s) return null; const r = h('em', 'hc-r mono'); r.setAttribute('aria-hidden', 'true'); s.appendChild(r); return [r, ids]; }).filter(Boolean) : [];
   function paint() {
     const next = LINE.find(id => !S.done[id]);
     groups.forEach(g => { const ts = [...g.querySelectorAll('.hc-t')], n = g.querySelector('.hc-n'), bn = ts.find(t => !S.done[t.dataset.ch]);
       ts.forEach(t => { const id = t.dataset.ch, d = !!S.done[id]; t.classList.toggle('on', d); t.classList.toggle('nx', id === next); t.classList.toggle('bn', t === bn);
         t.setAttribute('aria-label', w('ch.' + id) + (d ? ', ' + w('chm.done') : id === next ? ', ' + w('chm.next') : '')); });
       if (n) n.textContent = ts.filter(t => S.done[t.dataset.ch]).length + '/' + ts.length; });
-    if (rail) rail.querySelectorAll('.hc-r i').forEach(i => { i.classList.toggle('on', !!S.done[i.dataset.ch]); i.classList.toggle('nx', i.dataset.ch === next); });
+    for (const [r, ids] of RC) { const n = ids.filter(id => S.done[id]).length; r.textContent = n + '/' + ids.length; r.classList.toggle('all', n === ids.length); }
   }
   paint(); onChange(paint);
 }
