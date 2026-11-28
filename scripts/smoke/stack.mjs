@@ -147,6 +147,16 @@ export default async function run() {
       .catch(() => problems.push(tag + ': the rail does not reach your niche'));
     await sp.waitForFunction(() => { const v = window.__stack; if (!v.busy() && v.view.level !== 'stack') { const b = document.querySelector('#stackv .sk-rail [data-go="stack"]'); if (b) b.click(); } return v.view.level === 'stack' && !v.busy() && location.hash === '#/stack'; }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': the rail does not bring the camera back to your stack (#/stack)'));
+    /* a lens repaints the whole stack (#449): Perfect fails paints every plate from the carry, with the gate's own chance
+       of a wrong copy, and the plates above it at least as painted; closed again, the stack is plain */
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.busy()) return false; v.setLens({ rung: 'gate', id: 'perfect' });
+      const P = v.paintNow(), R = v.carry().R, g = R.rungs.gate.hands; if (!P || Object.keys(P).length !== 7) return false;
+      /* the numbers are the carry's own: the gate's chance as a power of ten, and the plates above at least as painted */
+      if (!g) return P.gate.v === null; const k = Math.log10(g.fail);
+      return (k <= -40 ? P.gate.say === 'rarer' : k >= -3 ? P.gate.say === 'pct' : P.gate.n === Math.round(-k)) && (P.chip.v == null || P.chip.v >= P.gate.v - 1e-9); }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': Perfect fails does not repaint every plate from the carry'));
+    await sp.waitForFunction(() => { const v = window.__stack; v.setLens(null); return v.paintNow() === null; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': closing the lens does not leave the stack plain'));
     /* the keyboard: the mirror's plots move under the arrows and Enter opens one */
     await sp.evaluate(() => { window.__stack.goField(); });
     await sp.waitForFunction(() => !window.__stack.busy() && window.__stack.view.level === 'field', null, { timeout: 20000 }).catch(() => {});

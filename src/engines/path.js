@@ -217,7 +217,9 @@ function carryOf(g, F, aim, ref) {
     const SG = A.CARRY.told[g.told].stages ? F.stages : 1, path = readD + 6 * tg + aluD + 2 * tg, period = Math.max(SG === 1 ? path : path / SG + 6 * tg, 12 * tg);
     const pipeG = SG > 1 ? SG * 128 * 10 : 0, coreG = aluG + fileG + CTRL + pipeG;
     const Ei = (aluE + 3 * readE + CTRL * 0.1 * Eg + pipeG * 0.25 * Eg + 2000 * 0.05 * Eg * (SG > 1 ? 1 : 0.6)) / eT;
-    const q = Math.min(1, 1 - (1 - Pw) * Math.pow(1 - Pr, 2) * (1 - fails(p, CTRL * 0.1)));
+    /* the chance an instruction goes wrong: the same product as 1 - (1 - Pw)(1 - Pr)^2(1 - control's), kept exact when it is
+       tiny (log1p and expm1, so one wrong copy in 10^40 does not round to never: Perfect fails reads it, #449) */
+    const q = Math.min(1, -Math.expm1(Math.log1p(-Math.min(Pw, 1 - 1e-16)) + 2 * Math.log1p(-Math.min(Pr, 1 - 1e-16)) + Math.log1p(-Math.min(fails(p, CTRL * 0.1), 1 - 1e-16))));
     /* its die, cut from a wafer of your line: how many come out whole, and what a good one costs */
     const die = dieOf(areaOf(coreG, G.switches), line.defects, line.pace);
     K = put('chip', { clock: 1e12 / period, cpi: CPI[SG], energy: Ei * 1e-15, wrong: q, gates: coreG, area: die.area, yield: die.yield, cost: die.cost / (ref || die.cost) },

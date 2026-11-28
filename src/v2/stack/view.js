@@ -30,6 +30,7 @@ import { FINE_OF, CHOICES, V_RANGE, ARRANGE } from '../../data/path.js';
 import { A, SW, RUNGS, EXAMPLE, GENE_AT, GENE_OF, RUNG_DIR, clamp, carry, see, stoneOf, marksOf, stackMarks, rungName, RECIPES, RIDX, BLOCK, NEEDS, POT, CAN, CELLCAN, fxOf, bestNeed, recipeName, population, census, times, pct } from './model.js';
 import { holder, credit, plotCard, sinceVisit, sinceLine, portCard, champWords } from './field.js';
 import { proposedHtml, openWords } from './genome.js';
+import * as SL from '../../engines/stacklens.js';
 import { PIC, passedPic, makePen, glyph } from './pics.js';
 import * as FX from './faces.js';
 
@@ -91,6 +92,8 @@ export function createStack(host, opts = {}) {
   /* what changed on the field since your last visit (the census without yours), kept in this browser */
   const SINCE = (() => { const c0 = census(POP); return sinceLine(sinceVisit(POP, { champ: c0.champ }, new Date().toISOString().slice(0, 10)), POP, { champ: c0.champ }); })();
   const yoursAt = r => FINE_OF[r].some(k => String(S.F[k]) !== String(EXAMPLE[k])) || !!R().rungs[r].fork;
+  /* who chose a rung, for Only humans (#449): an agent whose fork you took, you, or the lab's example */
+  const byAgent = new Set(), whoAt = r => (R().rungs[r].fork && GENE_OF[r] && byAgent.has(GENE_OF[r]) ? 'agent' : yoursAt(r) ? 'you' : 'lab');
 
   /* ---------- the camera ---------- */
   let vw = 0, vh = 0, dpr = 1, dirty = true, U = 1, on = false, raf = 0;
@@ -377,9 +380,11 @@ export function createStack(host, opts = {}) {
     const figsAt = r => (face !== 'use' ? FX.figsOf(Rn, r, face, stepAt(r)) : Vn.fig[r]) || [];
     ctx.font = fMono(12.5 * U, 500); const vwid = Math.max(...RUNGS.map(r => Math.max(...figsAt(r).map(f => ctx.measureText(f[1]).width), 30))) + 12;
     const words = fade > 0.75, stones = Object.fromEntries(RUNGS.map(r => [r, stonesOf(r)]));
+    /* a lens that repaints the whole stack (#449): every plate painted from the carry, none dimmed */
+    const RP = lens && SL.REPAINT.includes(lens.id) ? SL.paint(Rn, lens.id, sh.mine ? whoAt : () => 'lab') : null;
     for (let i = 0; i < NR; i++) {
       const z = i * cam.G * ex, a = proj(rc.x, rc.y, z), rung = RUNGS[i], dead = i > bi, dir = RUNG_DIR[rung], passed = !!Rn.rungs[rung].passed;
-      const dim = (focus >= 0 && focus !== i ? 0.42 : 1) * (lens && lens.rung !== rung ? 0.5 : 1);
+      const dim = (focus >= 0 && focus !== i ? 0.42 : 1) * (lens && !RP && lens.rung !== rung ? 0.5 : 1);
       PL[i] = { x: a[0], y: a[1], w: wpx, d: dpx, skew, z };
       if (a[1] - dpx > vh + 60 || a[1] < -260) continue;
       const m = nov ? mat[dir] : 1, pm = clamp((Math.log10(m) + 2.3) / 2.3, 0, 1), bar = Math.sqrt(m), inFocus = sh.mine && nov && (S.focus.includes(dir) || hoverDir === dir);
@@ -401,6 +406,11 @@ export function createStack(host, opts = {}) {
       ctx.fillStyle = C.panel((drafted ? 0.55 : C.dark ? 0.9 : 0.93) * fade * (passed ? 0.55 : 1)); ctx.fill(p);
       const flash = wave && Math.abs(wl - i) < 0.7 ? 1 : 0, edge = dead ? C.bad(0.6 * fade) : focus === i || hoverRung === i || flash ? C.acc(0.95 * fade) : drafted ? C.acc(0.7 * fade * dim) : C.ink((passed ? 0.2 : 0.36) * fade * dim);
       ctx.strokeStyle = edge; ctx.lineWidth = focus === i || flash ? 1.8 : 1; if (dead || passed) ctx.setLineDash([5, 4]); else if (drafted) ctx.setLineDash([7, 5]); ctx.stroke(p); ctx.setLineDash([]);
+      /* the lens's paint over the plate: failing copies in red, moving bits in warm, a fluid rung outlined, a rung chosen
+         by you in blue (by an agent in warm) */
+      if (RP && RP[rung] && RP[rung].v != null && !dead) { const q = RP[rung], id = lens.id;
+        if (id === 'line') { if (q.v) { ctx.strokeStyle = C.acc(0.95 * fade); ctx.lineWidth = 2.6; ctx.setLineDash([9, 5]); ctx.stroke(p); ctx.setLineDash([]); } else { ctx.fillStyle = C.ink(0.08 * fade); ctx.fill(p); } }
+        else if (q.v > 0) { const col = id === 'perfect' ? C.bad : id === 'geo' ? C.warm : q.say === 'agent' ? C.warm : C.acc; ctx.fillStyle = col((0.08 + 0.32 * q.v) * fade); ctx.fill(p); ctx.strokeStyle = col(0.85 * fade); ctx.lineWidth = 1.6; ctx.stroke(p); } }
       /* its front edge is inked as far as its direction is polished */
       ctx.fillStyle = C.ink(0.12 * fade * dim); ctx.fillRect(a[0], a[1], wpx, th);
       if (!dead) { ctx.fillStyle = inFocus ? C.acc((0.85 + 0.15 * grew) * fade) : C.ink(0.72 * fade * dim); ctx.fillRect(a[0], a[1], wpx * Math.max(0.012, bar), th); if (inFocus && grew > 0) { ctx.fillStyle = C.acc(0.5 * grew); ctx.fillRect(a[0], a[1] - 2, wpx * bar, th + 4); } }
@@ -414,7 +424,9 @@ export function createStack(host, opts = {}) {
       label(lx(a[1] - yN), yN, rungName(rung), fSerif(pxN, 700), pxN, dead ? C.mut(al) : C.ink(al), { pri: 90 - i, force: true });
       if (sh.mine && yoursAt(rung) && !three) { ctx.fillStyle = C.acc(al); ctx.fillRect(lx(a[1] - yN) - 9, yN - pxN * 0.62, 4, pxN * 0.62); }
       const way = dead ? t('sk.tag.cannot') : passed ? Vn.way[rung] || '' : face !== 'use' ? FX.wayOf(Rn, rung, face, stepAt(rung)) : Vn.way[rung] || '';
-      if (two) label(lx(a[1] - yW), yW, way, fMono(10.5 * U), 10.5 * U, dead ? C.bad(al) : C.mut(al), { pri: 70, max: zone + (three ? 30 : 10) });
+      const sup = n => String(n).replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]), lw = RP && RP[rung] && !dead ? t('sk.lens.' + lens.id + '.' + RP[rung].say, { n: lens.id === 'perfect' && RP[rung].say !== 'pct' ? sup(RP[rung].n) : RP[rung].n }) : null;
+      if (two) label(lx(a[1] - yW), yW, lw || way, fMono(10.5 * U, lw ? 600 : 400), 10.5 * U, dead ? C.bad(al) : lw ? (lens.id === 'perfect' && RP[rung].v > 0 ? C.bad(al) : C.ink(al)) : C.mut(al), { pri: 70, max: zone + (three ? 30 : 10) + (lw ? 150 : 0) });
+      else if (lw) label(lx(a[1] - yN) + 140, yN, lw, fMono(10.5 * U, 600), 10.5 * U, C.ink(al), { pri: 69, max: zone + 150 });
       if (three) { const mineY = sh.mine && yoursAt(rung); label(lx(a[1] - yT), yT, sh.mine ? (mineY ? t('sk.tag.yours') : t('sk.tag.lab')) : t('sk.tag.sketch'), fMono(10.5 * U, mineY ? 600 : 400), 10.5 * U, mineY ? C.acc(al) : C.mut(0.8 * al), { pri: 60, max: zone + 20 }); }
       const figs = face !== 'use' ? figsAt(rung) : (wave && sh.mine && i > wave.k && wl < i ? Yprev.V.fig[rung] : Vn.fig[rung]) || [];
       if (anim && ex < 0.985) continue;
@@ -667,7 +679,7 @@ export function createStack(host, opts = {}) {
     else if (d.out) goOut();
     else if (d.dir) { const x = d.dir, i = S.focus.indexOf(x); if (i >= 0) S.focus.splice(i, 1); else { S.focus.push(x); if (S.focus.length > A.FOCUS_MAX) S.focus.shift(); } save(); ui(); }
     else if (d.mark) { const m = marks[+d.mark]; if (m && card().mark) card().mark(m); }
-    else if (d.fork) { if (d.fork !== 'x') { const p = proposals[+d.fork]; proposals = null; setGene(p.gene, p.option); } else { proposals = null; ui(); } }
+    else if (d.fork) { if (d.fork !== 'x') { const p = proposals[+d.fork]; proposals = null; byAgent.add(p.gene); setGene(p.gene, p.option); } else { proposals = null; ui(); } }
     else if (b.classList.contains('sk-grow1')) grow(1); else if (b.classList.contains('sk-grow5')) grow(5);
     else if (b.classList.contains('sk-ask')) { proposals = A.agentForks(S.A); ui(); }
     else if (b.classList.contains('sk-explore')) port();
@@ -721,7 +733,9 @@ export function createStack(host, opts = {}) {
   let first = true;
   const setPose = p => { Object.assign(cam, { x: p.x, y: p.y, z: p.z, s: p.s, T: p.T, G: p.G, ex: p.ex, ox: p.ox, oy: p.oy }); trig(); };
   /* for the lab's own checks (scripts/smoke/stack.mjs) */
-  const api = { S, view, cam, A, face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
+  /* the lens open in the card: its rung lit, the others dimmed; a lens that repaints the stack paints every plate (#449) */
+  function setLens(l) { const k = l ? l.rung + l.id : ''; if (k === (lens ? lens.rung + lens.id : '')) return; lens = l; dirty = true; ui(); }
+  const api = { S, view, cam, A, setLens, paintNow: () => (lens && SL.REPAINT.includes(lens.id) ? SL.paint(R(), lens.id, whoAt) : null), face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
   /* the questions on the stack, for the card: the strongest at a rung (or across the stack), the one marked at a rung */
   const marksAt = (key, n = 6) => (view.level === 'field' || !onMine() ? [] : stackMarks(QB, n, RUNGS.includes(key) ? [key] : null));
   return {
@@ -729,7 +743,7 @@ export function createStack(host, opts = {}) {
     ctl: CTL, view, reframe, marksAt, mine: onMine,
     markOf: (rung, q) => (QB[rung] || []).find(m => m.id === q) || null,
     /* the lens open in the card: its rung lit, the others dimmed */
-    setLens(l) { const k = l ? l.rung + l.id : ''; if (k === (lens ? lens.rung + lens.id : '')) return; lens = l; dirty = true; ui(); },
+    setLens,
     /* what you are looking at: the line the foot said before the card, and the opened recipe's figures */
     rest: () => rest, shown: () => (view.level === 'field' ? null : shown()),
     /* the face every plate is turned to (#456), and what a rung shows on it: its way, figures and mark, or why it has none */
