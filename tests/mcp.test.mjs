@@ -21,7 +21,7 @@ test('an agent connects, lists the tools, reads the plan and takes a job', async
     assert.equal(init.result.serverInfo.name, 'open-silicon-lab');
     assert.ok(init.result.capabilities.tools && init.result.instructions);
     const tools = (await S.call('tools/list', {})).result.tools.map(t => t.name);
-    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'block_front', 'submit_front', 'propose_question', 'choose_design', 'grow_architecture', 'architecture_forks', 'propose_arrangement', 'propose_placement', 'architecture_field', 'submit_architecture', 'propose_gene']);
+    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'block_front', 'submit_front', 'propose_question', 'choose_design', 'grow_architecture', 'architecture_forks', 'propose_arrangement', 'propose_placement', 'architecture_field', 'submit_architecture', 'propose_gene', 'propose_purpose']);
     const plan = (await S.tool('list_plan', {})).structuredContent;
     assert.ok(plan.pieces.some(p => p.id === 'core' && p.engine === 'riscv'));
     const job = (await S.tool('get_job', { job: 'vote' })).structuredContent;
@@ -163,6 +163,14 @@ test('an agent grows an architecture through the port: scores a history, takes a
     assert.ok(G1.ok && /-gene-/.test(G1.entry.id) && G1.entry.file.includes('"carry"') && /guess/.test(G1.status), JSON.stringify(G1));
     const G2 = (await S.tool('propose_gene', { gene: 'shape', option: 'ring', name: 'A ring', what: 'Units joined in a ring, each passing its result to the next.', effect: { energy: 1.2 }, carry: {}, kind: 'person' })).structuredContent;
     assert.ok(G2.ok === false && G2.how && G2.genes.find(g => g.gene === 'shape').contract.units, 'an incomplete proposal is refused with the contract');
+    /* purposes (#481): one just past what any recipe does comes back as an entry; one too easy is refused with the reason
+       in words a proposer can act on, and today's needs as examples of the form; the field lists the purposes and the
+       season */
+    const P1 = (await S.tool('propose_purpose', { purpose: 'glacier', name: 'A glacier logger', what: 'A logger frozen into the ice for twenty years, reading exactly and never repaired.', w: { rugged: 1, energy: 0.5 }, must: { rugged: 2, exact: 0.9 }, author: 'An agent', kind: 'ai', ai: 'Proposed by an AI agent through the open port.' })).structuredContent;
+    assert.ok(P1.ok && /-purpose-/.test(P1.entry.id) && P1.entry.file.includes('"season"'), JSON.stringify(P1));
+    const P2 = (await S.tool('propose_purpose', { purpose: 'easy', name: 'Anything cheap', what: 'Any job at all, as long as it spends little energy.', w: { energy: 2 }, kind: 'person' })).structuredContent;
+    assert.ok(P2.ok === false && /easy/i.test(P2.reason) && P2.how && P2.needs.length === 6, JSON.stringify(P2));
+    assert.ok(Array.isArray(Fd.purposes) && Fd.purposes.some(p => p.purpose === 'deep-sea') && Fd.season >= 1 && Fd.scoredPerAuthorPerDay >= 1 && Array.isArray(Fd.pastChampions));
     assert.ok((await S.tool('grow_architecture', { start: 'in/charge/graph/stack', years: [['luck']] })).isError, 'a direction the engine does not have');
   } finally { S.stop(); }
 });

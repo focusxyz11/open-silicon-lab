@@ -5,7 +5,7 @@
    stack (#/stack/<rung>), the lab's blue button the way into the whole (#/stack); the island and the Map are quieter
    ways on. The rungs are read from src/data/path.js, the stack's own list, here and never in the first page's closure:
    this is the page's last picture, so it is fetched once the page has drawn, not with it. */
-import { w, h, S, K, fg, onChange } from './holdkit.js';
+import { w, h, S, K, fg, onChange, lab } from './holdkit.js';
 import { at, put, out, glyph } from './holdplates.js';
 import { RUNGS } from '../data/path.js';
 
@@ -79,4 +79,16 @@ export function landing(end, sources) {
   if (end) { const f = h('footer', '', '<button type="button" class="bbtn mono">' + w('sources') + '</button><a href="' + REPO + '" target="_blank" rel="noopener">GitHub ↗</a><a href="' + REPO + '/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">' + w('foot.join') + ' ↗</a><a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">' + w('foot.mit') + '</a>');   // i18n-ok: GitHub is a name
     f.firstChild.onclick = sources; end.appendChild(f); }
   return () => { location.hash = '#/stack'; };
+}
+
+/* the field of every attempt at an architecture in one line, on the arrangements block (#480): how many of the recipes
+   have been tried and how many beat today's computer somewhere, read from the community's ledger by the population
+   engine (ctx.field in src/v2/hold.js). It comes with the shell's idle preload, never with the first page's own load */
+export function fillField(sum) {
+  if (!sum || !Number.isFinite(sum.tried)) return;
+  /* it comes late: where it appears above what you are reading, the page keeps your place (nothing jumps) */
+  const box = document.getElementById('home');
+  document.querySelectorAll('#hd-root [data-field]').forEach(e => { const above = box && e.getBoundingClientRect().top < box.getBoundingClientRect().top, h0 = box ? box.scrollHeight : 0;
+    e.innerHTML = w('field.line', { tried: sum.tried, of: sum.of, beat: sum.beat }) + ' ' + lab(w('field.go'), '#/stack/field'); e.hidden = false;
+    if (above) box.scrollTop += box.scrollHeight - h0; });
 }

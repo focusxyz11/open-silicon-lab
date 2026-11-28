@@ -153,6 +153,10 @@ export const FILED = {
   'bridge': ['physics', 'dig', 'nat'], 'dnawta': ['physics', 'dig'],
   /* new ways to compute: reversible logic at the switch, dataflow at the chip (#323) */
   'reversible': ['physics', 'nat'], 'dataflow': ['geo', 'eff'],
+  /* build up, not out: tiers stacked until the heat stops you, chiplets against the dust (#482) */
+  'tiers': ['geo', 'physics', 'eff'],
+  /* trust it or not: an agent's adder that may hide a trigger, checked within a budget (#497) */
+  'trigger': ['trust', 'dig', 'human'],
   /* spiking neurons and light, new ways to compute (#322) */
   'spikes': ['physics', 'copy'], 'light': ['physics', 'geo']
   }

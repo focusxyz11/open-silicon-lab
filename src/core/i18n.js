@@ -49,7 +49,7 @@ export const AREAS = {
     'chip', 'life'],
   /* an architecture's needs and genes go with the ledger, whose record names them */
   design: ['design', 'bench', 'build', 'ledger', 'api', 'core', 'ar.need', 'ar.gene'],
-  labs: ['td', 'bet', 'aib', 'agent', 'srv', 'ana', 'ckp', 'rv', 'er', 'cim', 'grv', 'semi', 'imp', 'ovl', 'eu',
+  labs: ['td', 'tier', 'trg', 'bet', 'aib', 'agent', 'srv', 'ana', 'ckp', 'rv', 'er', 'cim', 'grv', 'semi', 'imp', 'ovl', 'eu',
     'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'xray', 'xr', 'gauge', 'carch',
     'pb', 'th', 'srch', 'halt',
     /* spiking neurons and light (#322) */

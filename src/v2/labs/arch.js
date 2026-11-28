@@ -430,7 +430,7 @@ export default function lab(L) {
       /* keep this attempt: signed, checked against the ledger (grown again there), kept as your draft with its slip */
       if (q('[data-ar-keep]')) {
         const h = hist(), s0 = st(); if (!h) return true;
-        const k = keep(S, { kind: 'try', arch: A.histClaim(h, A.winsOf(s0)), words: '' }, 'arch ' + A.keyOf(s0.g).split('/').join(' '), signOf(el.querySelector('.arkeep') || el));
+        const k = keep(S, { kind: 'try', arch: A.histClaim(h, A.winsOf(s0)), season: A.VERSION, words: '' }, 'arch ' + A.keyOf(s0.g).split('/').join(' '), signOf(el.querySelector('.arkeep') || el));
         view.arNo = k.ok ? null : refusal(k.r); if (k.ok) { view.arSlip = k.e.id; view.arSlipKey = slipKey(h); save(); if (L.ctx && L.ctx.kept) L.ctx.kept(k.e); }
         draw(); if (show) show('.arkept .slip, .arkeep'); return true;
       }

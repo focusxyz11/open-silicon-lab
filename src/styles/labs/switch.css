@@ -62,6 +62,7 @@
 .tswdev .sub { fill: color-mix(in srgb, var(--ink) 9%, var(--panel-solid)); stroke: var(--line); }
 .tswdev .ins { fill: color-mix(in srgb, var(--muted) 45%, var(--panel-solid)); }
 .tswdev .ch { fill: var(--accent); }
+.tswdev .ch.hole { fill: color-mix(in srgb, var(--accent) 45%, var(--panel-solid)); stroke: var(--accent); stroke-width: 1; }
 .tswdev .gate { fill: color-mix(in srgb, var(--warm) 80%, var(--panel-solid)); }
 .tswdev .lb { font: 600 10px var(--sans); fill: var(--ink); }
  .tswdev .lch { fill: var(--accent); }

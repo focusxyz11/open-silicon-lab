@@ -209,7 +209,7 @@ export const genomeOf = s => proposals(world(s));
 export const frontierOf = s => frontier(world(s));
 /* an attempt at an architecture in a few words: how many genes it ended from today's computer, its years and the needs it
    won (ar.need is in the ledger's area, so the record names them wherever it is drawn) */
-const archWords = e => t(e.facts.wins.length ? 'ledger.rec.arch' : 'ledger.rec.archNone', { genes: fmtNum(e.facts.novelty), years: fmtNum(e.facts.years), needs: e.facts.wins.map(n => t('ar.need.' + n)).join(', ') });
+const archWords = e => !e.facts ? t('ledger.rec.archPast', { n: fmtNum(e.season || 1) }) : t(e.facts.wins.length ? 'ledger.rec.arch' : 'ledger.rec.archNone', { genes: fmtNum(e.facts.novelty), years: fmtNum(e.facts.years), needs: e.facts.wins.map(n => t('ar.need.' + n)).join(', ') });
 export function entryWords(e, s) { const W = world(s), T = W.byId[e.of];
   return e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : e.kind === 'try' && e.puzzle ? t('ledger.rec.attempt', { wh: fmtNum(+(e.facts.joules / 3600).toPrecision(2)) })
     : e.kind === 'try' && e.chef ? t('ledger.rec.chef', { level: t('mb.lv.' + e.chef + '.t'), wait: fmtNum(Math.round(e.facts.wait * 100)), e: fmtNum(+e.facts.energy.toPrecision(2)) })
@@ -217,6 +217,7 @@ export function entryWords(e, s) { const W = world(s), T = W.byId[e.of];
     : e.kind === 'try' && e.machine ? t('ledger.rec.machine', { need: t('machines.need.' + e.machine + '.t'), x: fmtNum(+e.facts.energy.toPrecision(2)), days: isFinite(e.facts.days) ? fmtNum(e.facts.days) : '?', n: isFinite(e.facts.days) ? e.facts.days : 2 })
     : e.kind === 'try' ? t('ledger.rec.try', { title: T.title, n: e.facts.cases })
     : e.kind === 'gene' ? t('ledger.rec.gene', { name: e.name })
+    : e.kind === 'purpose' ? t('ledger.rec.purpose', { name: e.name })
     : e.kind === 'report' ? t('ledger.rec.report', { say: t('report.say.' + e.say), at: e.at, words: e.words }) : e.kind === 'fix' ? t('ledger.rec.fix', { words: e.words }) : e.q; }
 /* break a design: a challenge made by the ledger itself, for every clocked design that stands, and kept for the
    broken ones, so anyone can find the case again */
