@@ -28,7 +28,8 @@ import { theme } from '../../core/ui.js';
 import { mark, statusMark } from '../fid.js';
 import { FINE_OF, CHOICES, V_RANGE, ARRANGE } from '../../data/path.js';
 import { A, SW, RUNGS, EXAMPLE, GENE_AT, GENE_OF, RUNG_DIR, clamp, carry, see, stoneOf, marksOf, stackMarks, rungName, RECIPES, RIDX, BLOCK, NEEDS, POT, CAN, CELLCAN, fxOf, bestNeed, recipeName, population, census, times, pct } from './model.js';
-import { holder, credit, plotCard, sinceVisit, sinceLine, seasonLine, portCard, champWords } from './field.js';
+import { holder, credit, plotCard, sinceVisit, sinceLine, seasonLine, portCard, champWords, pointEv, evWords, landmarksHtml, factOf } from './field.js';
+import { facts } from '../../core/facts.js';
 import { proposedHtml, openWords } from './genome.js';
 import * as SL from '../../engines/stacklens.js';
 import * as PU from './purpose.js';
@@ -201,8 +202,8 @@ export function createStack(host, opts = {}) {
   /* the line at the foot of the picture says what you are looking at, until something happens */
   function restLine(sh) {
     if (!sh) { if (cam.s < poseField().s * 1.45) return t('sk.field.rest'); const h = plotAt(cam.x, cam.y); if (!h) return t('sk.field.rest'); const d = RECIPES[h.ri].d; return t('sk.field.restNear', { need: need(NEEDS[h.n]), d: awayWords(d), n: CELLCAN[h.n][d] }); }
-    const g = sh.g, d = A.novelty(g), kn = A.knownOf(g);
-    return d ? t('sk.recipe.line', { name: recipeName(g), d: d === 1 ? t('sk.recipe.d1') : t('sk.recipe.dn', { d }), status: kn ? t('ar.st.' + kn.status) : t('sk.recipe.newOne') }) : t('sk.recipe.lineToday', { name: recipeName(g) });
+    const g = sh.g, d = A.novelty(g), L = A.landmarksOf(g), st = L.some(k => k.status === 'product') ? 'product' : 'lab';
+    return d ? t('sk.recipe.line', { name: recipeName(g), d: d === 1 ? t('sk.recipe.d1') : t('sk.recipe.dn', { d }), status: L.length ? t('ar.st.' + st) : t('sk.recipe.newOne') }) : t('sk.recipe.lineToday', { name: recipeName(g) });
   }
   const awayWords = d => (d === 0 ? t('sk.field.today') : d === 1 ? t('sk.field.away1') : t('sk.field.away', { d }));
   function refresh(from) {
@@ -275,6 +276,8 @@ export function createStack(host, opts = {}) {
 
   /* ---------- drawing ---------- */
   let LBL = [], hover = null, hoverRung = -1, hoverDir = null, PL = [];
+  /* the outline each built point was last drawn with, by recipe (#495; for the lab's checks) */
+  const OUTL = {};
   function label(x, y, text, font, px, color, o = {}) { LBL.push({ x, y, text, font, px, color, align: o.align || 'left', pri: o.pri || 0, bg: o.bg, force: o.force, max: o.max }); }
   function flushLabels() {
     LBL.sort((a, b) => b.pri - a.pri); const placed = [];
@@ -327,7 +330,11 @@ export function createStack(host, opts = {}) {
       if (cam.ex > 0.3 && n === view.n && ri === view.r) continue;
       const p = new Path2D(); para(p, a0, a1, wpx, hpx, skew); ctx.fillStyle = C.bg(0.9 * gf); ctx.fill(p);
       if (!broke) { const q = new Path2D(), gh = gl ? Math.max(5, hpx * 0.2) : hpx; para(q, a0, a1, wpx * f, gh, skew * gh / hpx); if (win && cam.ex < 0.2) { ctx.shadowColor = col(0.8); ctx.shadowBlur = clamp(wpx * 0.2, 4, 12); } ctx.fillStyle = col((here ? 0.95 : win ? 0.92 : ch ? 0.7 : 0.4) * gf * (1 - 0.7 * cam.ex)); ctx.fill(q); ctx.shadowBlur = 0; }
-      ctx.strokeStyle = broke ? C.bad(0.9 * gf) : col((ch || here ? 0.9 : 0.6) * gf); ctx.lineWidth = 1; if (broke) ctx.setLineDash([3, 3]); ctx.stroke(p); ctx.setLineDash([]);
+      /* a landmark's outline is the evidence behind its numbers (#495): dashed for a maker's claim (or no source), solid
+         when reported independently, doubled when peer-reviewed; the words say it on the plot's line and its card */
+      const ev = pointEv(e.a); OUTL[e.a.key] = ev || (e.a.built ? 'plain' : null);
+      ctx.strokeStyle = broke ? C.bad(0.9 * gf) : col((ch || here || ev ? 0.9 : 0.6) * gf); ctx.lineWidth = ev === 'claim' ? 1.25 : 1; if (broke) ctx.setLineDash([3, 3]); else if (ev === 'claim') { const k = clamp(wpx * 0.1, 2, 5); ctx.setLineDash([k, k * 0.8]); } ctx.stroke(p); ctx.setLineDash([]);
+      if (ev === 'peer') { const o = clamp(wpx * 0.06, 2, 3.5), q2 = new Path2D(); para(q2, a0 - o, a1 + o, wpx + 2 * o, hpx + 2 * o, skew * (hpx + 2 * o) / Math.max(hpx, 1e-6)); ctx.stroke(q2); }
       if (e.could < 1 && wpx > 16) { const fx = frac(e.could) * wpx; ctx.beginPath(); ctx.moveTo(a0 + fx + skew, a1 - hpx); ctx.lineTo(a0 + fx, a1); ctx.strokeStyle = col(0.8 * gf); ctx.stroke(); }
       if (gl) glyph(ctx, a0, a1 - hpx, wpx, hpx * 0.8, RECIPES[ri].g, C, (win ? 1 : 0.75) * gf);
       if (here || (ri === mr && flat)) { const m = n === an ? 1 : 0.5, k = clamp(wpx * 0.12, 4, 9), o = 3; ctx.strokeStyle = C.acc(m * Math.max(gf, 0.5)); ctx.lineWidth = n === an ? 1.6 : 1; ctx.beginPath();
@@ -339,7 +346,7 @@ export function createStack(host, opts = {}) {
         const name = recipeName(RECIPES[ri].g), home = e.a.sc && NEEDS.every((x, k) => !e.a.sc[x].can || e.a.sc[x].now <= e.now + 1e-9 || k === n);
         if (here) label(a0 + wpx / 2, wpx >= 150 ? a1 + 16 : a1 - hpx - 6, t('sk.field.yours'), fSans(12.5, 700), 12.5, C.acc(1), { align: 'center', pri: 100, bg: true });
         if (wpx >= 150 && (ch || win || e.a.id || ++nNames <= 8)) label(a0 + 2, a1 - hpx - 5, name + '  ' + times(e.now), fSans(11.5, ch ? 700 : 400), 11.5, col(0.95), { pri: 20 + e.now, max: wpx * 1.6, bg: true });
-        else if (d > 0 && !mine && wpx > 12 && (ch || (home && (win || e.a.built)))) label(a0 + wpx + 6, a1 - Math.max(0, (hpx - 9) / 2), ch || e.a.by === 'ledger' ? champWords(e) : (e.a.built ? t('ar.known.' + e.a.id) : name) + '  ' + times(e.now), fSans(11, win || ch ? 700 : 400), 11, C.ink(win || ch ? 1 : 0.8), { pri: (e.a.by === 'ledger' ? 16 : e.a.built ? 12 : 4) + e.now + (ch ? 3 : 0), bg: true, max: 240 });
+        else if (d > 0 && !mine && wpx > 12 && (ch || (home && (win || e.a.built)))) label(a0 + wpx + 6, a1 - Math.max(0, (hpx - 9) / 2), ch || e.a.by === 'ledger' ? champWords(e) : (e.a.built ? holder(e.a) : name) + '  ' + times(e.now), fSans(11, win || ch ? 700 : 400), 11, C.ink(win || ch ? 1 : 0.8), { pri: (e.a.by === 'ledger' ? 16 : e.a.built ? 12 : 4) + e.now + (ch ? 3 : 0), bg: true, max: 240 });
       }
     }
     /* the proposed column (#481): marked as proposed by a dashed frame; every recipe that could serve it faint, an edge
@@ -385,7 +392,7 @@ export function createStack(host, opts = {}) {
   /* one plot in words: what stands on it, or what it could be */
   function plotLine(h) {
     const e = CEN.P[h.n][h.ri], pot = POT[h.n][h.ri], g = RECIPES[h.ri].g, F = (k, v) => t('sk.field.' + k, v);
-    if (e) return F('now', { x: times(e.now) }) + ' · ' + F('could', { x: times(e.could) }) + (e.a.mine ? ' · ' + F('yours') : e.a.by === 'ledger' ? ' · ' + credit(e.a) : e.a.id ? ' · ' + t('ar.st.' + e.a.by) : '') + (isChamp(h.n, h.ri) ? ' · ' + F('champ') : '');
+    if (e) return F('now', { x: times(e.now) }) + ' · ' + F('could', { x: times(e.could) }) + (e.a.mine ? ' · ' + F('yours') : e.a.by === 'ledger' ? ' · ' + credit(e.a) : e.a.id ? ' · ' + t('ar.st.' + e.a.by) + (A.novelty(g) ? ' · ' + evWords(pointEv(e.a)) : '') + (e.a.waits ? ' · ' + t('sk.land.waits', { n: Math.min(...e.a.landmarks.map(k => k.from)) }) : '') : '') + (isChamp(h.n, h.ri) ? ' · ' + F('champ') : '');
     if (pot) return F('nobody') + ' · ' + F('could', { x: times(pot) });
     const m = A.missesOf(g, NEEDS[h.n])[0]; return F('cant', { what: m ? t('ar.cant.' + m) : '' });
   }
@@ -605,7 +612,12 @@ export function createStack(host, opts = {}) {
       ctl.dataset.key = key; ctl.hidden = !key; ctl.setAttribute('aria-label', key ? rungName(RUNGS[view.i]) : ''); }
     /* another recipe's sketch */
     const sketch = $('.sk-card');
-    if (sh && !sh.mine) { const kn = A.knownOf(sh.g), a = sh.att; sketch.innerHTML = '<span>' + esc(kn ? t('sk.plot.built', { name: t('ar.known.' + kn.id), status: t('ar.st.' + kn.status) }) + ' ' + t('sk.plot.sketch') : a && a.by === 'ledger' ? plotCard(a) : t('sk.plot.sketch')) + '</span><button type="button" class="btn primary sk-take">' + esc(t('sk.plot.take')) + '</button><button type="button" class="btn sk-tomine">' + esc(t('sk.plot.mine')) + '</button>'; sketch.hidden = false; } else sketch.hidden = true;
+    /* a recipe someone has built opens every landmark on it, each with its status, figure, evidence and source (#495) */
+    if (sh && !sh.mine) { const L = A.landmarksOf(sh.g), a = sh.att, k = sh.key + '|' + (factOf(L.length && L[0].fact) ? 1 : 0) + phone();
+      if (sketch.dataset.k !== k) { const h0 = sketch.hidden ? 0 : sketch.offsetHeight; sketch.dataset.k = k; sketch.innerHTML = (L.length && A.novelty(sh.g) ? landmarksHtml(L, phone()) + '<span>' + esc(t('sk.plot.sketch')) + '</span>' : '<span>' + esc(L.length ? t('sk.plot.built', { name: t('ar.known.' + L[0].id), status: t('ar.st.' + L[0].status) }) + ' ' + t('sk.plot.sketch') : a && a.by === 'ledger' ? plotCard(a) : t('sk.plot.sketch')) + '</span>') + '<button type="button" class="btn primary sk-take">' + esc(t('sk.plot.take')) + '</button><button type="button" class="btn sk-tomine">' + esc(t('sk.plot.mine')) + '</button>';
+        /* a card taller or shorter than before: the camera frames the stack in the room it leaves */
+        sketch.hidden = false; if (Math.abs(sketch.offsetHeight - h0) > 12) requestAnimationFrame(() => { measure(); if (anim) { if (view.level === 'stack') anim.to = poseStack(view.n, view.r); } else if (view.level === 'stack') fly(poseStack(view.n, view.r), 400); }); }
+      sketch.hidden = false; } else { sketch.hidden = true; sketch.dataset.k = ''; }
     /* the questions that bite here, by their short names: at most three while you look (on a rung opened, its own), every
        one of the level with Ask open, none in Do; one opened alone, in the card. Only as used: the marks stand on the
        parts of the as-used pictures (#456) */
@@ -774,13 +786,15 @@ export function createStack(host, opts = {}) {
     raf = requestAnimationFrame(loop);
   }
   setTheme(); build(); recount(); QB = marksOf(R(), lensesAt);
+  /* the landmarks' facts (#495): their evidence is drawn as each one's outline, weakest until they arrive */
+  facts().then(() => { dirty = true; if (on) { const sk = $('.sk-card'); sk.dataset.k = ''; ui(); } });
   new ResizeObserver(() => { if (on) { resize(); ui(); } }).observe(root);
   let first = true;
   const setPose = p => { Object.assign(cam, { x: p.x, y: p.y, z: p.z, s: p.s, T: p.T, G: p.G, ex: p.ex, ox: p.ox, oy: p.oy }); trig(); };
   /* for the lab's own checks (scripts/smoke/stack.mjs) */
   /* the lens open in the card: its rung lit, the others dimmed; a lens that repaints the stack paints every plate (#449) */
   function setLens(l) { const k = l ? l.rung + l.id : ''; if (k === (lens ? lens.rung + lens.id : '')) return; lens = l; dirty = true; ui(); }
-  const api = { S, view, cam, A, setLens, paintNow: () => (lens && SL.REPAINT.includes(lens.id) ? SL.paint(R(), lens.id, whoAt) : null), face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, propose, purpose: () => ({ col: COL, form: PFORM, on: purposeOn }), field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
+  const api = { S, view, cam, A, setLens, outlines: () => Object.assign({}, OUTL), landmarks: () => POP.filter(a => a.built).map(a => ({ key: a.key, ids: a.landmarks.map(k => k.id), ev: pointEv(a), waits: !!a.waits })), card: () => $('.sk-card').hidden ? '' : $('.sk-card').textContent, plotOf: key => ({ n: aimN(), ri: RIDX.get(key) }), paintNow: () => (lens && SL.REPAINT.includes(lens.id) ? SL.paint(R(), lens.id, whoAt) : null), face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, propose, purpose: () => ({ col: COL, form: PFORM, on: purposeOn }), field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
   /* the questions on the stack, for the card: the strongest at a rung (or across the stack), the one marked at a rung */
   const marksAt = (key, n = 6) => (view.level === 'field' || !onMine() ? [] : stackMarks(QB, n, RUNGS.includes(key) ? [key] : null));
   return {

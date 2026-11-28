@@ -348,5 +348,11 @@
  "sk.do.machine": "How many units before moving numbers costs more than computing?",
  "sk.do.mind": "Fewer bits a weight: how far before it forgets?",
  "sk.face.do.design": "Walk the studio's steps: what does each one decide?",
- "sk.face.do.make": "Walk the line: what does each step do to your design?"
+ "sk.face.do.make": "Walk the line: what does each step do to your design?",
+ "sk.ev.claim": "the maker's claim",
+ "sk.ev.independent": "reported independently",
+ "sk.ev.peer": "peer-reviewed",
+ "sk.ev.none": "no source in the lab yet",
+ "sk.land.waits": "counts in the scores from season {n}",
+ "sk.land.share": "These {n} chips are very different, yet they make the same four choices: the genes are coarse, and the finer settings decide the rest."
 }

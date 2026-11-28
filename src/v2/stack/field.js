@@ -5,17 +5,35 @@
 import { t, fmtNum, fmtDate, fmtList } from '../../core/i18n.js';
 import { esc } from '../../core/esc.js';
 import { REPO } from '../../data/weave.js';
-import { F, times } from './model.js';
+import { A, F, times } from './model.js';
+import { factsNow } from '../../core/facts.js';
 import { DAY_CAP } from '../../data/field.js';
 
 const SEEN = 'osl-stack-seen';
 const need = n => t('ar.need.' + n);
 const away = d => (d === 1 ? t('sk.field.away1') : t('sk.field.away', { d }));
-/* who stands on a point, in a few words: the built recipe's name, the entry's author (an agent said so), or you */
+/* the landmarks on a built point (#495), by name, each one: several may share a recipe */
+export const landmarkNames = a => (a.landmarks || [{ id: a.id }]).map(k => t('ar.known.' + k.id)).join(' · ');
+/* a fact by its id, once src/data/facts.json has arrived (src/core/facts.js); nothing before */
+export const factOf = id => (factsNow() || {})[id];
+/* the evidence behind a built point's numbers, drawn as its outline (arch.js pointEvidence: the weakest of its
+   landmarks'), and in words */
+export const pointEv = a => (a && a.built && A.novelty(a.g) ? A.pointEvidence(a.landmarks, factOf) : null);
+export const evWords = ev => (ev ? t('sk.ev.' + ev) : t('sk.ev.none'));
+/* each landmark on a point, for the card that opens it: its name, how far along, its fact's figure, the evidence behind
+   it and its source, and the season it counts in the scores from if that is still to come */
+export function landmarksHtml(L, short) {
+  /* a phone gets less: each landmark's name, status and evidence, without its figure (and so without its source) */
+  const one = k => { const f = k.fact && !short ? factOf(k.fact) : null, ev = A.landmarkEvidence(k, factOf), wait = (k.from || 1) > A.VERSION;
+    return '<span class="sk-land"><b>' + esc(t('ar.known.' + k.id)) + '</b>, ' + esc(t('ar.st.' + k.status)) + (f ? ': ' + esc(f.value) : '') + ' (' + esc(evWords(ev)) + ')' +
+      (f && f.url ? ' · <a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(f.source) + '</a>' : '') + (wait ? ' · ' + esc(t('sk.land.waits', { n: k.from })) : '') + '</span>'; };
+  return L.map(one).join('') + (L.length > 1 ? '<span class="sk-land">' + esc(t('sk.land.share', { n: L.length })) + '</span>' : '');
+}
+/* who stands on a point, in a few words: the built recipe's landmarks, the entry's author (an agent said so), or you */
 export function holder(a) {
   if (!a) return '';
   if (a.mine) return t('sk.field.yours');
-  if (a.built) return t('ar.known.' + a.id);
+  if (a.built) return landmarkNames(a);
   return a.agent ? t('sk.field.byAgent', { who: a.who }) : a.who;
 }
 /* the credit a point carries, for the line under a plot: first to try its recipe, or kept on a day */
