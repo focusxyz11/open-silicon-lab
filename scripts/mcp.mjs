@@ -20,7 +20,7 @@ useTexts(EN, 'en');
 useLedger(collect());
 
 const str = d => ({ type: 'string', description: d });
-const WHO = { author: str(EN['api.arg.author']), kind: { type: 'string', enum: ['person', 'ai', 'both', 'program'], description: EN['api.arg.kind'] }, ai: str(EN['api.arg.ai']), about: str(EN['api.arg.about']) };
+const WHO = { author: str(EN['api.arg.author']), github: str(EN['api.arg.github']), kind: { type: 'string', enum: ['person', 'ai', 'both', 'program'], description: EN['api.arg.kind'] }, ai: str(EN['api.arg.ai']), about: str(EN['api.arg.about']) };
 /* a plan for the energy puzzle (src/engines/budget.js PLAN): every field optional, the engine checks the values */
 const PLAN_ARG = { type: 'object', description: EN['api.arg.plan'], properties: {
   home: { type: 'string', enum: ['dram', 'hbm', 'sram'] }, precision: { type: 'string', enum: ['fp16', 'fp8', 'fp4'] }, clock: { type: 'number', minimum: 0.5, maximum: 4.5 },
@@ -81,7 +81,7 @@ function handle(msg) {
   if (method === 'tools/call') {
     const tool = TOOLS.find(x => x.name === (params && params.name));
     if (!tool) return fail(id, -32602, 'Unknown tool: ' + (params && typeof params.name === 'string' ? params.name : '')); /* i18n-ok: protocol message */
-    try { const out = tool.fn(record(params.arguments) || {}); return reply(id, { content: [{ type: 'text', text: JSON.stringify(out, null, 2) }], structuredContent: out, isError: !!(out && (out.error || out.ok === false)) }); }
+    try { const args = record(params.arguments) || {}, out = API.withGithub(args.github, () => tool.fn(args)); return reply(id, { content: [{ type: 'text', text: JSON.stringify(out, null, 2) }], structuredContent: out, isError: !!(out && (out.error || out.ok === false)) }); }
     catch (e) { return reply(id, { content: [{ type: 'text', text: String(e && e.message || e) }], isError: true }); }
   }
   if (id !== undefined && id !== null) fail(id, -32601, 'Method not found: ' + (typeof method === 'string' ? method : '')); /* i18n-ok: protocol message */

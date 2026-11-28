@@ -105,6 +105,10 @@ export function lifeOf({ job, code, slice, where, choices }) {
 const refusal = r => t('ledger.no.' + r.reason, { n: r.wrong || 0, of: r.of || 0 });
 /* an entry, checked against the ledger as it stands: its file, and the link that opens it on GitHub as a new file
    in a pull request. Nothing is posted: a person opens the link and sends it. */
+/* the sender's GitHub account for the entry being written, set by the port around one call (#484) */
+let GH = null;
+export function withGithub(gh, fn) { GH = typeof gh === 'string' && gh.trim() ? gh.trim().replace(/^@/, '') : null; try { return fn(); } finally { GH = null; } }
+const draftE = (fields, name, day) => draft(GH ? Object.assign({}, fields, { github: GH }) : fields, name, day);
 function entryOut(e, extra) {
   const r = tryEntry(e);
   if (!r.ok) return Object.assign({ ok: false, reason: refusal(r) }, extra || {});
@@ -169,13 +173,13 @@ export function proposeDesign({ need, code, title, author, kind, ai, words, from
   const c = checkDesign({ job: n.project, code });
   if (!c.right) return { ok: false, reason: t('api.notRight'), check: c };
   const name = title || t('design.proj.' + n.project + '.t');
-  return entryOut(draft({ kind: 'design', piece: need, title: name, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', code, from: from || null, about: about || null }, txt(author) + ' ' + txt(name)), { check: c });
+  return entryOut(draftE({ kind: 'design', piece: need, title: name, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', code, from: from || null, about: about || null }, txt(author) + ' ' + txt(name)), { check: c });
 }
 /* propose a break: a case, tick by tick, that makes a design of the ledger answer wrong */
 export function proposeBreak({ design, case: seq, author, kind, ai, words }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
   const T = entryOf(design);
-  const e = draft({ kind: 'break', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', case: seq }, txt(author) + ' ' + (T && T.title || 'break'));
+  const e = draftE({ kind: 'break', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', case: seq }, txt(author) + ' ' + (T && T.title || 'break'));
   const out = entryOut(e);
   if (T && T.kind === 'design' && T.ok && caseOk(needOf(T.piece).project, seq)) { const r = runCase(needOf(T.piece).project, T.code, seq); if (r) out.ticks = r.rows.map((x, i) => ({ tick: i + 1, inputs: x.v, should: x.e, does: x.o, wrong: x.mis.length > 0 })); }
   return out;
@@ -184,17 +188,17 @@ export function proposeBreak({ design, case: seq, author, kind, ai, words }) {
 export function proposeTry({ design, cases, author, kind, ai, words, about }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
   const T = entryOf(design);
-  return entryOut(draft({ kind: 'try', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', cases, about: about || null }, txt(author) + ' ' + (T && T.title || 'try')));
+  return entryOut(draftE({ kind: 'try', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', cases, about: about || null }, txt(author) + ' ' + (T && T.title || 'try')));
 }
 /* propose a question: it needs a home (a level, perhaps the question it sits under) and what was noticed */
 /* report something wrong with the lab itself, at a place given by its address: checked by the ledger first */
 export function proposeReport({ at, part, say, words, author, kind, ai }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
-  return entryOut(draft({ kind: 'report', at, part: part || null, say, words, by: author || t('api.anon'), made: kind, ai: ai || '' }, txt(author) + ' ' + txt(at).replace(/[#/]+/g, ' ')));
+  return entryOut(draftE({ kind: 'report', at, part: part || null, say, words, by: author || t('api.anon'), made: kind, ai: ai || '' }, txt(author) + ' ' + txt(at).replace(/[#/]+/g, ' ')));
 }
 export function proposeQuestion({ at, under, part, question, noticed, author, kind, ai, about }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
-  return entryOut(draft({ kind: 'question', at, part: part || null, under: under || null, q: question, noticed: noticed || '', by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, txt(author) + ' ' + txt(question).split(/\s+/).slice(0, 5).join(' ')));
+  return entryOut(draftE({ kind: 'question', at, part: part || null, under: under || null, q: question, noticed: noticed || '', by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, txt(author) + ' ' + txt(question).split(/\s+/).slice(0, 5).join(' ')));
 }
 
 /* propose a new option for a gene of an architecture (the open genome, #452): the gene, the option's id, its name and what
@@ -203,7 +207,7 @@ export function proposeQuestion({ at, under, part, question, noticed, author, ki
    contract asks for */
 export function proposeGene({ gene, option, name, what, effect, carry, fact, words, author, kind, ai } = {}) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
-  const out = entryOut(draft({ kind: 'gene', gene, option, name, what, effect, carry, fact: fact || null, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '' }, txt(author) + ' ' + txt(gene) + ' ' + txt(option)));
+  const out = entryOut(draftE({ kind: 'gene', gene, option, name, what, effect, carry, fact: fact || null, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '' }, txt(author) + ' ' + txt(gene) + ' ' + txt(option)));
   return out.ok ? Object.assign(out, { status: fact ? t('ledger.state.backed') : t('ledger.state.guess') })
     : Object.assign(out, { how: t('api.gene.how'), genes: Arch.GENES.map(k => ({ gene: k, name: t('ar.gene.' + k), options: Arch.OPTIONS[k], contract: Arch.CONTRACT[k] })), traits: Arch.TRAITS, traitRange: Arch.TRAIT_RANGE });
 }
@@ -214,7 +218,7 @@ export function proposeGene({ gene, option, name, what, effect, carry, fact, wor
    polished); a refusal says why in words a proposer can act on, with today's needs as examples of the form */
 export function proposePurpose({ purpose, name, what, w, must, words, author, kind, ai } = {}) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
-  const out = entryOut(draft({ kind: 'purpose', purpose, name, what, w, must: must || {}, season: Arch.VERSION, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '' }, txt(author) + ' ' + txt(purpose)));
+  const out = entryOut(draftE({ kind: 'purpose', purpose, name, what, w, must: must || {}, season: Arch.VERSION, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '' }, txt(author) + ' ' + txt(purpose)));
   return out.ok ? Object.assign(out, { status: t('ledger.state.proposed') })
     : Object.assign(out, { how: t('api.purpose.how'), traits: Arch.TRAITS, weightRange: Arch.PURPOSE_W, mustRange: Arch.PURPOSE_MUST, needs: Arch.NEEDS.map(n => ({ need: n, name: t('ar.need.' + n), w: Arch.WANT[n].w, must: Arch.WANT[n].must })) });
 }
@@ -244,7 +248,7 @@ export function submitAttempt({ plan, words, author, kind, ai, about }) {
   const P = plan && typeof plan === 'object' && !Array.isArray(plan) ? plan : null;
   if (!P) return { ok: false, reason: t('ledger.no.plan') };
   const b = budget(JOB, P);
-  return entryOut(draft({ kind: 'try', puzzle: 'energy', plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' energy'), b.ok ? { joules: sig(b.total), wattHours: sig(b.total / 3600), secondsPerAnswer: sig(b.seconds), accuracyDb: sig(b.snrDb) } : {});
+  return entryOut(draftE({ kind: 'try', puzzle: 'energy', plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' energy'), b.ok ? { joules: sig(b.total), wattHours: sig(b.total / 3600), secondsPerAnswer: sig(b.seconds), accuracyDb: sig(b.snrDb) } : {});
 }
 
 /* ---- the block's front (#315, #326): where Geometry and Efficiency fuels use meet. Two controls (where the logic sits,
@@ -269,7 +273,7 @@ export function submitFront({ plan, words, author, kind, ai, about }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
   const P = plan && typeof plan === 'object' && !Array.isArray(plan) ? plan : null; if (!P) return { ok: false, reason: t('ledger.no.plan') };
   const E = geoEffFront(), placed = [P.p, P.n].every(v => typeof v === 'number' && v >= 0 && v <= 1) ? pointOut(E.at(P.p, P.n)) : null;
-  return entryOut(draft({ kind: 'try', front: FRONT, plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' front'), placed ? { placed } : {});
+  return entryOut(draftE({ kind: 'try', front: FRONT, plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' front'), placed ? { placed } : {});
 }
 
 /* ---- A thousand that pass (src/engines/thousand.js): a program's thousand designs for a need, all passing every check;
@@ -293,7 +297,7 @@ export function chooseDesign({ need, pick, reason, author, kind, ai, about } = {
   if (pick == null && reason == null) return out;
   const bad = whoOk(kind, ai); if (bad) return Object.assign(out, { ok: false, reason: bad });
   if (kind !== 'person' && kind !== 'ai') return Object.assign(out, { ok: false, reason: t('ledger.no.chooser') });
-  const e = draft({ kind: 'try', choice: id, pick, words: typeof reason === 'string' ? reason.trim() : reason, by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, txt(author) + ' choice ' + id);
+  const e = draftE({ kind: 'try', choice: id, pick, words: typeof reason === 'string' ? reason.trim() : reason, by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, txt(author) + ' choice ' + id);
   const res = entryOut(e);
   delete out.designs; delete out.columns;
   return Object.assign(out, res, res.ok ? { picked: Thousand.designOf(id, pick) } : {});
@@ -365,5 +369,5 @@ export function submitArchitecture(a = {}) {
   const R = archRead(a || {}); if (!R || !R.h.years.length) return archNo();
   /* a claim that is not a list goes to the ledger as it is, to be refused there with a reason */
   const arch = Object.assign(Arch.histClaim(R.h, []), { wins: a.wins == null ? Arch.winsOf(R.st) : a.wins });
-  return entryOut(draft({ kind: 'try', arch, season: Arch.VERSION, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' arch ' + R.h.start.split('/').join(' ')), { recipe: recipeOut(R.st.g), reached: Arch.winsOf(R.st) });
+  return entryOut(draftE({ kind: 'try', arch, season: Arch.VERSION, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' arch ' + R.h.start.split('/').join(' ')), { recipe: recipeOut(R.st.g), reached: Arch.winsOf(R.st) });
 }
