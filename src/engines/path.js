@@ -142,8 +142,9 @@ export function lineOf(care) {
       density: { f: 'figures', fact: DENSITY.fact }, area: { f: 'idea', by: 'bet' }, yield: { f: 'computed', by: 'chip' }, cost: { f: 'computed', by: 'chip' } }
   };
 }
-/* the area of a die of n gates of s switches each, cm²: its switches at the line's density, and its pads and edges */
-export const areaOf = (n, s) => (n * s / DENSITY.perMm2 + AREA_FIXED) / 100;
+/* the area of a die of n gates of s switches each, cm²: its switches at the line's density, each gate taking k of a fin
+   gate's area (the switch's shape: a stacked pair about half, #499), and its pads and edges */
+export const areaOf = (n, s, k = 1) => (n * s * k / DENSITY.perMm2 + AREA_FIXED) / 100;
 
 /* ---- the carry ---- */
 /* a forked rung's contract: today's example rung, its energy divided by factor, its time multiplied by slow, failing
@@ -186,7 +187,7 @@ function carryOf(g, F, aim, ref) {
     /* the gate, made of the switch's contract at your voltage */
     const V = F.V, L = LIB[F.lib], vtb = S.vt - 3 * S.sigma / 1000, z = 6 * (V - vtb) / (S.vmin - vtb);
     const p = V <= vtb ? 0.5 : Math.min(0.5, Q(z)), d = (V / VREF) * IREF / Math.max(Irel(S, V), 1e-30), en = Math.pow(V / VREF, 2);
-    G = put('gate', { delay: T0 * d * L.delay * 1e-12, energy: EG0 * en * (S.pair ? 1 : 4) * L.energy * 1e-15, fail: p, switches: L.switches }, { lib: F.lib, V });
+    G = put('gate', { delay: T0 * d * L.delay * 1e-12, energy: EG0 * en * (S.pair ? 1 : 4) * L.energy * 1e-15, fail: p, switches: L.switches, area: sw.area }, { lib: F.lib, V });
   } else {
     put('atom', null, { matter: C.matter });
     if (!skips.length) { put('switch', null, { matter: C.matter }); G = put('gate', forkHands('gate', eC, C.delay), { matter: C.matter }); }
@@ -221,7 +222,7 @@ function carryOf(g, F, aim, ref) {
        tiny (log1p and expm1, so one wrong copy in 10^40 does not round to never: Perfect fails reads it, #449) */
     const q = Math.min(1, -Math.expm1(Math.log1p(-Math.min(Pw, 1 - 1e-16)) + 2 * Math.log1p(-Math.min(Pr, 1 - 1e-16)) + Math.log1p(-Math.min(fails(p, CTRL * 0.1), 1 - 1e-16))));
     /* its die, cut from a wafer of your line: how many come out whole, and what a good one costs */
-    const die = dieOf(areaOf(coreG, G.switches), line.defects, line.pace);
+    const die = dieOf(areaOf(coreG, G.switches, G.area), line.defects, line.pace);
     K = put('chip', { clock: 1e12 / period, cpi: CPI[SG], energy: Ei * 1e-15, wrong: q, gates: coreG, area: die.area, yield: die.yield, cost: die.cost / (ref || die.cost) },
       { core: { stages: SG, period: period * 1e-12 }, die });
   } else K = R.rungs.chip.hands;

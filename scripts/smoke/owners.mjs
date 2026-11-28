@@ -32,7 +32,7 @@ export const LAB_ALSO = {
 /* the labs' own engines, imported by these labs alone */
 const LAB_ENGINES = { analog: ['analog'], corearch: ['corearch'], crystal: ['crystal'], dies: ['dies'], etch: ['films'],
   evolve: ['evolve'], fabsteps: ['overlay', 'implant', 'semiconductor'], grover: ['grover'], halt: ['halt'],
-  redundancy: ['vote'], rvpuzzles: ['rv'], search: ['search'], strands: ['bridge'] };
+  redundancy: ['vote'], rvpuzzles: ['rv'], search: ['search'], strands: ['bridge'], tiers: ['tiers'], trigger: ['trigger'] };
 const labSections = labs => ['labs', ...new Set(labs.flatMap(l => LAB_ALSO[l] || []))];
 
 /* a view's or a lab's files → the sections that open them */

@@ -170,6 +170,10 @@ export default async function run() {
     await hp.keyboard.press('Escape');
     const side = await hp.evaluate(() => { const p = document.getElementById('home'); return p.scrollWidth - p.clientWidth; });
     if (side > 1) problems.push(tag + ': the first page scrolls sideways by ' + side + ' px');
+    /* the field of every attempt in one line on the arrangements block, read from the ledger after the idle preload,
+       with its way to the field (#480) */
+    await play('the arrangements block does not say how much of the field has been tried', () => { if (window.__hold.state().cur !== 'arr') window.__hold.go('arr'); const e = document.querySelector('#hd-root [data-field]:not([hidden])');
+      return !!e && /\d/.test(e.textContent) && !!e.querySelector('a[href="#/stack/field"]'); }, null, 30000);
     /* the first page in another language, and back */
     await hp.goto(base + 'index.html?lang=zh#/');
     await play('the first page does not show in Chinese', () => document.documentElement.lang === 'zh' && /晶体管/.test((document.querySelector('#hd-root .b-hud .count') || {}).textContent || ''), null, 20000);
