@@ -149,6 +149,29 @@
 .sk-port a { color: var(--accent); }
 .sk-port code { font: 500 12.5px/1 var(--mono); padding: 3px 6px; border: 1px solid var(--line); border-radius: 4px; white-space: nowrap; }
 .sk-port .btn { justify-self: end; min-height: 32px; }
+/* propose what it is for (#481): a purpose's dials, checked by the engine as they move */
+.stackv.proposing .sk-dock { display: none; }
+.sk-purpose { background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; display: grid; gap: 8px; max-width: min(760px, 100%); max-height: 46vh; overflow: auto; text-align: left; animation: sk-say .35s ease-out backwards; }
+.sk-cards .sk-purpose p { margin: 0; text-align: left; text-shadow: none; font-size: 14px; line-height: 1.45; }
+.sk-purpose .k { font: 600 11px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.sk-pf { display: grid; grid-template-columns: 1fr 1.4fr 3fr; gap: 8px; }
+.sk-pf label { display: grid; gap: 3px; font: 500 12px/1.2 var(--sans); color: var(--muted); }
+.sk-pf .wide textarea { min-height: 33px; }
+.sk-pf input, .sk-pf textarea { font: 400 14px/1.35 var(--sans); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; resize: vertical; }
+.sk-ptraits { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.sk-ptr { display: grid; gap: 4px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; }
+.sk-ptr b { font: 600 13px/1.2 var(--sans); }
+.sk-pdial { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 6px; font: 400 11px/1.2 var(--mono); color: var(--muted); }
+.sk-pdial input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+.sk-pdial output { grid-row: 1; grid-column: 2; color: var(--ink); }
+.sk-cards .sk-purpose .sk-pv { font-size: 13.5px; color: var(--muted); }
+.sk-cards .sk-purpose .sk-pv.ok { color: var(--ink); }
+.sk-purpose .acts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.sk-pfoot { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; justify-content: space-between; }
+.sk-purpose .sign { display: flex; gap: 10px; flex-wrap: wrap; }
+.sk-purpose .sign select { max-width: 190px; }
+.sk-purpose .sign input { width: 150px; }
+@media (max-width: 759px) { .sk-ptraits { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sk-pf { grid-template-columns: 1fr 1fr; } .sk-pf .wide { grid-column: 1 / -1; } .sk-purpose { max-height: 70vh; } }
 
 /* the agents' forks: a hand of cards over the dock */
 .sk-cards { display: grid; gap: 8px; justify-items: center; max-width: 100%; }

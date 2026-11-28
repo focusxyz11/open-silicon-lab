@@ -89,6 +89,8 @@
  "hd.walls.n": "Wall {n} of 4",
  "hd.try.k": "Try it",
  "hd.play": "Play it for real",
+ "hd.field.line": "{tried} of the {of} recipes for a computer have been tried so far, and {beat} beat today's computer at something.",
+ "hd.field.go": "See every attempt",
  "hd.q.label": "The question behind it",
  "hd.q.meet": "Meet it where it lives",
  "hd.ways.k": "What people are trying against it",

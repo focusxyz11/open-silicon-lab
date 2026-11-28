@@ -222,6 +222,22 @@ export function jevons(ei, ci) {
 export const J_GOAL = { minAnswers: 8, maxEnergy: 0.9 };
 export const J_START = { eff: 0, cap: CAP.length - 1, guess: null };
 export const J_GUESSES = ['less', 'same', 'more'];
+/* this year's numbers (#501): Efficiency fuels use and Compute beats cleverness are one curve seen twice. What frontier
+   training asks for grew far faster than what a dollar of chips buys, so the rest was paid for, in chips and in power;
+   and the data centres' electricity doubles. Each number rests on its fact (src/data/facts.json), shown after the
+   guess. Growth a year: compute since 2020, chip performance per dollar since 2023 (epoch-compute); electricity in TWh,
+   2025 (dc-electricity) and 2030 in stated policies (weo-2026-dc) */
+export const J_WORLD = {
+  compute: { perYear: 5, from: 2020, fact: 'epoch-compute' },
+  perDollar: { perYear: 1.49, from: 2023, fact: 'epoch-compute' },
+  power: [{ year: 2025, twh: 485, fact: 'dc-electricity' }, { year: 2030, twh: 1000, fact: 'weo-2026-dc' }]
+};
+/* both curves from one year to another, against the first: what training asks for, what a dollar of chips buys, and the
+   rest (the spending that makes up the difference) */
+export function jWorld(from = 2023, to = 2026) {
+  const n = to - from, ask = Math.pow(J_WORLD.compute.perYear, n), buy = Math.pow(J_WORLD.perDollar.perYear, n);
+  return { from, to, ask, buy, rest: ask / buy, power: J_WORLD.power, powerGrowth: J_WORLD.power[1].twh / J_WORLD.power[0].twh };
+}
 /* the guess: chips eight times as efficient, no limit on the island's power; what the model says */
 export function jevonsAnswer() { const E = jevons(3, CAP.length - 1).energy; return E < 0.8 ? 'less' : E <= 1.25 ? 'same' : 'more'; }
 export function checkJevons(b) {

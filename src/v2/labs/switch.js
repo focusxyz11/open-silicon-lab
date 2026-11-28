@@ -104,12 +104,17 @@ export default function lab(L) {
       if (form === 'tube') body = [[98, 40], [142, 40], [98, 80], [142, 80]].map(([x, y]) => tube(x, y, 9)).join('');
       else if (form === 'sheet') body = [36, 56, 76].map(y => ins(84, y, 72, 4, 1) + chan(84, y, 72, 4, 1)).join('');
       else body = [32, 54, 76].map(y => ins(86, y, 68, 12) + chan(86, y, 68, 12)).join('');
+    } else if (sh === 'cfet') {
+      /* the stacked pair: one gate wrapped around both, the electron ribbons over the hole ribbons, a thin layer between */
+      gate = '<rect class="gate" x="70" y="10" width="100" height="94" rx="6"/>';
+      body = [16, 28, 40].map(y => ins(86, y, 68, 7) + chan(86, y, 68, 7)).join('') + '<rect class="sub" x="80" y="52" width="80" height="5" rx="1"/>' + [64, 76, 88].map(y => ins(86, y, 68, 7) + '<rect class="ch hole" x="86" y="' + y + '" width="68" height="7" rx="3"/>').join('');
     } else { body = '<rect class="ins" x="28" y="98" width="184" height="6" rx="1"/>' + chan(28, 94, 184, 4, 1); gate = '<rect class="ins" x="78" y="88" width="84" height="6" rx="1"/><rect class="gate" x="78" y="58" width="84" height="30" rx="4"/>'; }
-    s += (sh === 'gaa' ? gate + body : body + gate);
+    s += (sh === 'gaa' || sh === 'cfet' ? gate + body : body + gate);
     /* three words, each beside its part */
-    const gy = sh === 'gaa' ? 13 : sh === 'fin' ? 11 : sh === 'sheet' ? 53 : 45;
+    const gy = sh === 'gaa' ? 13 : sh === 'cfet' ? 7 : sh === 'fin' ? 11 : sh === 'sheet' ? 53 : 45;
     s += '<text class="lb" x="120" y="' + gy + '" text-anchor="middle">' + esc(t('sw.dev.gate')) + '</text>';
-    s += sh === 'gaa' ? '<path class="lead" d="M172 60h14"/><text class="lb lch" x="190" y="63">' + esc(t('sw.dev.channel')) + '</text>'
+    s += sh === 'cfet' ? '<path class="lead" d="M172 31h12"/><text class="lb lch" x="186" y="34">' + esc(t('sw.dev.top')) + '</text><path class="lead" d="M172 79h12"/><text class="lb lch" x="186" y="82">' + esc(t('sw.dev.below')) + '</text>'
+      : sh === 'gaa' ? '<path class="lead" d="M172 60h14"/><text class="lb lch" x="190" y="63">' + esc(t('sw.dev.channel')) + '</text>'
       : '<text class="lb lch" x="28" y="' + (sh === 'fin' ? 91 : sh === 'sheet' ? 89 : 82) + '">' + esc(t('sw.dev.channel')) + '</text>';
     s += '<text class="lb lsub" x="120" y="119" text-anchor="middle">' + esc(t('sw.dev.sub')) + '</text>';
     return '<figure class="tswdev">' + s + '</svg><figcaption class="small muted">' + esc(t('sw.dev.cap', { shape: t('sw.shape.' + sh), mat: inName(r) })) + '</figcaption></figure>';
@@ -146,7 +151,8 @@ export default function lab(L) {
     const fac = r.own ? t('sw.f.own') : !r.survives ? t('sw.f.melts', { c: nf(r.mat.melt), heat: nf(r.heat) }) : !r.pair ? t('sw.f.pair') : t('sw.f.ok', { c: nf(r.heat) });
     const rows = [['v', r.clean ? t('sw.v', { v: nf(r.vmin, 2) }) : t('sw.never'), 'sw.r.v.d'], ['energy', r.clean ? t('sw.pct', { v: nf(r.energy * 100) }) : '—', 'sw.r.energy.d'],
       ['speed', r.clean ? t('sw.times', { v: r.speed >= 0.1 ? nf(r.speed, 2) : nf(+r.speed.toPrecision(1), 3) }) : '—', 'sw.r.speed.d'], ['swing', t('sw.mv', { v: nf(r.swing) }), 'sw.r.swing.d'],
-      ['pair', r.pair ? t('sw.yes') : t('sw.no'), r.pair ? 'sw.r.pair.y' : 'sw.r.pair.n'], ['factory', fac, 'sw.r.factory.d']];
+      ['pair', r.pair ? t('sw.yes') : t('sw.no'), r.pair ? 'sw.r.pair.y' : 'sw.r.pair.n'], ['factory', fac, 'sw.r.factory.d'],
+      ['area', t('sw.pct', { v: nf(r.area * 100) }), r.area < 1 ? 'sw.r.area.half' : 'sw.r.area.d']];
     return '<div class="tswread">' + rows.map(([k, v, d]) => '<span class="sr-' + k + '"><span class="small muted">' + esc(t('sw.r.' + k)) + '</span><b class="mono">' + esc(v) + '</b><span class="small muted">' + esc(t(d)) + '</span></span>').join('') + '</div>';
   }
   const pill = st => '<span class="tswst s-' + st + '">' + esc(t('sw.status.' + st)) + '</span>';
@@ -155,7 +161,7 @@ export default function lab(L) {
     const matSt = M.own ? (r.inBand ? 'band' : 'guess') : M.status;
     const rows = [
       ['mat', M.own ? fidMark({ f: 'idea' }) : fidMark({ f: 'figures', fact: M.fact }), pill(matSt)],
-      ['shape', fidMark({ f: 'idea' }), pill(Sh.status)],
+      ['shape', Sh.fact ? fidMark({ f: 'figures', fact: Sh.fact }) : fidMark({ f: 'idea' }), pill(Sh.status)],
       ['way', fidMark({ f: 'figures', fact: X.fact }), pill(X.status)],
       ['curve', fidMark({ f: 'computed', by: 'switch' }), ''],
       ['traps', fidMark({ f: 'idea' }), '']];
