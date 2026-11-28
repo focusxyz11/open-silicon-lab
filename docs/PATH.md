@@ -51,7 +51,7 @@ built.
 | --- | --- |
 | Atom → switch | the material: gap, electron and hole mobility, traps |
 | Switch → gate | lowest clean voltage, threshold, swing, spread of the copies, on-current, both carriers or not, survives the line |
-| Gate → block | delay and energy per gate at your voltage, the chance a copy fails, switches per gate |
+| Gate → block | delay and energy per gate at your voltage, the chance a copy fails, switches per gate, the area a gate takes against a gate of fins (a stacked pair about half, #499) |
 | Block → chip | ALU delay, energy an operation, wrong operations; register read delay, energy, wire share |
 | Chip → machine | clock, cycles an instruction, energy an instruction, wrong instructions |
 | Machine → mind | instructions a second, energy an instruction with memory, power, share spent moving data |

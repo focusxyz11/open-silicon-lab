@@ -2459,6 +2459,18 @@
    "url": "https://arxiv.org/abs/2601.17178",
    "value": "Up to 83% of agent-made trojans evaded modern detectors",
    "verified": "2026-11-28"
+  },
+  {
+   "id": "intel-cfet-2026",
+   "topic": "transistor",
+   "detail": "At VLSI 2026 Intel showed monolithic stacked-pair (CFET) inverters, the n-type ribbons built on the p-type ones, at a 45 nm gate pitch, with backside power (PowerVia) and backside contacts; it projects that at full scaling such an inverter takes about half the area of a side-by-side one. TSMC showed a working CFET inverter at 48 nm, Samsung single devices at 45 nm. Shown in labs, not in products.",
+   "kind": "claim",
+   "label": "Transistors stacked in pairs",
+   "source": "Intel Newsroom",
+   "status": "new",
+   "url": "https://www.intel.com/content/www/us/en/newsroom/news/corporate/intel-foundry-details-process-milestones-future-innovation-at-vlsi-symposium.html",
+   "value": "A stacked-pair inverter at 45 nm gate pitch; about half the area of a side-by-side one at full scaling (projected)",
+   "verified": "2026-11-28"
   }
  ],
  "changes": [
