@@ -8,6 +8,7 @@
    Where the points come from:
      built     the recipes someone has built (arch.js KNOWN): the field's landmarks, what exists, each as far along as
                it is (a product or in a lab). They are facts about the world, not attempts, so no entry holds them.
+               Several landmarks may stand on one recipe: they share its point (arch.js LANDMARKS).
      ledger    every attempt kept in the community's ledger (src/engines/ledger.js, a try with an arch history), grown
                again here by the same engine, with who made it, how (a person, both, an AI, a search program, the lab's
                example), the day it was kept, and its credit: the first attempt at a recipe nobody has built (firstTry)
@@ -28,8 +29,13 @@ import { PAST } from '../data/field.js';
 export const ARCH_AGENTS = ['ai', 'program'];
 const DAY = /^(\d{4}-\d{2}-\d{2})-/;
 
-/* the built recipes, as points */
-export const builtAttempts = () => A.KNOWN.map(k => ({ key: A.keyOf(k.g), g: k.g, st: A.start(k.g), by: k.status, id: k.id, built: true }));
+/* the built recipes, as points: one point a recipe, however many landmarks stand on it (#495). id is its first
+   landmark's; landmarks every one, each with its own status and fact, opened together from the point; by the recipe's
+   status as this season's scores count it, or the furthest along of its landmarks while they all wait for the next
+   season (waits: its start is then a recipe nobody has built, as the scores read it until that season opens) */
+export const builtAttempts = () => A.FIELD_LANDMARKS.map(p => ({ key: p.key, g: p.g, st: A.start(p.g), id: p.landmarks[0].id, built: true,
+  by: p.built ? p.built.status : p.landmarks.some(x => x.status === 'product') ? 'product' : 'lab', waits: !p.built,
+  landmarks: p.landmarks.map(x => ({ id: x.id, status: x.status, fact: x.fact, from: x.from || 1 })) }));
 
 /* the ledger's attempts: settled entries (or their facts' shape: any record with an arch history), each grown again */
 export function ledgerAttempts(entries) {

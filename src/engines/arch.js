@@ -12,8 +12,8 @@
    it, computing in the memory itself, or values flowing through a mesh laid out once), what carries a value (charge,
    light, spikes, reversible charge, living cells), how it is told what to do (a program step by step, a graph laid out
    once, acting on events, learning from examples, wired for one job) and its shape (a few big cores, a grid of small
-   tiles, layers stacked, a swarm of small parts). 4 x 5 x 5 x 4 = 400 recipes; a few have been built (KNOWN, each
-   resting on an entry of src/data/facts.json), the rest are open.
+   tiles, layers stacked, a swarm of small parts). 4 x 5 x 5 x 4 = 400 recipes; a few have been built (KNOWN, the
+   field's landmarks standing on them, LANDMARKS, each resting on an entry of src/data/facts.json), the rest are open.
 
    What a recipe could become (potentialOf): each option changes five traits against today's computer (EFFECT: energy
    per answer, how many jobs it can take, whether answers are exact, how it bears faults and radiation, how fast it
@@ -228,19 +228,6 @@ export const TODAY_GAIN = 1.03;
 export const GOALS = { archniche: { needs: 1, years: 25 }, archspread: { needs: 3, years: 40 } };
 export const FOCUS_MAX = 2;
 
-/* the recipes someone has built, each with how far along it is and the fact it rests on */
-export const KNOWN = [
-  { id: 'cpu', g: TODAY, status: 'product', fact: null },
-  { id: 'gpu', g: { where: 'far', carrier: 'charge', told: 'program', shape: 'grid' }, status: 'product', fact: 'alexnet-gpu' },
-  { id: 'asic', g: { where: 'far', carrier: 'charge', told: 'fixed', shape: 'few' }, status: 'product', fact: 'asic-vs-cpu' },
-  { id: 'tpu', g: { where: 'flow', carrier: 'charge', told: 'graph', shape: 'grid' }, status: 'product', fact: 'tpu-ironwood' },
-  { id: 'wafer', g: { where: 'near', carrier: 'charge', told: 'graph', shape: 'grid' }, status: 'product', fact: 'cerebras-cs4' },
-  { id: 'photonic', g: { where: 'flow', carrier: 'light', told: 'graph', shape: 'grid' }, status: 'product', fact: 'qant-photonic' },
-  { id: 'neuro', g: { where: 'near', carrier: 'spikes', told: 'events', shape: 'grid' }, status: 'lab', fact: 'hala-point' },
-  { id: 'cim', g: { where: 'in', carrier: 'charge', told: 'learns', shape: 'grid' }, status: 'lab', fact: null },
-  { id: 'living', g: { where: 'near', carrier: 'living', told: 'learns', shape: 'swarm' }, status: 'product', fact: 'cortical-cl1' },
-  { id: 'reversible', g: { where: 'far', carrier: 'reversible', told: 'fixed', shape: 'few' }, status: 'lab', fact: 'vaire-ice-river' }
-];
 /* ---- seasons (#480) ----
    Every attempt in the ledger is grown again by this engine, so retuning it (a trait's effect, a need's weights, a
    growth constant) would silently score every old attempt again and move champions without anyone doing anything. So
@@ -254,7 +241,70 @@ export const KNOWN = [
    changes. */
 export const SEASONS = [{ v: 1, print: '65fe208e', from: '2026-11-26' }];
 export const VERSION = SEASONS.length;
-/* the tables the scores read, by name: changing any of them changes the print */
+
+/* the field's landmarks (#495): things someone has built, each with the recipe it makes, how far along it is (in
+   products, or shown in a lab) and the fact it rests on (src/data/facts.json). Several may stand on one recipe: the four
+   genes are coarse, and two very different chips can make the same four choices, the fine settings deciding the rest.
+   Groq's LPU and Cerebras's wafer both keep their memory beside the compute on the chip (SRAM, near), carry values in
+   charge, lay a model's graph out once and are grids of small tiles; one point on the field opens both.
+   Taalas HC1 wires one model (Llama 3.1 8B) into the chip as mask ROM: wired for one job (fixed). Its where is in, not
+   near: its weights are not a memory beside the compute that a core reads from, they are the circuit itself, each
+   weight's multiply done by the transistors that store it (the maker's description), so nothing is fetched. Its exact
+   trait (in: 0.5) is the model's guess for that too: the weights are packed into a few bits each, and its answers differ
+   a little from the model run in full. A grid: the model's layers laid out in tiles across one die.
+   from: the season from which a landmark counts in the scores (none: the first). A landmark that makes a recipe newly
+   built changes how that recipe is scored (it starts further along, and is no longer new for the goals), which would
+   move a season's standings without anyone doing anything (seasons, above). So it stands on the field at once, with its
+   status and its evidence, and its recipe joins the scores (KNOWN) when the next season opens: raising VERSION to its
+   from then changes the print, as it should. A landmark joining a recipe already built changes no score, and counts at
+   once. */
+export const LANDMARKS = [
+  { id: 'cpu', g: TODAY, status: 'product', fact: null },
+  { id: 'gpu', g: { where: 'far', carrier: 'charge', told: 'program', shape: 'grid' }, status: 'product', fact: 'alexnet-gpu' },
+  { id: 'asic', g: { where: 'far', carrier: 'charge', told: 'fixed', shape: 'few' }, status: 'product', fact: 'asic-vs-cpu' },
+  { id: 'tpu', g: { where: 'flow', carrier: 'charge', told: 'graph', shape: 'grid' }, status: 'product', fact: 'tpu-ironwood' },
+  { id: 'wafer', g: { where: 'near', carrier: 'charge', told: 'graph', shape: 'grid' }, status: 'product', fact: 'cerebras-cs4' },
+  { id: 'lpu', g: { where: 'near', carrier: 'charge', told: 'graph', shape: 'grid' }, status: 'product', fact: 'groq3-lpu' },
+  { id: 'hc1', g: { where: 'in', carrier: 'charge', told: 'fixed', shape: 'grid' }, status: 'product', fact: 'taalas-hc1', from: 2 },
+  { id: 'photonic', g: { where: 'flow', carrier: 'light', told: 'graph', shape: 'grid' }, status: 'product', fact: 'qant-photonic' },
+  { id: 'neuro', g: { where: 'near', carrier: 'spikes', told: 'events', shape: 'grid' }, status: 'lab', fact: 'hala-point' },
+  { id: 'cim', g: { where: 'in', carrier: 'charge', told: 'learns', shape: 'grid' }, status: 'lab', fact: null },
+  { id: 'living', g: { where: 'near', carrier: 'living', told: 'learns', shape: 'swarm' }, status: 'product', fact: 'cortical-cl1' },
+  { id: 'reversible', g: { where: 'far', carrier: 'reversible', told: 'fixed', shape: 'few' }, status: 'lab', fact: 'vaire-ice-river' }
+];
+const keyOfG = g => GENES.map(x => g[x]).join('/');
+/* does a landmark count in this season's scores */
+export const scoredNow = k => (k.from || 1) <= VERSION;
+/* the recipes someone has built, as the scores read them: one each, in the order their first counting landmark is
+   listed, named by it (id, fact), with the furthest along of their counting landmarks as status, and every landmark on
+   the recipe (landmarks, a list: those waiting for a season too, as the field shows them) */
+export const KNOWN = [...new Set(LANDMARKS.filter(scoredNow).map(k => keyOfG(k.g)))].map(key => {
+  const L = LANDMARKS.filter(k => keyOfG(k.g) === key), C = L.filter(scoredNow);
+  return { id: C[0].id, g: C[0].g, status: C.some(k => k.status === 'product') ? 'product' : 'lab', fact: C[0].fact, landmarks: L };
+});
+/* the recipes on the field, one point each, in the order their first landmark is listed: every landmark standing on it,
+   and whether the scores count it as built this season (built: its KNOWN entry, or null while all its landmarks wait) */
+export const FIELD_LANDMARKS = [...new Set(LANDMARKS.map(k => keyOfG(k.g)))].map(key => ({ key, g: LANDMARKS.find(k => keyOfG(k.g) === key).g, landmarks: LANDMARKS.filter(k => keyOfG(k.g) === key), built: KNOWN.find(k => keyOfG(k.g) === key) || null }));
+/* the evidence behind a landmark's numbers (#495), read from its fact's kind (src/data/facts.json kinds), weakest
+   first: a maker's claim, an independent test or report, peer-reviewed. What no one but the maker has measured (a
+   claim, an estimate, a projection) is a claim, and so is a fact of an unknown kind, or one not read yet: evidence never
+   looks stronger than it is. A landmark with no fact has none (null), and is drawn as weak as a claim. Drawn as the
+   landmark's outline on the field (src/v2/stack/view.js), never as a new legend or a fourth truth mark */
+export const EVIDENCE = ['claim', 'independent', 'peer'];
+export const EVIDENCE_OF = { claim: 'claim', estimate: 'claim', projection: 'claim', reported: 'independent', peer: 'peer' };
+export const evidenceOf = fact => (fact && typeof fact.kind === 'string' && Object.hasOwn(EVIDENCE_OF, fact.kind) ? EVIDENCE_OF[fact.kind] : 'claim');
+/* a landmark's evidence: its fact's (factOf(id) gives a fact by its id, or nothing while facts.json is on its way), or
+   null with no fact */
+export const landmarkEvidence = (k, factOf) => (k && k.fact ? evidenceOf(factOf ? factOf(k.fact) : null) : null);
+/* a point shared by several landmarks is drawn with the weakest evidence among them: a claim beside an independent test
+   still draws as a claim; a point whose landmarks have no fact draws as a claim too (null only for no landmark) */
+export function pointEvidence(landmarks, factOf) {
+  const L = landmarks || []; if (!L.length) return null;
+  return EVIDENCE[Math.min(...L.map(k => EVIDENCE.indexOf(landmarkEvidence(k, factOf) || 'claim')))];
+}
+/* the tables the scores read, by name: changing any of them changes the print. Of the landmarks the scores read which
+   recipes count as built and how far along, each named by its first counting landmark: a landmark joining a recipe
+   already built, its fact, its evidence or a landmark waiting for the next season moves no season */
 export const tables = () => ({ OPTIONS, TODAY, TRAITS, EFFECT, CARRY, IDLE, FIXED_CAP, NEEDS, WANT, DIRS, NEED_DIRS, LINK, START_MAIN, START_SIDE, UNBUILT, GROWN, GROWTH, A0,
   BUILT_BOOST, ATTEMPTS, PEOPLE_START, PER_PERSON, JOIN, TODAY_GAIN, GOALS, FOCUS_MAX, KNOWN: KNOWN.map(k => [k.id, keyOf(k.g), k.status]), STONES, STONE, STONE_PEOPLE,
   ACTIVITY, MACHINE: MACHINE_NEEDS.map(n => [n.id, n.activity || 'steady']), PURPOSE_W, PURPOSE_MUST, PURPOSE_DIRS });
@@ -267,7 +317,10 @@ export const seasonOf = e => (e && Number.isInteger(e.season) ? e.season : 1);
 export const seasonOk = v => v == null || (Number.isInteger(v) && v >= 1 && v <= VERSION);
 
 export const keyOf = g => GENES.map(k => g[k]).join('/');
+/* the built recipe g makes as this season's scores read it, or null: every landmark on it is its list (landmarks) */
 export const knownOf = g => KNOWN.find(k => keyOf(k.g) === keyOf(g)) || null;
+/* every landmark standing on g's recipe, those waiting for a season too (none: an empty list) */
+export const landmarksOf = g => LANDMARKS.filter(k => keyOf(k.g) === keyOf(g));
 export const RECIPES = OPTIONS.where.length * OPTIONS.carrier.length * OPTIONS.told.length * OPTIONS.shape.length;
 export const normal = g => Object.fromEntries(GENES.map(k => [k, OPTIONS[k].includes((g || {})[k]) ? g[k] : TODAY[k]]));
 /* how many genes differ from today's computer */

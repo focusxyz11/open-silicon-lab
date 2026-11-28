@@ -128,7 +128,8 @@ export const CAN = NEEDS.map((n, ni) => POT[ni].filter(p => p > 0).length);
 export const CELLCAN = NEEDS.map((n, ni) => [0, 1, 2, 3, 4].map(d => RECIPES.filter(r => r.d === d && POT[ni][r.i] > 0).length));
 export const fxOf = (k, o) => { const e = A.EFFECT[k][o] || {}; return ['energy', 'flex', 'exact', 'rugged', 'adapt'].filter(x => e[x] != null).map(x => t('ar.tr.' + x) + ' ' + times(e[x])).join(' · '); };
 export const bestNeed = g => { let b = 0, bi = -1; NEEDS.forEach((n, i) => { const p = A.potentialOf(g, n); if (p > b) { b = p; bi = i; } }); return bi; };
-export function recipeName(g) { const k = A.knownOf(g); if (k) return t('ar.known.' + k.id); return A.GENES.filter(x => g[x] !== A.TODAY[x]).map(x => optName(x, g[x])).join(' · ') || t('sk.recipe.today'); }
+/* a recipe's name: its landmarks' if anyone has built it (several may share it, #495), else its forks from today's */
+export function recipeName(g) { const L = A.landmarksOf(g); if (L.length) return L.map(k => t('ar.known.' + k.id)).join(' · '); return A.GENES.filter(x => g[x] !== A.TODAY[x]).map(x => optName(x, g[x])).join(' · ') || t('sk.recipe.today'); }
 
 /* ---------- the population: the population engine's (src/engines/population.js), on the sheet's order ----------
    the built recipes, every attempt kept in the community's ledger (grown again by the engine) and yours. The lab runs no

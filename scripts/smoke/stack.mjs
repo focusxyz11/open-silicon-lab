@@ -199,5 +199,35 @@ export default async function run() {
     await lp.waitForFunction(() => { const el = document.querySelector('#stackv .sk-since'); return !!window.__stack && !!el && !el.hidden && /since your last visit/i.test(el.textContent) && /new attempts/.test(el.textContent) && /deposed/.test(el.textContent); }, null, { timeout: 60000, polling: 500 })
       .catch(() => problems.push(tag + ': a later visit does not say the attempts kept and the champions deposed since'));
     await lp.close();
+    /* the 2026 landmarks (#495): each built point's outline is the evidence behind its numbers, read from its facts' kinds,
+       and a maker's claim never draws as independent; the wafer and the LPU share one point, and opening it shows both,
+       each with its status and its evidence; the model wired into a chip stands on the field */
+    {
+      const mp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce' });
+      mp.on('pageerror', e => problems.push(tag + ' (landmarks): ' + e.message));
+      await mp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); localStorage.removeItem('osl-stack'); localStorage.removeItem('osl-stack-seen'); localStorage.removeItem('osl-lang'); } catch (e) { /* no storage */ } });
+      await mp.goto(base + 'index.html#/stack/field');
+      /* the facts' kinds, as facts.json says them */
+      await mp.evaluate(() => fetch('src/data/facts.json').then(r => r.json()).then(j => { window.__mfacts = Object.fromEntries(j.facts.map(f => [f.id, f.kind])); })).catch(() => {});
+      const drawn = await mp.waitForFunction(() => {
+        const v = window.__stack, K = window.__mfacts; if (!v || !K || v.busy() || v.view.level !== 'field') return null;
+        const L = v.landmarks(), O = v.outlines(), wafer = L.find(p => p.ids.includes('wafer') && p.ids.includes('lpu')), hc1 = L.find(p => p.ids.includes('hc1'));
+        /* the model wired into a chip stands on the field; its plot is drawn only in the needs it can serve, which a phone
+           may have panned away from */
+        if (!wafer || !hc1 || !O[wafer.key]) return null;
+        const ids = { wafer: 'cerebras-cs4', lpu: 'groq3-lpu', hc1: 'taalas-hc1' };
+        const bad = L.filter(p => O[p.key] && p.ids.some(id => K[ids[id]] === 'claim') && O[p.key] === 'independent').map(p => p.key);
+        return { bad, wafer: O[wafer.key], hc1: O[hc1.key] || 'claim', key: wafer.key };
+      }, null, { timeout: 60000, polling: 500 }).then(x => x.jsonValue(), () => null);
+      if (!drawn) problems.push(tag + ': the field does not draw the 2026 landmarks (the wafer and the LPU on one point, the model wired into a chip) with their outlines');
+      else {
+        if (drawn.bad.length || drawn.wafer !== 'claim' || drawn.hc1 !== 'claim') problems.push(tag + ': a maker\'s claim is drawn as stronger evidence on the field: ' + JSON.stringify(drawn));
+        const card = await mp.waitForFunction(key => { const v = window.__stack; if (v.busy()) return null;
+          if (v.view.level === 'field') { const p = v.plotOf(key); v.goStack(p.n, p.ri, 0); return null; }
+          const c = v.card(); return /wafer-scale/i.test(c) && /language processing unit/i.test(c) && (c.match(/maker's claim/g) || []).length >= 2 ? c : null; }, drawn.key, { timeout: 30000, polling: 500 }).then(x => x.jsonValue(), () => null);
+        if (!card) problems.push(tag + ': opening the wafer\'s point does not show both the wafer and the LPU, each with its status and evidence');
+      }
+      await mp.close();
+    }
   }
 }

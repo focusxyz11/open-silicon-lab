@@ -2805,6 +2805,8 @@
  "ar.known.cim": "A compute-in-memory chip",
  "ar.known.living": "A living-neuron computer",
  "ar.known.reversible": "A reversible test chip",
+ "ar.known.lpu": "A language processing unit",
+ "ar.known.hc1": "A model wired into a chip",
  "ar.st.product": "in products",
  "ar.st.lab": "shown in a lab",
  "ar.fork.note": "After the first year, changing a gene is a fork: what was learned in the directions that gene leads starts again.",
