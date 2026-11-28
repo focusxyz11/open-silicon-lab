@@ -5,13 +5,9 @@
    to place as HTML over the picture (CLAUDE.md: no word drawn into a picture that moves). No figure is computed here. */
 import { DIE } from './plan.js';
 
-/* the lab's palette, read from its tokens (base.css), so day and night follow the page */
-export function paletteOf(el) {
-  const cs = getComputedStyle(el || document.documentElement), v = k => cs.getPropertyValue(k).trim();
-  return { bg: v('--bg'), ink: v('--ink'), muted: v('--muted'), line: v('--line'), accent: v('--accent'), bad: v('--bad'), warm: v('--warm'), panel: v('--panel-solid') };
-}
-/* a token's colour at an opacity (the tokens are hex colours) */
-export const alpha = (c, a) => { const m = /^#([0-9a-f]{6})$/i.exec(c || ''); if (!m) return c; const n = parseInt(m[1], 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; };
+import { paletteOf, alpha } from './kit.js';
+import { madeDie } from './made.js';
+export { paletteOf, alpha };
 
 /* thresholds, in screen pixels (the guide's) */
 export const SHOW = { outline: 34, units: 200, block: 130, cells: 150, layout: 44, cellWords: 110, heat: 220, heatBlock: 620 };
@@ -20,6 +16,7 @@ export const SHOW = { outline: 34, units: 200, block: 130, cells: 150, layout: 4
    screen); W, H the view's size in CSS pixels; words(key, vars) gives the labels' words. Returns the labels:
    { x, y, text, kind ('name', 'aside', 'figure'), part, bad } in screen pixels, the label's top left */
 export function drawDie(ctx, P, cam, o) {
+  if (o.made) return madeDie(ctx, P, cam, o);
   const { W, H, C, words } = o, s = cam.s, X = x => cam.ox + x * s, Y = y => cam.oy + y * s, labels = [];
   const on = r => X(r.x + r.w) > -40 && X(r.x) < W + 40 && Y(r.y + r.h) > -40 && Y(r.y) < H + 40;
   const rect = r => ctx.rect(X(r.x), Y(r.y), r.w * s, r.h * s);
@@ -156,3 +153,4 @@ export function layoutOf(ctx, c, X, Y, s, C, badGate) {
   ctx.stroke();
   ctx.strokeStyle = alpha(C.accent, 0.9); ctx.beginPath(); ctx.moveTo(x, y + h * 0.04); ctx.lineTo(x + w, y + h * 0.04); ctx.moveTo(x, y + h * 0.96); ctx.lineTo(x + w, y + h * 0.96); ctx.stroke();
 }
+

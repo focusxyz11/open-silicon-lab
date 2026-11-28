@@ -4,7 +4,8 @@
    continuously (the camera passes between the levels, never jumping); ↑ comes out; along (→) leads to the same level as
    made; an old address of the room walked through opens the die at its corner's level; a design that does not do its
    job is said on the die; Arrange sets the recipe in your stack and the hot spot follows (#507); the block scrambled turns
-   late, settled is on time, every state finds the planted bug (#508); no sideways scroll. Desktop at night, phone by day */
+   late, settled is on time, every state finds the planted bug (#508); the masks and the rules (#509); an agent's
+   proposal taken only by you (#510); your wafer on the line carries your design (#511); no sideways scroll. Desktop at night, phone by day */
 import { S } from './shared.mjs';
 
 export const about = 'The studio (#/studio): your chip as designed from the record, the die zoomed to block, gate and switch with no cut, the rail and the address, along to the same level as made, the room\'s old addresses, a broken design, desktop and phone';
@@ -90,6 +91,17 @@ export default async function run() {
     if (!old) problems.push(tag + ': an old address of the room does not open the die at its corner\'s level');
     await page.close();
   }
+  /* the line (#511): your wafer at every station is your design in its state after that step, from the record */
+  { const tag = 'studio: your design on the line'; S.at = tag;
+    const page = await browser3d.newPage({ viewport: { width: 1280, height: 820 }, reducedMotion: 'reduce' });
+    page.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await page.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    for (const st of ['print', 'etch', 'test']) {
+      await page.goto(base + 'index.html#/line/' + st);
+      const drawn = await page.waitForFunction(s => (document.getElementById('diveui').dataset.made || '').split(' ').some(x => x.startsWith(s + '=' + s)), st, { timeout: 90000, polling: 1000 }).then(() => true, () => false);
+      if (!drawn) problems.push(tag + ': at ' + st + ' your wafer does not carry your design in its state after that step');
+    }
+    await page.close(); }
   /* a design that does not do its job: the die says so, and the line will not make it */
   { const tag = 'studio: a broken design'; S.at = tag;
     const page = await browser3d.newPage({ viewport: { width: 1280, height: 820 }, reducedMotion: 'reduce' });
