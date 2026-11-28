@@ -10,7 +10,8 @@ import * as D from '../src/data/path.js';
 import * as P from '../src/engines/path.js';
 import * as A from '../src/engines/arch.js';
 import * as SW from '../src/engines/switch.js';
-import { FIDS, ENGINES, STATUS_MAX, rankOf } from '../src/data/fidelity.js';
+import { FIDS, ENGINES, STATUS_MAX, rankOf, GUESSES } from '../src/data/fidelity.js';
+import { SHAPE_AT } from '../src/engines/tiers.js';
 import { LAYERS } from '../src/data/lattice.js';
 import { WORLDS, DEPTHS } from '../src/data/weave.js';
 import { TWINS } from '../src/data/atlas.js';
@@ -23,7 +24,7 @@ import { AREA_FIXED } from '../src/engines/bet.js';
 const FACTS = new Set(JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts.map(f => f.id));
 const depthsOf = id => WORLDS.find(w => w.id === id).depths;
 const close = (a, b, why) => assert.ok(Math.abs(a - b) <= 1e-12 * Math.max(Math.abs(a), Math.abs(b)), why + ': ' + a + ' against ' + b);
-const UNITS = ['eV', 'cm2/Vs', 'per cm2 eV', 'V', 'mV', 'x', 'yes', 's', 'J', 'p', 'n', 'share', 'Hz', 'per s', 'W', 'cm2'];
+const UNITS = ['eV', 'cm2/Vs', 'per cm2 eV', 'V', 'mV', 'x', 'yes', 's', 'J', 'p', 'n', 'share', 'Hz', 'per s', 'W', 'cm2', 'W/cm2'];
 const ex = (f, g = A.TODAY, aim) => P.carry(P.stackOf(g, f, aim));
 const H = (R, r) => R.rungs[r].hands;
 
@@ -68,8 +69,8 @@ test('the lab\'s example carries from the atom to the mind without errors, every
 test('the switch rung\'s numbers are the switch engine\'s, for every material, shape and way of switching', () => {
   for (const mat of SW.MATERIAL_IDS) for (const shape of SW.SHAPE_IDS) for (const mech of SW.MECH_IDS) {
     const R = ex({ mat, shape, mech }), spec = SW.normal({ mat, shape, mech }), sw = SW.switchOf(spec), h = H(R, 'switch');
-    for (const k of D.fieldsOf('switch')) assert.ok(Object.is(h[k], sw[k]), mat + '/' + shape + '/' + mech + ' ' + k + ': ' + h[k] + ' against ' + sw[k]);
-    assert.deepEqual(H(R, 'atom'), { gap: sw.mat.eg, electrons: sw.mat.me, holes: sw.mat.mh, traps: sw.mat.dit }, mat + ': the atom is the engine\'s material');
+    for (const k of D.fieldsOf('switch').filter(k => k !== 'moving' && k !== 'heat')) assert.ok(Object.is(h[k], sw[k]), mat + '/' + shape + '/' + mech + ' ' + k + ': ' + h[k] + ' against ' + sw[k]);
+    assert.deepEqual(H(R, 'atom'), { gap: sw.mat.eg, electrons: sw.mat.me, holes: sw.mat.mh, traps: sw.mat.dit, moving: 0, heat: 0 }, mat + ': the atom is the engine\'s material');
     assert.ok(FACTS.has(R.rungs.atom.fid.fact), mat + ': the atom\'s figures have a source');
     assert.equal(R.broken, sw.clean ? null : 'switch', mat + '/' + shape + '/' + mech);
   }
@@ -397,4 +398,30 @@ test('every face the stack turns to is drawn, says its steps, and hands up whole
       }
     }
   }
+});
+
+/* ---- the carry moves bits too: data movement and heat up every rung (#494) ---- */
+test('every rung hands up the share it spends moving bits and its heat, and the guesses behind them are marked', () => {
+  const R = P.X0;
+  for (const r of D.RUNGS) { const h = H(R, r); assert.ok(h.moving >= 0 && h.moving <= 1, r + '.moving ' + h.moving); assert.ok(h.heat >= 0 && Number.isFinite(h.heat), r + '.heat ' + h.heat); }
+  assert.ok(H(R, 'atom').moving === 0 && H(R, 'switch').moving === 0, 'a switch makes a bit and moves none');
+  assert.ok(H(R, 'machine').moving >= H(R, 'machine').moveShare, 'the machine\'s moving counts its memory and its chips\' own wires');
+  for (const k of ['gate-wire', 'block-trip', 'heat-limit']) assert.ok(GUESSES[k] && GUESSES[k].status === 'guess' && ENGINES[GUESSES[k].by], k + ' is marked a guess');
+});
+
+test('forking where it computes from far to near shrinks the moving share at the block and the chip', () => {
+  const at = w => ex({}, Object.assign({}, A.TODAY, { where: w })), order = ['far', 'near', 'flow', 'in'];
+  for (const r of ['block', 'chip', 'machine']) for (let i = 1; i < order.length; i++) assert.ok(H(at(order[i]), r).moving < H(at(order[i - 1]), r).moving, r + ': ' + order[i] + ' moves less than ' + order[i - 1]);
+  assert.ok(H(at('far'), 'block').moving - H(at('near'), 'block').moving > 0.08, 'visibly');
+});
+
+test('heat rises with stacked shapes: tiers on one footprint add their heat', () => {
+  const at = s => ex({}, Object.assign({}, A.TODAY, { shape: s }));
+  assert.ok(H(at('stack'), 'machine').heat > H(at('few'), 'machine').heat * 2, 'the stack of tiers runs hotter than a few big cores');
+  assert.ok(H(at('stack'), 'machine').heat > P.HEAT_LIMIT, 'hotter than a cold plate takes');
+  assert.ok(H(at('few'), 'machine').heat < P.HEAT_LIMIT, 'today\'s machine is not');
+  assert.equal(H(at('stack'), 'mind').heat, H(at('stack'), 'machine').heat, 'the mind runs on the machine\'s heat');
+  assert.equal(P.TIERS.stack, SHAPE_AT.tiers, 'the stack shape has the tiers lab\'s tiers');
+  /* a gate at full speed burns more than any chip can shed; the chip at its clock and a quarter of its gates does not */
+  assert.ok(H(P.X0, 'gate').heat > 10 * P.HEAT_LIMIT && H(P.X0, 'chip').heat < P.HEAT_LIMIT);
 });

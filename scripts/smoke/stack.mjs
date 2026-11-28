@@ -174,6 +174,20 @@ export default async function run() {
       .catch(() => problems.push(tag + ': Perfect fails does not repaint every plate from the carry'));
     await sp.waitForFunction(() => { const v = window.__stack; v.setLens(null); return v.paintNow() === null; }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': closing the lens does not leave the stack plain'));
+    /* two lenses held (#449): a chain numbers the rungs it climbs; a fork splits the plates by a line with its handle,
+       the other side its own carry; the front is the field for two needs in the card. Then put down */
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.busy()) return false; v.setLens({ rung: 'gate', id: 'dig', pair: 'physics' }); const P = v.pair();
+      return !!P && P.shape === 'chain' && P.chain.steps.length >= 5 && P.chain.steps.every((s, i) => s.k === i + 1); }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': two lenses held as a chain do not number the rungs they climb'));
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.busy()) return false; v.setLens({ rung: 'block', id: 'geo', pair: 'line' }); const P = v.pair(), h = document.querySelector('#stackv .sk-split');
+      if (!P || P.shape !== 'fork' || !h || h.hidden) return false; v.setSplit(0.3); return P.gene === 'where' && P.option !== v.S.g.where && P.right.block.v !== P.left.block.v && h.getAttribute('aria-valuenow') === '30'; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': a fork held does not split the plates by a line with its handle, each side its own carry'));
+    await sp.waitForFunction(() => { const v = window.__stack, o = v.A.OPTIONS.where.find(x => x !== v.S.g.where && x !== v.A.TODAY.where); v.setForkOpt('where', o); v.setLens({ rung: 'block', id: 'geo', pair: 'line' }); const P = v.pair(); return !!P && P.option === o; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the fork\'s other option cannot be chosen'));
+    await sp.waitForFunction(() => { const v = window.__stack; v.setLens({ rung: 'machine', id: 'geo', pair: 'eff' }); const P = v.pair(); return !!P && P.shape === 'front' && P.front.front.length >= 1 && P.front.na !== P.front.nb; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': a front held is not the field for two needs'));
+    await sp.waitForFunction(() => { const v = window.__stack; v.setLens(null); return v.pair() === null && document.querySelector('#stackv .sk-split').hidden; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': putting two lenses down does not leave the stack plain'));
     /* the keyboard: the mirror's plots move under the arrows and Enter opens one */
     await sp.evaluate(() => { window.__stack.goField(); });
     await sp.waitForFunction(() => !window.__stack.busy() && window.__stack.view.level === 'field', null, { timeout: 20000 }).catch(() => {});
@@ -228,6 +242,42 @@ export default async function run() {
         if (!card) problems.push(tag + ': opening the wafer\'s point does not show both the wafer and the LPU, each with its status and evidence');
       }
       await mp.close();
+    }
+    /* Grow an architecture, played in the stack's Do (#450; moved here from the architecture lab's own checks): its two
+       goals in the card, a recipe nobody has built grown to win one need (the challenge won), two forks making a family
+       tree of three, the curve of attempts, a node tapped starting again from it, and the attempt kept in the ledger */
+    if (w === 1280) {
+      const gp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce' });
+      gp.on('pageerror', e => problems.push(tag + ' (grow): ' + e.message));
+      await gp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); localStorage.removeItem('osl-stack'); localStorage.removeItem('osl-lang'); } catch (e) { /* no storage */ } });
+      await gp.goto(base + 'index.html#/stack');
+      const G = '#stackv .skframe .sk-growd ';
+      await gp.waitForFunction(G => { const v = window.__stack; if (!v || v.busy() || v.view.level !== 'stack') return false;
+        if (!document.querySelector(G)) { const d = document.querySelector('#stackv .skframe .modes3 [data-mode="do"]'); if (d) d.click(); return false; }
+        return !!document.querySelector(G + '[data-sk-goal="archniche"]') && !!document.querySelector(G + '[data-sk-goal="archspread"]'); }, G, { timeout: 60000, polling: 1000 })
+        .catch(() => problems.push(tag + ': the stack\'s Do does not hold Grow an architecture\'s two goals'));
+      await gp.waitForFunction(G => { const v = window.__stack, A = v.A, st = v.S.A;
+        if (document.querySelector(G + '[data-sk-goal="archniche"][data-won]')) return true;
+        if (st.g.where !== 'in' || st.g.told !== 'graph' || st.g.shape !== 'stack') { v.setGene('where', 'in'); v.setGene('told', 'graph'); v.setGene('shape', 'stack'); return false; }
+        if (st.year >= 25) { v.setGene('shape', 'few'); v.setGene('shape', 'stack'); return false; }
+        const sug = A.suggest(st, 'archniche').dirs; v.S.focus = (st.year < 10 ? ['people'] : []).concat(sug).slice(0, 2); v.grow(5);
+        return false; }, G, { timeout: 60000, polling: 1000 })
+        .catch(() => problems.push(tag + ': a recipe nobody has built, grown on the stack, does not win An architecture nobody has built'));
+      const n0 = await gp.evaluate(G => document.querySelectorAll(G + '.sk-tree [data-sk-node]').length, G);
+      await gp.waitForFunction(([G, n0]) => { const v = window.__stack, n = document.querySelectorAll(G + '.sk-tree [data-sk-node]').length;
+        if (n >= n0 + 2) return true; if (n === n0) v.setGene('shape', 'grid'); else v.setGene('carrier', 'light'); return false; }, [G, n0], { timeout: 30000, polling: 1000 })
+        .catch(() => problems.push(tag + ': two forks on the stack do not grow its family tree by two'));
+      await gp.waitForFunction(G => !!document.querySelector(G + '.sk-curve svg .cv'), G, { timeout: 20000, polling: 1000 })
+        .catch(() => problems.push(tag + ': the curve of attempts is not drawn in the stack\'s Do'));
+      await gp.waitForFunction(G => { const cur = document.querySelector(G + '.sk-keep, ' + G + '.sk-kept'); if (!cur) { window.__stack.grow(1); return false; }
+        if (document.querySelector(G + '.sk-kept .slip')) return true; const n = document.querySelector(G + '.sk-keep [data-sign]'); if (n && !n.value) n.value = 'Smoke';
+        const b = document.querySelector(G + '[data-sk-keep]'); if (b) b.click(); return false; }, G, { timeout: 30000, polling: 1000 })
+        .catch(async () => problems.push(tag + ': an attempt grown on the stack cannot be kept in the ledger: ' + await gp.evaluate(G => (document.querySelector(G + '.sk-keep .bad') || {}).textContent || 'no keep', G)));
+      await gp.waitForFunction(G => { const ns = document.querySelectorAll(G + '.sk-tree [data-sk-node]'), cur = document.querySelector(G + '.sk-tree [data-sk-node].cur');
+        if (!window.__n0) { window.__n0 = ns.length; const a = document.querySelector(G + '.sk-tree [data-sk-node="0"]'); if (a) a.dispatchEvent(new MouseEvent('click', { bubbles: true })); return false; }
+        return ns.length === window.__n0 + 1 && !!cur && +cur.dataset.skNode === window.__n0 && window.__stack.S.A.year === 0; }, G, { timeout: 20000, polling: 1000 })
+        .catch(() => problems.push(tag + ': a node of the stack\'s family tree does not start again from it'));
+      await gp.close();
     }
   }
 }

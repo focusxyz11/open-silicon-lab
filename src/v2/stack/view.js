@@ -21,7 +21,12 @@
    asked how much of the picture the card takes; the rung's controls (.sk-ctl) are its Do face.
    moved(): called when the address changes under the view, so the loop in the bar follows. show(at, face): along turns
    every plate to a face, as designed, made or used (#456, src/v2/stack/faces.js); the address says it
-   (#/stack/<face>/<rung>, used if none). A face's controls are the rung's Do face like any other. */
+   (#/stack/<face>/<rung>, used if none). A face's controls are the rung's Do face like any other.
+   Two lenses held (#449, src/engines/stacklens.js): setLens({ rung, id, pair }) with a pair paints the pair's shape. A
+   chain numbers the rungs the pair's measure climbs, lit where it passes its line, the carry's vias between lit steps
+   lit too; a fork splits every plate by a line you drag (on the picture, by its handle, or in the card), your stack on
+   the left, the same stack with the pair's gene forked on the right, each side painted and drawn from its own carry; a
+   front is the field for two needs, drawn in the card (pairHtml). */
 import { t, fmtNum } from '../../core/i18n.js';
 import { esc } from '../../core/esc.js';
 import { theme } from '../../core/ui.js';
@@ -35,6 +40,7 @@ import * as SL from '../../engines/stacklens.js';
 import * as PU from './purpose.js';
 import { PIC, passedPic, makePen, glyph } from './pics.js';
 import * as FX from './faces.js';
+import * as GR from './grow.js';
 
 const NR = RUNGS.length, KEY = 'osl-stack';
 const lerp = (a, b, u) => a + (b - a) * u, ease = u => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2), smooth = u => { u = clamp(u, 0, 1); return u * u * (3 - 2 * u); };
@@ -65,7 +71,7 @@ export function createStack(host, opts = {}) {
   const still = () => !!(opts.still && opts.still());
   host.innerHTML = '<canvas class="sk-world" role="img"></canvas>' +
     '<header class="sk-head"><h1 class="sk-ttl"></h1><nav class="sk-rail"></nav><div class="sk-faces" role="group"></div><div class="sk-tools"><span class="sk-fid"></span><button type="button" class="sk-reset lnk"></button></div></header>' +
-    '<nav class="sk-sr"></nav><div class="sk-genes"></div><div class="sk-marks"></div><section class="sk-ctl" hidden></section><div class="sk-pop" hidden></div>' +
+    '<nav class="sk-sr"></nav><div class="sk-genes"></div><div class="sk-marks"></div><button type="button" class="sk-split" role="slider" aria-valuemin="5" aria-valuemax="95" hidden><i></i></button><section class="sk-ctl" hidden></section><div class="sk-pop" hidden></div>' +
     '<footer class="sk-foot"><p class="sk-since" hidden></p><p class="sk-say" role="status" aria-live="polite"></p><div class="sk-cards" hidden></div><div class="sk-card" hidden></div><div class="sk-dock"></div></footer>';
   const root = host, $ = s => root.querySelector(s), $$ = s => [...root.querySelectorAll(s)];
   const cv = $('.sk-world'), ctx = cv.getContext('2d'), CTL = $('.sk-ctl');
@@ -85,14 +91,25 @@ export function createStack(host, opts = {}) {
   const recol = () => { COL = PU.columnOf(opts.purposes ? opts.purposes() : null, POP); SHEET.x1 = WID + 5 + (COL ? CSTEP : 0); };
   recol();
   const brought = () => A.broughtOf(opts.done ? opts.done() : {});
-  const fresh = () => ({ F: Object.assign({}, EXAMPLE), g: Object.assign({}, A.TODAY), aim: 'any', A: A.start(A.TODAY, brought()), T: A.treeOf(A.TODAY), focus: [], stones: brought(), first: {} });
+  const fresh = () => { const a = A.start(A.TODAY, brought()); return { F: Object.assign({}, EXAMPLE), g: Object.assign({}, A.TODAY), aim: 'any', A: a, T: A.treeOf(A.TODAY), focus: [], stones: brought(), first: {}, H: A.histOf(a), slip: null, slipKey: null }; };
   const S = fresh();
-  try { const k = JSON.parse(localStorage.getItem(KEY) || 'null'); if (k && k.A && A.isKey(A.keyOf(k.A.g)) && NEEDS.includes(k.aim)) { Object.assign(S.F, k.F); S.g = k.A.g; S.A = A.bring(k.A, brought()); S.T = k.T || A.treeOf(S.g); S.aim = k.aim; S.focus = k.focus || []; S.stones = Object.assign({}, k.stones || {}, brought()); S.first = k.first || {}; } } catch (e) { /* a fresh start */ }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ F: S.F, aim: S.aim, A: S.A, T: S.T, focus: S.focus, stones: S.stones, first: S.first })); } catch (e) { /* not kept */ } };
+  try { const k = JSON.parse(localStorage.getItem(KEY) || 'null'); if (k && k.A && A.isKey(A.keyOf(k.A.g)) && NEEDS.includes(k.aim)) { Object.assign(S.F, k.F); S.g = k.A.g; S.A = A.bring(k.A, brought()); S.T = k.T || A.treeOf(S.g); S.aim = k.aim; S.focus = k.focus || []; S.stones = Object.assign({}, k.stones || {}, brought()); S.first = k.first || {}; S.H = k.H && k.H.start ? k.H : null; S.slip = k.slip || null; S.slipKey = k.slipKey || null; } } catch (e) { /* a fresh start */ }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ F: S.F, aim: S.aim, A: S.A, T: S.T, focus: S.focus, stones: S.stones, first: S.first, H: S.H, slip: S.slip, slipKey: S.slipKey })); } catch (e) { /* not kept */ } };
   const extra = (F, g) => { const spec = SW.normal({ mat: F.mat, shape: F.shape, mech: F.mech, own: F.own }); return { F, g, spec, sw: SW.switchOf(spec), M: SW.MATERIALS.find(m => m.id === spec.mat) }; };
   const make = (F, g, aim) => { const R = carry(F, g, aim); return { R, V: see(R), D: extra(R.fine, R.recipe) }; };
   let Y = make(S.F, S.g, S.aim), Yprev = Y, marks = [], QB = {}, lens = null, CEN = null, proposals = null, portOn = false, purposeOn = false, PFORM = PU.loadForm(), PSLIP = '', wave = null, pings = [], grewAt = -1e9;
   const R = () => Y.R;
+  /* Grow an architecture, played here (#450, src/v2/stack/grow.js): the history of the line being grown, for the ledger
+     (arch.js histOf: begun again at every start, a year's focus at every year, a fork or a stone at the year grown
+     before it), and the two challenges, won here as soon as their goal is met */
+  const restartH = () => { S.H = A.histOf(S.A); }, changeH = c => { if (S.H) S.H.changes.push(c); };
+  const slipKey = () => (S.H ? JSON.stringify([S.H.start, S.H.years.length, S.H.changes.filter(c => c.gene != null)]) : '');
+  let keepNo = null;
+  function goals() { if (!opts.win) return; for (const id of GR.GOAL_IDS) if (A.goalOf(S.A, id).met && opts.win(id)) say(t('ar.done.' + id)); }
+  function growHtml() {
+    const won = opts.done ? opts.done() : {}, slip = S.slip && S.slipKey === slipKey() && opts.archSlip ? opts.archSlip(S.slip) : '';
+    return GR.growHtml({ st: S.A, tree: S.T, done: id => !!won[id], title: id => (opts.titleOf ? opts.titleOf(id) : id), keep: { on: !!opts.keepArch && A.novelty(S.g) > 0 && S.A.year > 0 && !!S.H, slip, no: keepNo, sign: opts.signHtml ? opts.signHtml() : '' } });
+  }
   const mineKey = () => A.keyOf(S.g), mineRi = () => RIDX.get(mineKey()), aimN = () => NEEDS.indexOf(S.aim);
   const mineAtt = () => ({ key: mineKey(), g: S.g, st: S.A, by: 'you', mine: true });
   const recount = () => { CEN = census(POP, mineAtt()); };
@@ -100,6 +117,9 @@ export function createStack(host, opts = {}) {
   const SINCE = (() => { const c0 = census(POP); return [sinceLine(sinceVisit(POP, { champ: c0.champ }, new Date().toISOString().slice(0, 10)), POP, { champ: c0.champ }), seasonLine(opts.over ? opts.over() : 0)].filter(Boolean).join(' '); })();
   const yoursAt = r => FINE_OF[r].some(k => String(S.F[k]) !== String(EXAMPLE[k])) || !!R().rungs[r].fork;
   /* who chose a rung, for Only humans (#449): an agent whose fork you took, you, or the lab's example */
+  /* two lenses held (#449): where the fork's line splits the plates, the option asked for each gene, the second need of
+     the front, and the forks' carries kept */
+  let split = 0.5, needB = null, PS = null, splitDrag = false; const forkAsk = {}, F2 = new Map();
   const byAgent = new Set(), whoAt = r => (R().rungs[r].fork && GENE_OF[r] && byAgent.has(GENE_OF[r]) ? 'agent' : yoursAt(r) ? 'you' : 'lab');
 
   /* ---------- the camera ---------- */
@@ -129,7 +149,7 @@ export function createStack(host, opts = {}) {
   }
   function poseStack(n, ri) {
     /* beside the card's side panel the genes step aside, and the figures keep their column left of it */
-    const c = chrome(), ph = phone(), rc = plotRect(n, ri), uh = vh - c.top - c.bot, side = ph ? 0 : ins().r, mL = ph ? 12 : side ? 28 : clamp(vw * 0.18, 215, 380), mR = ph ? 12 : side ? side + 300 : clamp(vw * 0.21, 265, 380), head = ph ? 30 : 64, K = 1.36, NP = NR - 1;
+    const c = chrome(), ph = phone(), rc = plotRect(n, ri), uh = Math.max(150, vh - c.top - c.bot), side = ph ? 0 : ins().r, mL = ph ? 12 : side ? 28 : clamp(vw * 0.18, 215, 380), mR = ph ? 12 : side ? side + 300 : clamp(vw * 0.21, 265, 380), head = ph ? 30 : 64, K = 1.36, NP = NR - 1;
     let s = (vw - mL - mR) / PW, cos = 0.3, depth = PD * s * cos, pitch = depth * K;
     if (NP * pitch + depth + head > uh) { s = (uh - head) / ((NP * K + 1) * PD * cos); depth = PD * s * cos; pitch = depth * K; }
     else { pitch = Math.min((uh - head) / (NP + 1 / K), PD * s * 0.66 * 1.9); cos = clamp(pitch / K / (PD * s), 0.3, 0.66); depth = PD * s * cos; }
@@ -196,6 +216,55 @@ export function createStack(host, opts = {}) {
     return SK;
   }
 
+  /* ---------- two lenses held: the pair's shape on the stack (#449) ---------- */
+  function pairNow(sh, a = lens && lens.id, b = lens && lens.pair) {
+    if (!a || !b || !sh) return null;
+    const shape = SL.shapeOf(a, b); if (!shape) return null;
+    const Rn = sh.Y.R, who = sh.mine ? whoAt : () => 'lab', m = SL.measureOf(a, b), left = SL.paint(Rn, m, who);
+    if (shape === 'chain') return { shape, a, b, measure: m, left, chain: SL.chainOf(Rn, a, b, who) };
+    if (shape === 'fork') {
+      const gene = SL.geneOfPair(a, b), o = SL.otherOption(A.OPTIONS[gene], sh.g[gene], A.TODAY[gene], forkAsk[gene]), g2 = Object.assign({}, sh.g, { [gene]: o }), k = A.keyOf(g2) + JSON.stringify(sh.F) + sh.need;
+      if (!F2.has(k)) { if (F2.size > 24) F2.clear(); F2.set(k, make(sh.F, g2, sh.need)); }
+      const Y2 = F2.get(k); return { shape, a, b, measure: m, left, gene, option: o, Y2, right: SL.paint(Y2.R, m) };
+    }
+    return { shape, a, b, measure: m, left };
+  }
+  /* the front: every attempt at two needs, yours among them; the best compromises; the needs it is drawn for */
+  function frontNow() {
+    const na = S.aim, can = NEEDS.filter(n => n !== na), nb = can.includes(needB) ? needB : can.find(n => A.scoreOf(S.A)[n].can) || can[0], pts = [];
+    for (const a of POP) { const sc = a.sc || A.scoreOf(a.st); if (sc[na].can && sc[nb].can) pts.push({ x: sc[na].now, y: sc[nb].now, key: a.key, built: !!a.built }); }
+    const sc = A.scoreOf(S.A), mine = sc[na].can && sc[nb].can ? { x: sc[na].now, y: sc[nb].now, key: mineKey(), mine: true } : null;
+    const all = mine ? pts.concat([mine]) : pts, front = SL.frontOf(all);
+    return { na, nb, pts, mine, front, onFront: !!mine && front.some(p => p.x === mine.x && p.y === mine.y) };
+  }
+  const shortOf = (m, q) => (!q || q.v == null ? '—' : t('sk.pair.short.' + m + '.' + q.say, { n: m === 'perfect' && q.say === 'oneIn' ? sup(q.n) : q.n }));
+  const sup = n => String(n).replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
+  /* the pair's part of the card: what the shape shows on your stack, and its control */
+  function pairHtml(a, b) {
+    if (view.level === 'field') return '';
+    const P = PS && PS.a === a && PS.b === b ? PS : pairNow(shown(), a, b); if (!P) return '';
+    const mw = t('sk.pair.measure.' + P.measure), head = '<p class="kicker">' + esc(t('sk.pair.on.' + P.shape)) + '</p>';
+    if (P.shape === 'chain') { const c = P.chain;
+      return '<div class="sk-pair">' + head + '<p>' + esc(c.from ? t('sk.pair.chain', { n: c.lit, of: c.steps.length, from: rungName(c.from).toLowerCase(), what: mw }) : t('sk.pair.chainNone', { of: c.steps.length, what: mw })) + '</p></div>'; }
+    if (P.shape === 'fork') { const opts = A.OPTIONS[P.gene].filter(o => o !== shown().g[P.gene]);
+      return '<div class="sk-pair">' + head + '<p>' + esc(t('sk.pair.fork', { gene: t('ar.gene.' + P.gene).toLowerCase(), yours: optName(P.gene, shown().g[P.gene]).toLowerCase(), other: optName(P.gene, P.option).toLowerCase(), what: mw })) + '</p>' +
+        '<span class="sk-seg" role="group" aria-label="' + esc(t('ar.gene.' + P.gene)) + '">' + opts.map(o => '<button type="button" data-skfork="' + esc(P.gene + ':' + o) + '" aria-pressed="' + (o === P.option) + '">' + esc(optName(P.gene, o)) + '</button>').join('') + '</span>' +
+        '<label class="sk-row"><span class="sk-lbl">' + esc(t('sk.pair.line')) + '</span><input type="range" class="sk-splitr" min="5" max="95" step="1" value="' + Math.round(split * 100) + '" aria-label="' + esc(t('sk.pair.lineAria')) + '"></label></div>'; }
+    /* the front: the field for two needs */
+    const Fr = frontNow(), W = 280, H = 210, L = 34, B = 30, lg = v => Math.max(-2, Math.min(2, Math.log10(Math.max(v, 1e-6)))), X = v => L + (lg(v) + 2) / 4 * (W - L - 8), Y = v => H - B - (lg(v) + 2) / 4 * (H - B - 8);
+    const st = Fr.front.map(p => [X(p.x), Y(p.y)]), stair = st.length ? 'M' + X(1e-6) + ',' + st[0][1] + st.map(([x, y], i) => (i ? 'H' + x + 'V' + y : 'H' + x)).join('') + 'V' + Y(1e-6) : '';
+    const shade = st.length ? 'M' + W + ',' + 8 + 'H' + X(1e-6) + 'V' + st[0][1] + st.map(([x, y], i) => (i ? 'H' + x + 'V' + y : 'H' + x)).join('') + 'V' + (H - B) + 'H' + W + 'Z' : '';
+    const dots = Fr.pts.map(p => '<circle cx="' + X(p.x).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="' + (p.built ? 3.2 : 2.4) + '" class="' + (p.built ? 'b' : 'l') + '"/>').join('');
+    const me = Fr.mine ? '<circle cx="' + X(Fr.mine.x).toFixed(1) + '" cy="' + Y(Fr.mine.y).toFixed(1) + '" r="5.5" class="me"/>' : '';
+    const svg = '<svg class="sk-front" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('sk.pair.frontAria', { a: need(Fr.na), b: need(Fr.nb), n: Fr.pts.length })) + '">' +
+      '<path class="nob" d="' + shade + '"/><line class="ax" x1="' + L + '" y1="' + (H - B) + '" x2="' + W + '" y2="' + (H - B) + '"/><line class="ax" x1="' + L + '" y1="8" x2="' + L + '" y2="' + (H - B) + '"/>' +
+      '<line class="one" x1="' + X(1) + '" y1="8" x2="' + X(1) + '" y2="' + (H - B) + '"/><line class="one" x1="' + L + '" y1="' + Y(1) + '" x2="' + W + '" y2="' + Y(1) + '"/>' +
+      dots + '<path class="fr" d="' + stair + '"/>' + me +
+      '<text x="' + W + '" y="' + (H - 8) + '" text-anchor="end">' + esc(need(Fr.na)) + ' →</text><text x="4" y="14">' + esc(need(Fr.nb)) + ' ↑</text><text x="' + (X(1) + 3) + '" y="' + (H - B - 4) + '" class="sm">×1</text></svg>';
+    return '<div class="sk-pair">' + head + '<p>' + esc(t('sk.pair.front', { a: need(Fr.na), b: need(Fr.nb), n: Fr.pts.length })) + ' ' + esc(Fr.mine ? t(Fr.onFront ? 'sk.pair.frontOn' : 'sk.pair.frontBehind') : t('sk.pair.frontCant')) + '</p>' + svg +
+      '<span class="sk-seg" role="group" aria-label="' + esc(t('sk.pair.needB')) + '">' + NEEDS.filter(n => n !== Fr.na).map(n => '<button type="button" data-skneed="' + n + '" aria-pressed="' + (n === Fr.nb) + '">' + esc(need(n)) + '</button>').join('') + '</span></div>';
+  }
+
   /* ---------- changing things ---------- */
   let sayT = 0, saying = false, rest = '';
   function say(s) { const el = $('.sk-say'); el.textContent = s; el.classList.remove('in'); void el.offsetWidth; el.classList.add('in'); sayT = performance.now(); saying = true; }
@@ -210,7 +279,7 @@ export function createStack(host, opts = {}) {
     Yprev = Y; Y = make(S.F, S.g, S.aim);
     QB = marksOf(R(), lensesAt);
     if (from != null && !still()) wave = { k: from, t0: performance.now() };
-    if (stoneOf(S.F, S.g) && !S.stones.device) { S.stones.device = A.KEPT_SWITCH; S.A = A.bring(S.A, { device: A.KEPT_SWITCH }); if (A.novelty(S.g)) say(t('sk.say.stone')); }
+    if (stoneOf(S.F, S.g) && !S.stones.device) { S.stones.device = A.KEPT_SWITCH; S.A = A.bring(S.A, { device: A.KEPT_SWITCH }); if (S.A.year) changeH({ at: S.A.year, stone: A.KEPT_SWITCH }); else restartH(); if (A.novelty(S.g)) say(t('sk.say.stone')); }
     recount(); save(); dirty = true; ui(); if (card().changed) card().changed();
   }
   const sayOnce = {};
@@ -229,14 +298,14 @@ export function createStack(host, opts = {}) {
     if (S.g[k] === o) return;
     const g2 = Object.assign({}, S.g, { [k]: o }), wasOn = onMine(), yr = S.A.year;
     let msg;
-    if (!yr) { S.A = A.start(g2, S.stones); S.T = A.treeStart(S.T, g2); }
-    else { const lost = A.LINK[k].filter(d => S.A.tries[d] > 0); S.A = A.forkOf(S.A, k, o); S.T = A.treeFork(S.T, g2, yr); msg = lost.length ? t('ar.say.fork', { gene: t('ar.gene.' + k).toLowerCase(), option: optName(k, o).toLowerCase(), dirs: dirList(lost) }) : t('ar.say.forkFree', { gene: t('ar.gene.' + k).toLowerCase(), option: optName(k, o).toLowerCase() }); }
+    if (!yr) { S.A = A.start(g2, S.stones); S.T = A.treeStart(S.T, g2); restartH(); }
+    else { const lost = A.LINK[k].filter(d => S.A.tries[d] > 0); S.A = A.forkOf(S.A, k, o); S.T = A.treeFork(S.T, g2, yr); changeH({ at: yr, gene: k, option: o }); msg = lost.length ? t('ar.say.fork', { gene: t('ar.gene.' + k).toLowerCase(), option: optName(k, o).toLowerCase(), dirs: dirList(lost) }) : t('ar.say.forkFree', { gene: t('ar.gene.' + k).toLowerCase(), option: optName(k, o).toLowerCase() }); }
     S.g = S.A.g; proposals = null;
     const aimMsg = fixAim(); S.focus = A.novelty(S.g) ? A.suggest(S.A, 'archniche').dirs.slice() : [];
     refresh(GENE_AT[k][0]);
     if (!msg) { const kn = A.knownOf(S.g), sc = A.scoreOf(S.A)[S.aim];
       msg = !A.novelty(S.g) ? t('sk.say.today') : kn ? t('ar.say.known', { name: t('ar.known.' + kn.id) }) : sc.could < 1 && !NEEDS.some(n => A.scoreOf(S.A)[n].could >= 1) ? t('ar.say.newNone') : t('sk.say.newOne', { v: times(sc.now), need: asNeed(S.aim), could: times(sc.could) }); }
-    say(aimMsg || msg);
+    say(aimMsg || msg); goals();
     if (wasOn && view.level !== 'field') { const lv = view.level, i = view.i; goStack(aimN(), mineRi(), 1200); if (lv === 'rung') { view.level = 'rung'; view.i = i; anim.to = poseRung(view.n, view.r, i); } } else { view.n = aimN(); view.r = mineRi(); }
     ui();
   }
@@ -245,21 +314,35 @@ export function createStack(host, opts = {}) {
     let msg = '';
     for (let k = 0; k < n && S.A.year < 80; k++) {
       const firstTry = !S.A.year && !A.knownOf(S.g) && !POP.some(a => a.key === mineKey()) && !S.first[mineKey()];
-      S.A = A.year(S.A, S.focus); S.T = A.treeYear(S.T, A.winsOf(S.A));
+      S.A = A.year(S.A, S.focus); S.T = A.treeYear(S.T, A.winsOf(S.A)); if (S.H) S.H.years.push(S.focus.slice());
       const L = S.A.log[S.A.log.length - 1], sc = A.scoreOf(S.A)[S.aim];
       if (firstTry) { S.first[mineKey()] = 1; msg = t('sk.say.first'); }
       if (L.fresh.length) msg = t('sk.say.win', { y: S.A.year, need: asNeed(L.fresh[0]), p: Math.round(S.A.people) });
       else if (!msg || !firstTry) msg = L.focus.length ? t('sk.say.year', { y: S.A.year, n: fmtNum(L.attempts), dirs: dirList(L.focus), v: times(sc.now), need: asNeed(S.aim) }) : t('ar.say.idle', { y: S.A.year });
     }
-    grewAt = performance.now(); proposals = null; recount(); save(); say(msg); dirty = true; ui();
+    grewAt = performance.now(); proposals = null; recount(); save(); say(msg); goals(); dirty = true; ui(); if (card().changed) card().changed();
   }
-  function restart() { S.A = A.start(S.g, S.stones); S.T = A.treeStart(S.T, S.g); proposals = null; recount(); save(); dirty = true; ui(); }
+  function restart() { S.A = A.start(S.g, S.stones); S.T = A.treeStart(S.T, S.g); restartH(); proposals = null; recount(); save(); dirty = true; ui(); }
   function resetAll() { Object.assign(S, fresh()); proposals = null; if (card().putDown) card().putDown(); refresh(0); say(t('sk.say.reset')); goStack(aimN(), mineRi(), 1000); }
   function takeOver() {
     const sh = shown(); if (sh.mine) return;
-    S.g = Object.assign({}, sh.g); S.A = sh.att ? JSON.parse(JSON.stringify(sh.att.st)) : A.start(sh.g, S.stones); S.T = A.treeStart(S.T, sh.g);
+    S.g = Object.assign({}, sh.g); S.A = sh.att ? JSON.parse(JSON.stringify(sh.att.st)) : A.start(sh.g, S.stones); S.T = A.treeStart(S.T, sh.g); if (S.A.year) S.H = null; else restartH();
     S.aim = POT[view.n][view.r] > 0 ? NEEDS[view.n] : S.aim; fixAim(); S.focus = A.novelty(S.g) ? A.suggest(S.A, 'archniche').dirs.slice() : []; SK = null;
     refresh(0); say(t('sk.say.taken', { y: S.A.year })); view.n = aimN(); view.r = mineRi(); ui();
+  }
+  /* a node of the family tree: a new start from that recipe, a branch of the tree from it */
+  function backTo(id) {
+    const n = A.nodeOf(S.T, id); if (!n) return;
+    const g = A.recipeOf(n.g); S.A = A.start(g, S.stones); S.T = A.treeStart(S.T, S.A.g, n.id); S.g = S.A.g; restartH(); proposals = null;
+    S.focus = A.novelty(S.g) ? A.suggest(S.A, 'archniche').dirs.slice() : []; fixAim();
+    refresh(0); say(t('ar.say.back', { name: recipeName(S.g) })); if (view.level !== 'field') goStack(aimN(), mineRi(), 900); else { view.n = aimN(); view.r = mineRi(); }
+  }
+  /* keep this attempt in the ledger (signed; the ledger grows its history again before it counts) */
+  function keepAttempt(b) {
+    if (!opts.keepArch || !S.H) return;
+    const r = opts.keepArch(A.histClaim(S.H, A.winsOf(S.A)), 'arch ' + A.keyOf(S.g).split('/').join(' '), b.closest('.sk-keep') || b.parentNode);
+    keepNo = r.ok ? null : r.why; if (r.ok) { S.slip = r.id; S.slipKey = slipKey(); save(); }
+    if (card().changed) card().changed();
   }
   /* propose what it is for (#481): the card with the dials, over the field */
   function propose() {
@@ -419,8 +502,14 @@ export function createStack(host, opts = {}) {
     const figsAt = r => (face !== 'use' ? FX.figsOf(Rn, r, face, stepAt(r)) : Vn.fig[r]) || [];
     ctx.font = fMono(12.5 * U, 500); const vwid = Math.max(...RUNGS.map(r => Math.max(...figsAt(r).map(f => ctx.measureText(f[1]).width), 30))) + 12;
     const words = fade > 0.75, stones = Object.fromEntries(RUNGS.map(r => [r, stonesOf(r)]));
-    /* a lens that repaints the whole stack (#449): every plate painted from the carry, none dimmed */
-    const RP = lens && SL.REPAINT.includes(lens.id) ? SL.paint(Rn, lens.id, sh.mine ? whoAt : () => 'lab') : null;
+    /* a lens that repaints the whole stack (#449): every plate painted from the carry, none dimmed; two lenses held, the
+       pair's measure, and its shape (a chain's steps, a fork's two sides) */
+    PS = pairNow(sh);
+    const RP = PS ? PS.left : lens && SL.REPAINT.includes(lens.id) ? SL.paint(Rn, lens.id, sh.mine ? whoAt : () => 'lab') : null, RID = PS ? PS.measure : lens && lens.id;
+    const CH = PS && PS.chain ? Object.fromEntries(PS.chain.steps.map(x => [x.rung, x])) : null, FK = PS && PS.shape === 'fork' ? PS : null;
+    const colOf = q => (RID === 'perfect' || (RID === 'heat' && q.say === 'over') ? C.bad : RID === 'geo' || RID === 'heat' || q.say === 'agent' ? C.warm : C.acc);
+    const fill = (pth, q) => { if (RID === 'line') { if (q.v) { ctx.strokeStyle = C.acc(0.95 * fade); ctx.lineWidth = 2.6; ctx.setLineDash([9, 5]); ctx.stroke(pth); ctx.setLineDash([]); } else { ctx.fillStyle = C.ink(0.08 * fade); ctx.fill(pth); } }
+      else if (q.v > 0) { const col = colOf(q); ctx.fillStyle = col((0.08 + 0.32 * q.v) * fade); ctx.fill(pth); ctx.strokeStyle = col(0.85 * fade); ctx.lineWidth = 1.6; ctx.stroke(pth); } };
     for (let i = 0; i < NR; i++) {
       const z = i * cam.G * ex, a = proj(rc.x, rc.y, z), rung = RUNGS[i], dead = i > bi, dir = RUNG_DIR[rung], passed = !!Rn.rungs[rung].passed;
       const dim = (focus >= 0 && focus !== i ? 0.42 : 1) * (lens && !RP && lens.rung !== rung ? 0.5 : 1);
@@ -432,7 +521,9 @@ export function createStack(host, opts = {}) {
         const zb = (i - 1) * cam.G * ex, cut = i > bi || (i - 1) >= bi && bi < 9;
         for (let v = 0; v < 3; v++) {
           const lx = (i % 2 ? 3.3 : 3.9) + v * 1.9, b = proj(rc.x + lx, rc.y + 1, zb), tp = proj(rc.x + lx, rc.y + 1, z);
-          ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(tp[0], tp[1]); ctx.strokeStyle = cut ? C.bad(0.6 * fade) : C.acc(0.38 * fade); ctx.lineWidth = 1; if (cut) ctx.setLineDash([3, 4]); ctx.stroke(); ctx.setLineDash([]);
+          /* a chain held: the carry between two lit steps is the problem climbing, lit in the measure's colour */
+          const hot = CH && CH[rung] && CH[RUNGS[i - 1]] && CH[rung].lit && CH[RUNGS[i - 1]].lit;
+          ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(tp[0], tp[1]); ctx.strokeStyle = cut ? C.bad(0.6 * fade) : hot ? colOf(CH[rung].q)(0.9 * fade) : C.acc(0.38 * fade); ctx.lineWidth = hot ? 2.4 : 1; if (cut) ctx.setLineDash([3, 4]); ctx.stroke(); ctx.setLineDash([]);
           if (cut) continue;
           const u = still() ? 0.5 : (tm * 0.55 + v * 0.31 + i * 0.17) % 1; ctx.beginPath(); ctx.arc(b[0], lerp(b[1], tp[1], u), 2, 0, 6.283); ctx.fillStyle = C.acc(0.9 * fade); ctx.fill();
           if (wave && wl > i - 1 && wl < i) { const y = lerp(b[1], tp[1], wl - (i - 1)); ctx.beginPath(); ctx.arc(b[0], y, 5, 0, 6.283); ctx.fillStyle = C.acc(1); ctx.shadowColor = C.acc(1); ctx.shadowBlur = 12; ctx.fill(); ctx.shadowBlur = 0; }
@@ -447,15 +538,24 @@ export function createStack(host, opts = {}) {
       ctx.strokeStyle = edge; ctx.lineWidth = focus === i || flash ? 1.8 : 1; if (dead || passed) ctx.setLineDash([5, 4]); else if (drafted) ctx.setLineDash([7, 5]); ctx.stroke(p); ctx.setLineDash([]);
       /* the lens's paint over the plate: failing copies in red, moving bits in warm, a fluid rung outlined, a rung chosen
          by you in blue (by an agent in warm) */
-      if (RP && RP[rung] && RP[rung].v != null && !dead) { const q = RP[rung], id = lens.id;
-        if (id === 'line') { if (q.v) { ctx.strokeStyle = C.acc(0.95 * fade); ctx.lineWidth = 2.6; ctx.setLineDash([9, 5]); ctx.stroke(p); ctx.setLineDash([]); } else { ctx.fillStyle = C.ink(0.08 * fade); ctx.fill(p); } }
-        else if (q.v > 0) { const col = id === 'perfect' ? C.bad : id === 'geo' ? C.warm : q.say === 'agent' ? C.warm : C.acc; ctx.fillStyle = col((0.08 + 0.32 * q.v) * fade); ctx.fill(p); ctx.strokeStyle = col(0.85 * fade); ctx.lineWidth = 1.6; ctx.stroke(p); } }
+      if (RP && RP[rung] && RP[rung].v != null && !dead) fill(p, RP[rung]);
       /* its front edge is inked as far as its direction is polished */
       ctx.fillStyle = C.ink(0.12 * fade * dim); ctx.fillRect(a[0], a[1], wpx, th);
       if (!dead) { ctx.fillStyle = inFocus ? C.acc((0.85 + 0.15 * grew) * fade) : C.ink(0.72 * fade * dim); ctx.fillRect(a[0], a[1], wpx * Math.max(0.012, bar), th); if (inFocus && grew > 0) { ctx.fillStyle = C.acc(0.5 * grew); ctx.fillRect(a[0], a[1] - 2, wpx * bar, th + 4); } }
       /* its stepping stones, under the front edge at the right: one square each, inked when won */
       if (sh.mine && fade > 0.5 && !ph) { const st = stones[rung] || [], q = clamp(cam.s * 0.07, 4, 7), gap = q * 0.7; st.forEach((x, k) => { const sx = a[0] + wpx - (st.length - k) * (q + gap), sy = a[1] + th + 3; if (x.won) { ctx.fillStyle = C.acc(0.95 * fade); ctx.fillRect(sx, sy, q, q); } else { ctx.strokeStyle = C.ink(0.35 * fade * dim); ctx.lineWidth = 1; ctx.strokeRect(sx + 0.5, sy + 0.5, q - 1, q - 1); } }); }
       if (!dead && dpx > 20) { const pen = makePen(ctx, proj, cam, rc.x, rc.y, z, i < NR - 1 ? cam.G * ex : 1.5); pen.dash = pm < 0.5 ? [5, 3] : []; ctx.globalAlpha = fade * dim; ctx.lineJoin = 'round'; if (passed) passedPic(pen, C, tm, 1); else if (face !== 'use') FX.drawFace(face, rung, pen, C, Rn, sh.Y.D, tm, 0.5 + 0.5 * pm, stepAt(rung)); else PIC[rung](pen, C, Rn, sh.Y.D, tm, 0.5 + 0.5 * pm, rung === 'mind' ? race : null); ctx.globalAlpha = 1; }
+      /* a fork held: right of the line, the same rung built the other way, from its own carry */
+      if (FK && dpx > 20) { const xs = a[0] + wpx * split, q = new Path2D(); q.moveTo(xs, a[1]); q.lineTo(a[0] + wpx, a[1]); q.lineTo(a[0] + wpx + skew, a[1] - dpx); q.lineTo(xs + skew, a[1] - dpx); q.closePath();
+        const R2 = FK.Y2.R, dead2 = !R2.rungs[rung].hands && !R2.rungs[rung].passed;
+        ctx.save(); ctx.clip(q); ctx.fillStyle = C.panel((C.dark ? 0.96 : 0.97) * fade); ctx.fill(p); if (FK.right[rung] && FK.right[rung].v != null && !dead2) fill(p, FK.right[rung]);
+        if (!dead2) { const pen = makePen(ctx, proj, cam, rc.x, rc.y, z, i < NR - 1 ? cam.G * ex : 1.5); ctx.globalAlpha = fade * dim; ctx.lineJoin = 'round'; if (R2.rungs[rung].passed) passedPic(pen, C, tm, 1); else PIC[rung](pen, C, R2, FK.Y2.D, tm, 1, null); ctx.globalAlpha = 1; } else { ctx.fillStyle = C.bad(0.1 * fade); ctx.fill(p); }
+        ctx.restore();
+        ctx.beginPath(); ctx.moveTo(xs, a[1] + 6); ctx.lineTo(xs + skew * (1 + 6 / dpx), a[1] - dpx - 6); ctx.strokeStyle = C.acc(0.95 * fade); ctx.lineWidth = 2; ctx.stroke(); }
+      /* a chain held: the step's number on the plate, filled once lit */
+      if (CH && CH[rung] && !dead) { const st = CH[rung], cx = a[0] + wpx - 16 + skew * 0.25, cy = a[1] - Math.min(16, dpx * 0.3), rr = 9, col = colOf(st.q);
+        ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.283); if (st.lit) { ctx.fillStyle = col(0.95 * fade); ctx.fill(); } else { ctx.fillStyle = C.bg(0.9 * fade); ctx.fill(); ctx.strokeStyle = C.mut(0.8 * fade); ctx.lineWidth = 1.2; ctx.stroke(); }
+        ctx.font = fSans(11, 700); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = st.lit ? C.bg(1) : C.ink(0.9 * fade); ctx.fillText(String(st.k), cx, cy + 0.5); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
       if (!words) continue;
       /* words on the plate: its name at the front left, what it hands up at the right */
       const al = fade * dim, lx = h => a[0] + 15 + skew * (h / dpx), zone = wpx * 0.185, pxN = clamp(dpx * 0.26, 15, 27), three = dpx >= 74, two = dpx >= 46;
@@ -463,8 +563,8 @@ export function createStack(host, opts = {}) {
       label(lx(a[1] - yN), yN, rungName(rung), fSerif(pxN, 700), pxN, dead ? C.mut(al) : C.ink(al), { pri: 90 - i, force: true });
       if (sh.mine && yoursAt(rung) && !three) { ctx.fillStyle = C.acc(al); ctx.fillRect(lx(a[1] - yN) - 9, yN - pxN * 0.62, 4, pxN * 0.62); }
       const way = dead ? t('sk.tag.cannot') : passed ? Vn.way[rung] || '' : face !== 'use' ? FX.wayOf(Rn, rung, face, stepAt(rung)) : Vn.way[rung] || '';
-      const sup = n => String(n).replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]), lw = RP && RP[rung] && !dead ? t('sk.lens.' + lens.id + '.' + RP[rung].say, { n: lens.id === 'perfect' && RP[rung].say !== 'pct' ? sup(RP[rung].n) : RP[rung].n }) : null;
-      if (two) label(lx(a[1] - yW), yW, lw || way, fMono(10.5 * U, lw ? 600 : 400), 10.5 * U, dead ? C.bad(al) : lw ? (lens.id === 'perfect' && RP[rung].v > 0 ? C.bad(al) : C.ink(al)) : C.mut(al), { pri: 70, max: zone + (three ? 30 : 10) + (lw ? 150 : 0) });
+      const lw = RP && RP[rung] && !dead ? (FK ? t('sk.pair.vs', { a: shortOf(RID, RP[rung]), b: shortOf(RID, FK.right[rung]) }) : t('sk.lens.' + RID + '.' + RP[rung].say, { n: RID === 'perfect' && RP[rung].say !== 'pct' ? sup(RP[rung].n) : RP[rung].n, h: RP[rung].h })) : null;
+      if (two) label(lx(a[1] - yW), yW, lw || way, fMono(10.5 * U, lw ? 600 : 400), 10.5 * U, dead ? C.bad(al) : lw ? (RID === 'perfect' && RP[rung].v > 0 ? C.bad(al) : C.ink(al)) : C.mut(al), { pri: 70, max: zone + (three ? 30 : 10) + (lw ? 150 : 0) });
       else if (lw) label(lx(a[1] - yN) + 140, yN, lw, fMono(10.5 * U, 600), 10.5 * U, C.ink(al), { pri: 69, max: zone + 150 });
       if (three) { const mineY = sh.mine && yoursAt(rung); label(lx(a[1] - yT), yT, sh.mine ? (mineY ? t('sk.tag.yours') : t('sk.tag.lab')) : t('sk.tag.sketch'), fMono(10.5 * U, mineY ? 600 : 400), 10.5 * U, mineY ? C.acc(al) : C.mut(0.8 * al), { pri: 60, max: zone + 20 }); }
       const figs = face !== 'use' ? figsAt(rung) : (wave && sh.mine && i > wave.k && wl < i ? Yprev.V.fig[rung] : Vn.fig[rung]) || [];
@@ -623,8 +723,9 @@ export function createStack(host, opts = {}) {
        parts of the as-used pictures (#456) */
     const md = mode(), at = keyOf();
     marks = !sh || !sh.mine || md === 'do' || face !== 'use' ? [] : stackMarks(QB, md === 'ask' ? 6 : 3, lvl === 'rung' ? [RUNGS[view.i]] : null);
-    const mk2 = $('.sk-marks'), mkey = marks.map(m => m.rung + m.id).join() + '|' + (lens ? lens.rung + lens.id : '');
-    if (mk2.dataset.k !== mkey) { mk2.dataset.k = mkey; mk2.innerHTML = marks.map((m, k) => '<button type="button" data-mark="' + k + '" aria-pressed="' + !!(lens && lens.rung === m.rung && lens.id === m.id) + '" class="' + (lens && !(lens.rung === m.rung && lens.id === m.id) ? 'dim' : '') + '" aria-label="' + esc(t('frame.mark.aria', { q: t('frame.q.' + m.id) })) + '"><i></i><span>' + esc(t('frame.q.' + m.id)) + '</span></button>').join(''); }
+    const held = m => !!lens && ((lens.rung === m.rung && lens.id === m.id) || (!!lens.pair && lens.pair === m.id));
+    const mk2 = $('.sk-marks'), mkey = marks.map(m => m.rung + m.id).join() + '|' + (lens ? lens.rung + lens.id + (lens.pair || '') : '');
+    if (mk2.dataset.k !== mkey) { mk2.dataset.k = mkey; mk2.innerHTML = marks.map((m, k) => '<button type="button" data-mark="' + k + '" aria-pressed="' + held(m) + '" class="' + (lens && !held(m) ? 'dim' : '') + '" aria-label="' + esc(t('frame.mark.aria', { q: t('frame.q.' + m.id) })) + '"><i></i><span>' + esc(t('frame.q.' + m.id)) + '</span></button>').join(''); }
     /* the agents' forks: they propose, you decide */
     const cs = $('.sk-cards');
     if (purposeOn && !proposals) { const k = 'purpose|' + PSLIP; if (cs.dataset.k !== k) { cs.dataset.k = k; cs.innerHTML = PU.cardHtml(PFORM, opts.purposeCtx ? opts.purposeCtx() : {}, opts.signHtml ? opts.signHtml() : '', PSLIP); } }
@@ -660,6 +761,9 @@ export function createStack(host, opts = {}) {
     if (ok && lvl === 'stack' && !ph) $$('.sk-gene').forEach(el => { const k = el.dataset.gene, [lo, hi] = k === 'aim' ? [NR - 1, NR - 1] : GENE_AT[k], y = (PL[lo].y + PL[hi].y - PL[hi].d * 0.7) / 2; el.style.top = y + 'px'; el.style.right = (vw - PL[lo].x + 26) + 'px'; el.style.maxWidth = Math.max(120, PL[lo].x - 44) + 'px'; });
     const M = $('.sk-marks'); M.classList.toggle('on', !!(ok && lvl !== 'field'));
     if (ok) $$('.sk-marks button').forEach(b => { const m = marks[+b.dataset.mark]; if (!m) return; const i = RUNGS.indexOf(m.rung), q = proj(rc.x + m.at[0] / 100, rc.y + m.at[1] / 100, PL[i].z); b.style.left = q[0] + 'px'; b.style.top = q[1] + 'px'; b.classList.toggle('left', q[0] > vw - ins().r - 190); b.hidden = q[1] < chrome().top - 8 || q[1] > vh - chrome().bot + 10 || q[0] > vw - ins().r - 12; });
+    /* a fork held: the line's handle over the top plate, for the hand and the keyboard */
+    const SPL = $('.sk-split'), sp = ok && PS && PS.shape === 'fork' && lvl !== 'field' && PL[NR - 1];
+    SPL.hidden = !sp; if (sp) { const p = PL[NR - 1]; SPL.style.left = (p.x + p.w * split + p.skew) + 'px'; SPL.style.top = (p.y - p.d - 16) + 'px'; SPL.setAttribute('aria-valuenow', String(Math.round(split * 100))); SPL.setAttribute('aria-label', t('sk.pair.lineAria')); }
     const ctl = CTL; ctl.classList.toggle('on', !!(opts.card || (ok && lvl === 'rung')));
     if (opts.card) return;   /* the card holds the controls: its Do face (src/v2/stack/card.js) */
     if (ok && lvl === 'rung' && !ph && PL[view.i]) { const p = PL[view.i], w = Math.min(980, vw - 48); ctl.style.width = w + 'px'; ctl.style.left = clamp(p.x + p.w / 2 - w / 2, 16, vw - w - 16) + 'px'; const top = p.y + 26; ctl.style.top = top + 'px'; ctl.style.maxHeight = Math.max(160, vh - chrome().bot + 24 - top) + 'px'; }
@@ -684,9 +788,15 @@ export function createStack(host, opts = {}) {
     if (!inw) goOut(); else if (view.level === 'stack') { const i = plateAt(X, Y0); if (i >= 0 && onMine()) goRung(i); }
   }, { passive: false });
   const ptr = new Map(); let drag = null, pinch = null;
-  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); const [X, Y0] = local(e); ptr.set(e.pointerId, [X, Y0]); pop(); if (ptr.size === 1) drag = { x: X, y: Y0, cx: cam.x, cy: cam.y, moved: 0 }; else if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: cam.s }; drag = null; } });
+  /* a fork held: the line across the plates, caught within a few pixels of it on any plate */
+  const nearSplit = (X, Y0) => { if (!PS || PS.shape !== 'fork' || view.level === 'field') return false; for (const p of PL) { if (!p) continue; const ly = (p.y - Y0) / p.d; if (ly < -0.1 || ly > 1.1) continue; if (Math.abs(X - (p.x + p.w * split + p.skew * ly)) < 12) return true; } return false; };
+  const splitAt = (X, Y0) => { let best = null; for (const p of PL) { if (!p) continue; const ly = clamp((p.y - Y0) / p.d, 0, 1); const u = (X - p.x - p.skew * ly) / p.w; if (!best || Math.abs(p.y - p.d / 2 - Y0) < best.d) best = { u, d: Math.abs(p.y - p.d / 2 - Y0) }; } if (best) setSplit(best.u); };
+  cv.addEventListener('pointerdown', e => { const [X0, Y00] = local(e); if (nearSplit(X0, Y00)) { cv.setPointerCapture(e.pointerId); splitDrag = true; return; } });
+  cv.addEventListener('pointerdown', e => { if (splitDrag) return; cv.setPointerCapture(e.pointerId); const [X, Y0] = local(e); ptr.set(e.pointerId, [X, Y0]); pop(); if (ptr.size === 1) drag = { x: X, y: Y0, cx: cam.x, cy: cam.y, moved: 0 }; else if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: cam.s }; drag = null; } });
   cv.addEventListener('pointermove', e => {
     const [X, Y0] = local(e);
+    if (splitDrag) { splitAt(X, Y0); return; }
+    if (e.pointerType === 'mouse' && !drag && nearSplit(X, Y0)) { cv.style.cursor = 'ew-resize'; return; }
     if (ptr.has(e.pointerId)) ptr.set(e.pointerId, [X, Y0]);
     if (pinch && ptr.size === 2) { const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), r = d / pinch.d; if (anim) return;
       if (view.level === 'field') { const top = zoomAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, pinch.s * r / cam.s); if (top && r > 1.25) { const h = live(plotAt(...unproj((a[0] + b[0]) / 2, (a[1] + b[1]) / 2))); if (h) { pinch = null; goStack(h.n, h.ri); } } }
@@ -695,7 +805,7 @@ export function createStack(host, opts = {}) {
     if (e.pointerType === 'mouse') { let h = null, hr = -1; if (view.level === 'field' && !anim) h = plotAt(...unproj(X, Y0)); else if (!anim) hr = plateAt(X, Y0);
       if ((h ? h.n + '/' + h.ri : '') !== (hover ? hover.n + '/' + hover.ri : '') || hr !== hoverRung) { hover = h; hoverRung = hr; dirty = true; } cv.style.cursor = (h && live(h)) || (hr >= 0 && hr !== view.i) ? 'pointer' : view.level === 'field' ? 'grab' : 'default'; }
   });
-  const up = e => { const was = drag; ptr.delete(e.pointerId); if (ptr.size < 2) pinch = null; if (ptr.size === 0) drag = null; if (was && was.moved < 6 && e.type === 'pointerup') tap(...local(e)); };
+  const up = e => { if (splitDrag) { splitDrag = false; return; } const was = drag; ptr.delete(e.pointerId); if (ptr.size < 2) pinch = null; if (ptr.size === 0) drag = null; if (was && was.moved < 6 && e.type === 'pointerup') tap(...local(e)); };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', () => { if (hover || hoverRung >= 0) { hover = null; hoverRung = -1; dirty = true; } });
   function tap(X, Y0) {
     if (anim) return;
@@ -712,7 +822,15 @@ export function createStack(host, opts = {}) {
     else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && view.level !== 'field') { e.preventDefault(); goRung(clamp((view.i < 0 ? (e.key === 'ArrowUp' ? -1 : NR) : view.i) + (e.key === 'ArrowUp' ? 1 : -1), 0, NR - 1)); }
   };
   document.addEventListener('keydown', onKey);
+  { const SPL = $('.sk-split');
+    SPL.addEventListener('keydown', e => { const d = { ArrowLeft: -0.05, ArrowDown: -0.05, ArrowRight: 0.05, ArrowUp: 0.05, Home: -1, End: 1 }[e.key]; if (d == null) return; e.preventDefault(); setSplit(split + d); });
+    SPL.addEventListener('pointerdown', e => { SPL.setPointerCapture(e.pointerId); splitDrag = true; e.preventDefault(); });
+    SPL.addEventListener('pointermove', e => { if (splitDrag) splitAt(...local(e)); });
+    const end = () => { splitDrag = false; }; SPL.addEventListener('pointerup', end); SPL.addEventListener('pointercancel', end); }
   root.addEventListener('click', e => {
+    /* the family tree's nodes (SVG, not buttons): start again from that recipe; the kept attempt's slip */
+    const nd = e.target.closest && e.target.closest('[data-sk-node]'); if (nd) { backTo(+nd.dataset.skNode); return; }
+    if (e.target.closest && e.target.closest('.sk-kept') && opts.slipClick && opts.slipClick(e, redraw => { if (redraw) S.slip = null; save(); if (card().changed) card().changed(); })) return;
     if (purposeOn && e.target.closest('.sk-purpose')) {
       if (e.target.closest('[data-pclose]')) { purposeOn = false; ui(); return; }
       if (e.target.closest('[data-pkeep]')) { const r = opts.keepPurpose ? opts.keepPurpose(PU.fieldsOf(PFORM), $('.sk-purpose')) : null;
@@ -723,6 +841,9 @@ export function createStack(host, opts = {}) {
     }
     const b = e.target.closest('button,a'); if (!b) { if (!e.target.closest('.sk-pop')) pop(); return; }
     const d = b.dataset;
+    if (d.skfork) { const [gn, o] = d.skfork.split(':'); setForkOpt(gn, o); return; }
+    if (d.skneed) { setNeedB(d.skneed); return; }
+    if (b.hasAttribute('data-sk-keep')) { keepAttempt(b); return; }
     if (d.face) setFace(d.face);
     else if (d.go) { if (d.go === 'field') goField(); else if (d.go === 'niche') goNear(view.level === 'field' ? aimN() : view.n, view.level === 'field' ? mineRi() : view.r); else goStack(aimN(), mineRi()); }
     else if (d.rung) { if (view.level === 'field') { goStack(aimN(), mineRi(), 600); } goRung(+d.rung); }
@@ -744,6 +865,7 @@ export function createStack(host, opts = {}) {
     else if (b.classList.contains('sk-take')) takeOver(); else if (b.classList.contains('sk-tomine')) goStack(aimN(), mineRi());
   });
   root.addEventListener('input', e => { if (e.target.id === 'sk-volt') setFine('V', +e.target.value);
+    if (e.target.classList && e.target.classList.contains('sk-splitr')) setSplit(+e.target.value / 100);
     /* a dial or a field of the purpose: checked by the engine as it moves, kept in this browser until kept as a draft */
     if (e.target.closest && e.target.closest('.sk-purpose')) { PU.readInput(PFORM, e.target); PU.saveForm(PFORM); const v = PU.verdict(PFORM, opts.purposeCtx ? opts.purposeCtx() : {}), pv = $('.sk-pv'), kb = $('[data-pkeep]');
       if (pv) { pv.textContent = v.words; pv.classList.toggle('ok', v.ok); } if (kb) kb.disabled = !v.ok; } });
@@ -757,7 +879,7 @@ export function createStack(host, opts = {}) {
   function measure() {
     /* where the card is (src/v2/stack/card.js): the dock stands on its sheet on a phone, right of its caption or left of its
        side panel on a desktop */
-    const I = ins(), ph = vw < 760; footB = ph ? I.b || 0 : 0; capH = ph ? 0 : I.capH || 0;
+    const I = ins(), ph = vw < 760; footB = ph ? Math.min(I.b || 0, vh * 0.6) : 0; capH = ph ? 0 : I.capH || 0;
     root.style.setProperty('--sk-fl', (ph ? 8 : I.capW ? I.capW + 16 : 12) + 'px'); root.style.setProperty('--sk-fr', (ph ? 8 : I.r ? I.r + 16 : 12) + 'px'); root.style.setProperty('--sk-fb', (ph ? footB + 8 : 12) + 'px');
     root.classList.toggle('skcard', !!opts.card);
     const cs = $('.sk-cards'), hd = $('.sk-head').getBoundingClientRect(), rb = root.getBoundingClientRect(); headH = Math.max(90, hd.bottom - rb.top); footH = Math.max($('.sk-dock').getBoundingClientRect().height, $('.sk-card').getBoundingClientRect().height) + (cs.hidden || (ph && view.level === 'field') ? 0 : cs.getBoundingClientRect().height + 8) + (vw < 760 ? 52 : 34); }
@@ -793,16 +915,20 @@ export function createStack(host, opts = {}) {
   const setPose = p => { Object.assign(cam, { x: p.x, y: p.y, z: p.z, s: p.s, T: p.T, G: p.G, ex: p.ex, ox: p.ox, oy: p.oy }); trig(); };
   /* for the lab's own checks (scripts/smoke/stack.mjs) */
   /* the lens open in the card: its rung lit, the others dimmed; a lens that repaints the stack paints every plate (#449) */
-  function setLens(l) { const k = l ? l.rung + l.id : ''; if (k === (lens ? lens.rung + lens.id : '')) return; lens = l; dirty = true; ui(); }
-  const api = { S, view, cam, A, setLens, outlines: () => Object.assign({}, OUTL), landmarks: () => POP.filter(a => a.built).map(a => ({ key: a.key, ids: a.landmarks.map(k => k.id), ev: pointEv(a), waits: !!a.waits })), card: () => $('.sk-card').hidden ? '' : $('.sk-card').textContent, plotOf: key => ({ n: aimN(), ri: RIDX.get(key) }), paintNow: () => (lens && SL.REPAINT.includes(lens.id) ? SL.paint(R(), lens.id, whoAt) : null), face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, propose, purpose: () => ({ col: COL, form: PFORM, on: purposeOn }), field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
+  function setLens(l) { const kk = x => (x ? x.rung + x.id + (x.pair || '') : ''); if (kk(l) === kk(lens)) return; lens = l; PS = null; splitDrag = false; dirty = true; ui(); }
+  /* the fork's line, the fork's other option, the front's second need: each repaints, and the card says it again */
+  function setSplit(v) { split = clamp(v, 0.05, 0.95); const r = $('.sk-splitr'); if (r && document.activeElement !== r) r.value = Math.round(split * 100); dirty = true; place(); }
+  function setForkOpt(gene, o) { if (!A.OPTIONS[gene] || !A.OPTIONS[gene].includes(o)) return; forkAsk[gene] = o; PS = null; dirty = true; ui(); if (mode() === 'ask' && card().changed) card().changed(); }
+  function setNeedB(n) { if (!NEEDS.includes(n)) return; needB = n; if (mode() === 'ask' && card().changed) card().changed(); }
+  const api = { S, view, cam, A, setLens, outlines: () => Object.assign({}, OUTL), landmarks: () => POP.filter(a => a.built).map(a => ({ key: a.key, ids: a.landmarks.map(k => k.id), ev: pointEv(a), waits: !!a.waits })), card: () => $('.sk-card').hidden ? '' : $('.sk-card').textContent, plotOf: key => ({ n: aimN(), ri: RIDX.get(key) }), paintNow: () => (lens && SL.REPAINT.includes(lens.id) ? SL.paint(R(), lens.id, whoAt) : null), pair: () => { const P = pairNow(shown()); return P && { shape: P.shape, measure: P.measure, gene: P.gene || null, option: P.option || null, chain: P.chain || null, left: P.left, right: P.right || null, split, front: P.shape === 'front' ? frontNow() : null }; }, setSplit, setForkOpt, setNeedB, grown: () => ({ st: S.A, tree: S.T, hist: S.H, slip: S.slip }), backTo, face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, propose, purpose: () => ({ col: COL, form: PFORM, on: purposeOn }), field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
   /* the questions on the stack, for the card: the strongest at a rung (or across the stack), the one marked at a rung */
   const marksAt = (key, n = 6) => (view.level === 'field' || !onMine() ? [] : stackMarks(QB, n, RUNGS.includes(key) ? [key] : null));
   return {
     /* for the card (src/v2/stack/card.js) */
     ctl: CTL, view, reframe, marksAt, mine: onMine,
     markOf: (rung, q) => (QB[rung] || []).find(m => m.id === q) || null,
-    /* the lens open in the card: its rung lit, the others dimmed */
-    setLens,
+    /* the lens open in the card: its rung lit, the others dimmed; with a second held, the pair's shape (#449) */
+    setLens, pairHtml, growHtml,
     /* what you are looking at: the line the foot said before the card, and the opened recipe's figures */
     rest: () => rest, shown: () => (view.level === 'field' ? null : shown()),
     /* the face every plate is turned to (#456), and what a rung shows on it: its way, figures and mark, or why it has none */
