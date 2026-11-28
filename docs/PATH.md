@@ -161,6 +161,10 @@ stack does not move: along turns every plate at once (owner, 27 November 2026; g
   gate's rules and checks; *Fight or use physics* at Print; *The next Moore's law* in the line's care; *Only humans* in
   Arrange; *Efficiency fuels use* in yield and cost.
 
+All of it shares **one record of your chip** (`docs/CHIP.md`): the design, the chip after each step of the line, and
+the carry, read and written by every part; the studio's drafted die and the line's stations are designed in
+`docs/prototypes/studio-fab/` (27 November 2026).
+
 ## Building it
 
 Each line is meant to become one task issue, in order.
