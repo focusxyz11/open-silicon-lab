@@ -31,7 +31,7 @@ export function drawDie(ctx, P, cam, o) {
   drafted(0.9, 1.4); ctx.beginPath(); rect({ x: 0, y: 0, w: DIE, h: DIE }); ctx.stroke();
   if (dieW < SHOW.outline) { ctx.restore(); return labels; }
   if (dieW >= SHOW.units) { drafted(0.7, 1.1); ctx.beginPath(); P.pads.forEach(p => rect({ x: p.x, y: p.y, w: 26, h: 26 })); ctx.stroke(); }
-  if (dieW >= SHOW.units && dieW < 1600) name({ x: 0, y: -28, w: DIE, h: 28 }, 'sd.die', null, 'title', 'die');
+  if (dieW >= SHOW.units && dieW < W) name({ x: 0, y: -28, w: DIE, h: 28 }, 'sd.die', null, 'title', 'die');
   if (P.empty && !P.broken) {
     if (dieW >= SHOW.units) labels.push({ x: X(DIE * 0.36), y: Y(DIE * 0.48), text: words('sd.empty'), kind: 'aside', part: 'empty' });
     ctx.restore(); return labels;
@@ -71,8 +71,11 @@ export function drawDie(ctx, P, cam, o) {
 /* your block's cells in their slots, the wires between them (dotted) and, close enough, each cell as layout: two strips
    of silicon, two gates across them, a rail above and below */
 function cellsOf(ctx, P, X, Y, s, C, labels, words, on, bad) {
+  const line = w => w.pts.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1]))));
   ctx.strokeStyle = alpha(C.accent, 0.4); ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.beginPath();
-  P.wires.forEach(w => { w.pts.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); }); ctx.stroke();
+  P.wires.forEach(w => { if (!w.path) line(w); }); ctx.stroke();
+  /* the longest path, solid: blue with the time to spare, red when it is late (#508) */
+  if (P.timing) { ctx.setLineDash([]); ctx.lineWidth = 2.6; ctx.strokeStyle = P.late ? C.bad : C.accent; ctx.beginPath(); P.wires.forEach(w => { if (w.path) line(w); }); ctx.stroke(); }
   ctx.setLineDash([]); ctx.fillStyle = alpha(C.accent, 0.7); P.pins.forEach(p => { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), 2.4, 0, 6.3); ctx.fill(); });
   const cw = P.cells.length ? P.cells[0].w * s : 0;
   P.cells.forEach((c, k) => {
@@ -83,6 +86,19 @@ function cellsOf(ctx, P, X, Y, s, C, labels, words, on, bad) {
     if (c.w * s >= 110) labels.push({ x: X(c.x), y: Y(c.y) - 6, text: words('sd.cell', { type: c.type }), kind: 'name', part: 'cell:' + c.id, bad });
     if (k === 0 && c.w * s >= 300) labels.push({ x: X(c.x), y: Y(c.y + c.h) + 10, text: words('sd.drafted'), kind: 'aside', part: 'drafted' });
   });
+  /* the path's figure at its last cell, and the wire under the block */
+  const T = P.timing, last = T && P.cells.find(c => c.id === T.path[T.path.length - 1]);
+  if (last && on(last)) labels.push({ x: X(last.x), y: Y(last.y + last.h) + 6, text: words(P.late ? 'sd.fig.late' : 'sd.fig.spare', { n: Math.round(Math.abs(T.slack)) }), kind: 'figure', part: 'path', fid: P.fid.timing, bad: P.late });
+  if (P.wire && on(P.block)) labels.push({ x: X(P.ctl.x), y: Y(P.ctl.y + P.ctl.h) + 8, text: words(P.settled != null ? 'sd.fig.wireSettled' : 'sd.fig.wire', { now: Math.round(P.wire.now), hand: Math.round(P.wire.hand), settled: Math.round(P.settled || 0) }), kind: 'figure', part: 'wire', fid: P.fid.wire });
+  /* the coverage map in the registers' rectangle, once a test has run: untested faint, tested blue, wrong red */
+  const V = P.cover;
+  if (V && on(P.regs)) {
+    const r = P.regs, pad = r.w * 0.06, cw = (r.w - 2 * pad) / V.cols, ch = Math.min(cw, (r.h - 2 * pad) / V.rows);
+    for (let st = 0; st < V.cols * V.rows; st++) { const t = V.tested.has(st), bad2 = t && V.wrong.has(st);
+      ctx.fillStyle = bad2 ? C.bad : t ? alpha(C.accent, 0.75) : alpha(C.ink, 0.09); ctx.fillRect(X(r.x + pad + (st % V.cols) * cw) + 0.5, Y(r.y + pad + Math.floor(st / V.cols) * ch) + 0.5, cw * s - 1, ch * s - 1); }
+    labels.push({ x: X(r.x), y: Y(r.y + pad + V.rows * ch) + 8, text: words('sd.cover.n', { n: V.tested.size, m: V.cols * V.rows }), kind: 'figure', part: 'cover', fid: V.fid });
+    labels.push({ x: X(r.x), y: Y(r.y + pad + V.rows * ch) + 30, text: words(V.found ? 'sd.cover.found' : 'sd.cover.none'), kind: 'aside', part: 'found', bad: V.found });
+  }
 }
 export function layoutOf(ctx, c, X, Y, s, C, badGate) {
   const x = X(c.x), y = Y(c.y), w = c.w * s, h = c.h * s;
