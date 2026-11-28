@@ -19,13 +19,14 @@ export default async function run() {
     if (!goSeen) problems.push(tag + ': pointing at the factory on the island does not invite you in');
     await wp.mouse.move(5, 790);
     await wp.evaluate(() => { location.hash = '#/line/print'; });
-    await wp.waitForFunction(() => !!document.querySelector('#diveui .wayon:not([hidden]) .wogo') && !!document.querySelector('#diveui .wayin:not([hidden]) .wigo') && !!document.querySelector('#diveui .dock [data-in][href="#/dive/scanner/made"]'), null, { timeout: 90000, polling: 1000 })
-      .catch(() => problems.push(tag + ': at print, the line shows no way along and no way into the printing machine on the picture'));
+    await wp.waitForFunction(() => !!document.querySelector('#diveui .wayon:not([hidden]) .wogo') && !!document.querySelector('#diveui .wayin:not([hidden]) .wigo') && !!document.querySelector('#diveui .dock [data-in][href="#/fab/print"]'), null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': at print, the line shows no way along and no way into the printing station on the picture'));
     await wp.waitForFunction(() => !!document.querySelector('#diveui .wayin.at'), null, { timeout: 30000, polling: 1000 }).catch(() => problems.push(tag + ': at print, the way in does not stand beside the machine with a ring on it'));
     await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayon:not([hidden]) .wogo'); if (b && location.hash === '#/line/print') b.click(); return location.hash === '#/line/etch'; }, null, { timeout: 60000, polling: 3000 })
       .catch(() => problems.push(tag + ': the way along on the picture does not go to the next station'));
-    await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/line/etch' && /switch/.test(b.getAttribute('href') || '')) b.click(); return location.hash.startsWith('#/dive/switch'); }, null, { timeout: 60000, polling: 3000 })
-      .catch(() => problems.push(tag + ': the way in on the line does not go inside what the station makes'));
+    /* inside a station of your chip's line (#512): the machine at work and your wafer, then your die down to a switch */
+    await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/line/etch' && /#\/fab\/etch/.test(b.getAttribute('href') || '')) b.click(); return location.hash.startsWith('#/fab/etch') && !document.getElementById('studioui').hidden; }, null, { timeout: 60000, polling: 3000 })
+      .catch(() => problems.push(tag + ': the way in on the line does not go inside the station, to its machine and your wafer'));
     await wp.close(); }
   /* steps are along, levels are in · out (#266): on the line and in the studio the steps are one line from left to right,
      walked with → and Next; the rail at the side holds only the level a step shows, and is absent where it shows none.
