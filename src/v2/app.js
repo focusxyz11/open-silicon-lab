@@ -33,7 +33,7 @@ export function start() {
      (src/core/i18n.js; the first page needs only core); its moves load it, then run; hiding a view never opened does
      nothing. Then the other areas' words load when idle */
   const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame'], 'stack': ['frame']}, glueP = {};
-  const WORDS = { island: ['atlas', 'place', 'design', 'pages', 'shared'], frame: ['atlas', 'place', 'design', 'pages', 'shared'], pages: ['pages', 'hold'], stack: ['stack', 'labs'], studio: ['studio'] };
+  const WORDS = { island: ['atlas', 'place', 'design', 'pages', 'shared'], frame: ['atlas', 'place', 'design', 'pages', 'shared'], pages: ['pages', 'hold'], stack: ['stack', 'labs'], studio: ['studio', 'labs'] };
   /* and the styles of its view (src/core/styles.js): the frame's with the frame, each view's own with its glue */
   const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'], stack: ['stack'] };
   const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])), needStyles(...(STYLES[k] || [])), beyond())).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));

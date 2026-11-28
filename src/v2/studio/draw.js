@@ -14,7 +14,7 @@ export function paletteOf(el) {
 export const alpha = (c, a) => { const m = /^#([0-9a-f]{6})$/i.exec(c || ''); if (!m) return c; const n = parseInt(m[1], 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; };
 
 /* thresholds, in screen pixels (the guide's) */
-export const SHOW = { outline: 34, units: 200, block: 130, cells: 150, layout: 44, cellWords: 110 };
+export const SHOW = { outline: 34, units: 200, block: 130, cells: 150, layout: 44, cellWords: 110, heat: 220, heatBlock: 620 };
 
 /* draw the plan P on ctx with the camera cam ({ ox, oy, s }: a point x, y of the sheet is at ox + x s, oy + y s on the
    screen); W, H the view's size in CSS pixels; words(key, vars) gives the labels' words. Returns the labels:
@@ -36,6 +36,15 @@ export function drawDie(ctx, P, cam, o) {
     if (dieW >= SHOW.units) labels.push({ x: X(DIE * 0.36), y: Y(DIE * 0.48), text: words('sd.empty'), kind: 'aside', part: 'empty' });
     ctx.restore(); return labels;
   }
+  /* the heat under it all (src/engines/floorplan.js, #507): red where it is hot, while the die is large and the block not
+     yet; its two figures under the die, each with its mark */
+  if (P.heat && dieW >= SHOW.heat && P.block.w * s < SHOW.heatBlock) {
+    const N = Math.round(Math.sqrt(P.heat.grid.length)), c = DIE / N;
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const a = Math.min(0.5, (P.heat.grid[j * N + i] - 0.12) * 0.55); if (a <= 0.01) continue;
+      const x0 = Math.round(X(i * c)), y0 = Math.round(Y(j * c)); ctx.fillStyle = alpha(C.bad, a); ctx.fillRect(x0, y0, Math.round(X((i + 1) * c)) - x0, Math.round(Y((j + 1) * c)) - y0); }
+    labels.push({ x: X(0), y: Y(DIE) + 34, text: words('sd.fig.hot', { t: Math.round(P.heat.hottest) }), kind: 'figure', part: 'hottest', fid: P.heat.fid.hottest, bad: P.heat.hottest > 105 });
+    labels.push({ x: X(0), y: Y(DIE) + 58, text: words('sd.fig.trip', { d: P.heat.trip < 10 ? P.heat.trip.toFixed(1) : Math.round(P.heat.trip) }), kind: 'figure', part: 'trip', fid: P.heat.fid.trip });
+  }
   /* the memory: off the chip (dashed further out), a band, a piece inside every unit, or columns between them */
   drafted(0.8, 1.2); ctx.beginPath(); P.mem.forEach(m => { if (on(m)) rect(m); }); ctx.stroke();
   if (dieW >= SHOW.units && P.mem.length && P.memKind !== 'in') name(P.mem[0], P.memKind === 'far' ? 'sd.memFar' : 'sd.mem', null, 'name', 'memory');
@@ -44,7 +53,7 @@ export function drawDie(ctx, P, cam, o) {
   ctx.beginPath(); P.units.forEach(u => { if (on(u)) rect(u); }); drafted(0.9, 1.3); ctx.stroke();
   /* the trips between them and the memory, dotted */
   if (P.trips.length && dieW >= SHOW.units) { ctx.strokeStyle = alpha(C.accent, 0.4); ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.beginPath(); P.trips.forEach(([a, b]) => { ctx.moveTo(X(a[0]), Y(a[1])); ctx.lineTo(X(b[0]), Y(a[1])); ctx.lineTo(X(b[0]), Y(b[1])); }); ctx.stroke(); }
-  if (dieW >= SHOW.units && dieW < 2400) labels.push({ x: X(0), y: Y(DIE) + 10, text: words(P.n > 1 ? 'sd.units' : 'sd.unit', { n: P.n.toLocaleString('en') }), kind: 'aside', part: 'units' });
+  if (dieW >= SHOW.units && dieW < 2400) labels.push({ x: X(0), y: Y(DIE) + 10, text: words(P.layers > 1 ? 'sd.layers' : P.n > 1 ? 'sd.units' : 'sd.unit', { n: P.n.toLocaleString('en'), k: P.layers }), kind: 'aside', part: 'units' });
   /* the first unit: your block, its registers, its control */
   if (u0.w * s >= SHOW.block) {
     const bad = P.broken === 'design' || P.broken === 'switch';

@@ -41,6 +41,7 @@ chip**, which every part reads and writes and none keeps a copy of.
 | Part | In the lab today | Joins the record as |
 | --- | --- | --- |
 | Recipe and fine settings | `stackOf`, `recipeOf`, `fineOf` (`src/engines/path.js`) | as designed |
+| Floorplan and its heat | `floorplanOf`, `heatOf` (`src/engines/floorplan.js`, #507) | as designed |
 | Design, placement, routing | `build`, `simulate` (`src/engines/design.js`, `tinychip.js`), `timing.js`, `evolve.js` | as designed |
 | Masks | `maskSet` (`src/engines/rules.js`) | as designed, read by Print |
 | Crystal | `src/engines/crystal.js` | a station function |

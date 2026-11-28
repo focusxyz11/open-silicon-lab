@@ -13,7 +13,7 @@
  "sd.ctl": "control",
  "sd.cell": "{type}",
  "sd.drafted": "drafted until the line makes it solid",
- "sd.line.chip": "The whole die, drawn before anything is made: its pads, the units that compute and where the memory sits. Everything here is a plan.",
+ "sd.line.chip": "The whole die, drawn before anything is made: its pads, the units that compute and where the memory sits. Arrange it: packing the units close shortens the trips, and piles up the heat.",
  "sd.line.block": "Your block inside the first unit, beside its registers and its control: your design's cells in the rows the placer put them in, and the wires between them.",
  "sd.line.gate": "Each cell as it will be printed: two strips of silicon, two gates across them, a rail for power above and one for ground below.",
  "sd.line.switch": "One cell, close: the gates you see here are where the line will make its switches.",
@@ -23,5 +23,8 @@
  "sd.toUse": "{level} as used",
  "sd.toStack": "Your stack, as designed",
  "sd.toBench": "Draw it on the bench",
- "sd.line.switchOff": "Your switch never turns off, so nothing above it can be made: its gates are drawn red."
+ "sd.line.switchOff": "Your switch never turns off, so nothing above it can be made: its gates are drawn red.",
+ "sd.fig.hot": "hottest {t} °C",
+ "sd.fig.trip": "a value travels {d} mm to memory",
+ "sd.layers": "{n} units that compute, in {k} layers"
 }

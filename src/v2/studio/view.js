@@ -3,7 +3,7 @@
    and computes no figure of its own. One camera: a level is a framing of the same drawing (plan.js targets), flown to
    in 900 ms with a cubic ease (a cut with reduced motion); the wheel, a pinch or a drag move it continuously, and the
    level is wherever the scale stands. A tap goes one level in. The words on the picture are HTML over it.
-   createStudio(canvas, labels, o): o.words(key, vars) the words, o.still() reduced motion, o.inset() the picture's
+   createStudio(canvas, labels, o): o.words(key, vars) the words, o.mark(fid) a figure's mark of how true it is, o.still() reduced motion, o.inset() the picture's
    safe area ({ l, r, t, b }, pixels), o.level(level, pos) told whenever the level or the position along the levels
    changes. Returns { show(record, level, jump), go(level), at(), hide(), resize() }. */
 import { planOf, levelAt, LEVELS } from './plan.js';
@@ -27,9 +27,11 @@ export function createStudio(canvas, labelsEl, o) {
   const centre = c => { const [mx, my] = mid(); return { x: (mx - c.ox) / c.s, y: (my - c.oy) / c.s, s: c.s }; };
   const camOf = q => { const [mx, my] = mid(); return { ox: mx - q.x * q.s, oy: my - q.y * q.s, s: q.s }; };
 
-  function resize() {
+  /* the view's size changed, or (reframe) its safe area did: the camera keeps its level, framed anew */
+  function resize(reframe) {
     const r = canvas.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
     const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+    if (reframe === true && P && !fly && lastLv && W) { W = w; H = h; go(lastLv, true); return; }
     if (w === W && h === H && canvas.width === Math.round(w * dpr)) return;
     const q = W && H ? centre(cam) : null; W = w; H = h; canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     if (q) cam = camOf(q); draw();
@@ -49,7 +51,7 @@ export function createStudio(canvas, labelsEl, o) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     const labels = drawDie(ctx, P, cam, { W, H, C, words: o.words });
     labelsEl.innerHTML = labels.filter(l => l.x > -200 && l.x < W && l.y > -20 && l.y < H).map(l =>
-      '<span class="sdl ' + l.kind + (l.bad ? ' bad' : '') + '" data-part="' + esc(l.part) + '" style="left:' + l.x.toFixed(1) + 'px;top:' + l.y.toFixed(1) + 'px">' + esc(l.text) + '</span>').join('');
+      '<span class="sdl ' + l.kind + (l.bad ? ' bad' : '') + '" data-part="' + esc(l.part) + '" style="left:' + l.x.toFixed(1) + 'px;top:' + l.y.toFixed(1) + 'px">' + esc(l.text) + (l.fid && o.mark ? ' ' + o.mark(l.fid) : '') + '</span>').join('');
     /* a word that would run off the right edge is moved back inside it */
     for (const el of labelsEl.children) { const x = parseFloat(el.style.left), w = el.offsetWidth; if (x + w > W - 8) el.style.left = Math.max(8, W - 8 - w).toFixed(1) + 'px'; }
     tell();
@@ -94,6 +96,8 @@ export function createStudio(canvas, labelsEl, o) {
 
   return {
     show(record, level, jump) { shown = true; P = planOf(record); C = null; resize(); return go(level, jump || !lastLv); },
+    /* the record changed (a gene, a design): drawn again where the camera is */
+    update(record) { P = planOf(record); draw(); },
     go,
     at: () => ({ level: canvas.dataset.level || null, pos: +canvas.dataset.pos || 0, flying: !!fly }),
     plan: () => P,

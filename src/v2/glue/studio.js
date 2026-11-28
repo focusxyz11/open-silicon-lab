@@ -9,18 +9,19 @@
 import { t } from '../../core/i18n.js';
 import { still } from '../../core/ui.js';
 import * as Way from '../../engines/way.js';
-import { stackOf } from '../../engines/path.js';
+import * as A from '../../engines/arch.js';
 import { recordOf } from '../../engines/chiprecord.js';
+import { stackKept, keepGene } from '../stack/keep.js';
+import { mark } from '../fid.js';
 import { sizeOf } from '../../data/atlas.js';
 import { V, $, showStage, esc } from '../shell.js';
 import * as Game from '../game.js';
 
 export const STUDIO_LEVELS = ['chip', 'block', 'gate', 'switch'];
-/* your stack as the stack view keeps it (src/v2/stack/view.js, osl-stack): the recipe, the fine settings, the aim */
-function stackNow() {
-  try { const k = JSON.parse(localStorage.getItem('osl-stack') || 'null'); if (k && k.A && k.A.g) return stackOf(k.A.g, k.F, k.aim); } catch (e) { /* the lab's example */ }
-  return stackOf();
-}
+/* your stack as the stack view keeps it (src/v2/stack/keep.js, osl-stack): the recipe, the fine settings, the aim */
+const stackNow = () => stackKept(localStorage);
+/* Arrange (#507): the recipe's shape and where it computes, four options each, set here and kept in your stack */
+export const ARRANGE = ['shape', 'where'];
 /* the record of your chip now: your stack and the design on your bench (the lab's example until you change it) */
 export function recordNow() {
   const st = stackNow(), b = Game.benchDesign(V.S);
@@ -32,12 +33,15 @@ export function recordNow() {
 function inset() {
   const I = Object.assign({}, V.frameInset(V.swFrame)), dw = V.swFrame && V.swFrame.dock.parentNode;
   if (dw && innerWidth >= 1100) { const r = dw.getBoundingClientRect(); if (r.left < innerWidth / 2 && r.bottom > innerHeight - 60) I.l = Math.max(I.l, Math.round(r.right + 28)); I.r = Math.max(I.r, 190); I.b = Math.max(I.b, 40); }
+  /* the strip of controls, when it shows, is never over the picture's part in focus or its figures */
+  const ctl = V.sui && V.sui.querySelector('.sdctl:not([hidden])');
+  if (ctl) I.b = Math.max(I.b, Math.round(innerHeight - ctl.getBoundingClientRect().top + 16));
   return I;
 }
 export function create() {
   let view = null, viewP = null, rec = null, lv = 'chip';
   const ensure = () => viewP || (viewP = import('../studio/view.js').then(m => {
-    view = m.createStudio($('studioCanvas'), $('studioLabels'), { words: t, still, inset,
+    view = m.createStudio($('studioCanvas'), $('studioLabels'), { words: t, mark, still, inset,
       level: (l, pos) => { if (V.swFrame) { V.swFrame.rail(l, null, pos); if (l !== lv) { lv = l; V.swFrame.level(l); history.replaceState(null, '', '#/studio/' + l); V.here(); if (V.swFrame.mode() === 'look') drawCard(); } } },
       tap: l => go(l) });
     return view;
@@ -49,6 +53,12 @@ export function create() {
     const i = STUDIO_LEVELS.indexOf(lv), nm = l => t('depth.' + l + '.name'), D = rec.designed;
     const line = D.broken === 'empty' ? t('sd.line.empty') : D.broken === 'design' ? t('sd.line.broken') : D.broken === 'switch' ? t('sd.line.switchOff') : t('sd.line.' + lv);
     const W = Way.whereOf('#/studio/' + lv), make = Way.alongTo(W, 'make'), use = Way.alongTo(W, 'use');
+    /* the controls of the level in view, in one strip at the bottom centre (GUIDE.md §4): at the chip, Arrange, the two
+       genes the floorplan is laid out by, each option a button */
+    const arrange = lv !== 'chip' ? '' : '<div class="sdarr">' + ARRANGE.map(k => '<div class="sdgene" role="group" aria-label="' + esc(t('ar.gene.' + k)) + '"><p class="kicker">' + esc(t('ar.gene.' + k)) + '</p><div class="sdopts">' +
+      Object.keys(A.CARRY[k]).map(o => '<button type="button" class="chipb' + (D.recipe[k] === o ? ' on' : '') + '" data-gene="' + k + '" data-opt="' + o + '" aria-pressed="' + (D.recipe[k] === o) + '" title="' + esc(t('ar.opt.' + k + '.' + o + '.d')) + '">' + esc(t('ar.opt.' + k + '.' + o)) + '</button>').join('') + '</div></div>').join('') + '</div>';
+    const had = !!V.sui.querySelector('.sdctl:not([hidden])');
+    controls(arrange); if (had !== !!arrange && view) view.resize(true);
     V.swFrame.dock.innerHTML = V.lineHtml(t('sd.k') + ' · ' + nm(lv), line, null, V.aroundRow(
       i > 0 ? '<button type="button" class="chipb" data-key="back" data-sdgo="' + STUDIO_LEVELS[i - 1] + '">↑ ' + esc(nm(STUDIO_LEVELS[i - 1])) + '</button>' : '',
       i < STUDIO_LEVELS.length - 1 ? '<button type="button" class="chipb" data-key="next" data-in data-inname="' + esc(nm(STUDIO_LEVELS[i + 1])) + '" data-sdgo="' + STUDIO_LEVELS[i + 1] + '">↓ ' + esc(nm(STUDIO_LEVELS[i + 1])) + '</button>' : '',
@@ -68,15 +78,31 @@ export function create() {
       V.swFrame = V.frameOf(V.sui, { up: { href: '#/place/studio', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/studio', label: t('map.studio.t') }, { label: t('sd.k') }],
         rail: { label: t('sd.rail'), items: STUDIO_LEVELS.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: sizeOf(k) })) },
         onRail: k => go(k), onLook: drawCard, scroll: true, caption: true });
-      V.sui.onclick = e => { const g = e.target.closest('[data-sdgo]'); if (g) { e.preventDefault(); go(g.dataset.sdgo); } };
+      V.sui.onclick = e => { const g = e.target.closest('[data-sdgo]'); if (g) { e.preventDefault(); go(g.dataset.sdgo); }
+        const a = e.target.closest('[data-gene]'); if (a) { e.preventDefault(); arrangeTo(a.dataset.gene, a.dataset.opt); } };
       V.loading(false);
-      V.sui.dataset.broken = rec.designed.broken || '';
+      V.sui.dataset.broken = rec.designed.broken || ''; V.sui.dataset.recipe = A.keyOf(rec.designed.recipe);
       /* from the island the camera comes down onto the die; otherwise it opens at the level the address says */
       const start = fromIsland && lv !== 'chip' ? 'chip' : lv;
       d.show(rec, start, true); if (start !== lv) d.go(lv);
       V.swFrame.rail(lv, null, STUDIO_LEVELS.indexOf(lv)); V.swFrame.level(lv); drawCard(); V.here();
       $('studioCanvas').focus({ preventScroll: true });
     });
+  }
+  /* the strip of controls over the picture, made with the frame and filled for the level in view */
+  function controls(html) {
+    let el = V.sui.querySelector('.sdctl');
+    if (!el) { el = document.createElement('div'); el.className = 'sdctl'; V.sui.appendChild(el); }
+    el.hidden = !html; el.innerHTML = html;
+    /* on a wide screen, centred between the caption at the left and the ways in and along at the right */
+    const dw = V.swFrame && V.swFrame.dock.parentNode;
+    if (html && dw && innerWidth >= 1100) { const l = dw.getBoundingClientRect().right + 20, r = innerWidth - 220; el.style.left = Math.round((l + r) / 2) + 'px'; el.style.maxWidth = Math.round(r - l) + 'px'; }
+    else { el.style.left = ''; el.style.maxWidth = ''; }
+  }
+  /* a gene set in Arrange: kept in your stack, the record made again, the die drawn again where the camera is */
+  function arrangeTo(gene, opt) {
+    keepGene(localStorage, gene, opt); rec = recordNow(); if (view) view.update(rec);
+    V.sui.dataset.recipe = A.keyOf(rec.designed.recipe); drawCard(); V.hud();
   }
   const hideSw = () => { $('studioCanvas').hidden = $('studioLabels').hidden = true; V.sui.hidden = true; if (view) view.hide(); };
   Object.assign(V, { showStudio, hideSw, studioRecord: () => rec, studioLevel: () => lv });

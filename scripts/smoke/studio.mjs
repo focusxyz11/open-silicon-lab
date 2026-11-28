@@ -3,7 +3,7 @@
    bench), the island not drawn behind it; the rail and the address say the level; ↓ and a tap on the rail go in,
    continuously (the camera passes between the levels, never jumping); ↑ comes out; along (→) leads to the same level as
    made; an old address of the room walked through opens the die at its corner's level; a design that does not do its
-   job is said on the die; no sideways scroll. Desktop at night, phone by day */
+   job is said on the die; Arrange sets the recipe in your stack and the hot spot follows (#507); no sideways scroll. Desktop at night, phone by day */
 import { S } from './shared.mjs';
 
 export const about = 'The studio (#/studio): your chip as designed from the record, the die zoomed to block, gate and switch with no cut, the rail and the address, along to the same level as made, the room\'s old addresses, a broken design, desktop and phone';
@@ -24,6 +24,16 @@ export default async function run() {
     if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the studio scrolls sideways');
     if (!(await page.evaluate(() => { const r = document.querySelector('#studioui .rail2 [aria-current]'); return document.querySelectorAll('#studioui .rail2 [data-rail]').length === 4 && (!r || r.dataset.rail === 'chip'); })))
       problems.push(tag + ': the rail does not hold the four levels as designed, the chip lit');
+    /* Arrange (#507): at the chip, the recipe's shape and where it computes; stacked, the hot spot climbs (its figure
+       red, with its mark), and the stack keeps the recipe */
+    const arranged = await page.waitForFunction(() => { const b = document.querySelector('#studioui .sdctl [data-opt="stack"]'), u = document.getElementById('studioui');
+      if (b && !u.dataset.recipe.endsWith('/stack')) b.click();
+      const hot = document.querySelector('#studioLabels .sdl.figure[data-part="hottest"]'), k = JSON.parse(localStorage.getItem('osl-stack') || 'null');
+      return u.dataset.recipe.endsWith('/stack') && !!hot && hot.classList.contains('bad') && !!hot.querySelector('.fid') && !!k && k.A.g.shape === 'stack'; }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
+    if (!arranged) problems.push(tag + ': Arrange does not set the shape in your stack, or stacking does not heat the die with its marked figure');
+    const back = await page.waitForFunction(() => { const b = document.querySelector('#studioui .sdctl [data-opt="few"]'), u = document.getElementById('studioui'); if (b && !u.dataset.recipe.endsWith('/few')) b.click();
+      const hot = document.querySelector('#studioLabels .sdl.figure[data-part="hottest"]'); return u.dataset.recipe.endsWith('/few') && !!hot && !hot.classList.contains('bad'); }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
+    if (!back) problems.push(tag + ': Arrange does not go back to today\'s few big cores, cool again');
     /* in, continuously: ↓ flies to the block, the camera passing between the levels; the address follows */
     await page.evaluate(() => { window.posSeen = []; const c = document.getElementById('studioCanvas'); new MutationObserver(() => window.posSeen.push(+c.dataset.pos)).observe(c, { attributes: true, attributeFilter: ['data-pos'] }); });
     const inBlock = await page.waitForFunction(() => { const c = document.getElementById('studioCanvas');
