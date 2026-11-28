@@ -1,0 +1,103 @@
+/* A core question's card (#/q/<id>, src/v2/qcard.js, #517), loaded when a card first opens. One card at a time: see it
+   (the question alone with one picture you can move), place it (the same question in the lab) and read it (why it
+   matters, True, Still open). The lab's palette and type (base.css); reading text at 16 px in lines of about fifty
+   characters; nothing moves by itself (no ambient animation; turning to another card is the view's own change). */
+.qcv { color: var(--ink); }
+.qc-wrap { max-width: 1240px; margin: 0 auto; padding: 14px 20px 48px; }
+.qc-card { display: grid; grid-template-columns: minmax(0, 1fr) 344px; grid-template-areas: 'alone inlab' 'text text'; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+.qc-alone { grid-area: alone; min-width: 0; display: flex; flex-direction: column; padding-bottom: 22px; }
+.qc-text { grid-area: text; border-top: 1px solid var(--line); }
+.qc-head { padding: 24px 30px 4px; display: flex; flex-direction: column; gap: 10px; }
+.qc-kick { margin: 0; display: flex; align-items: center; gap: 9px; font: 500 11px/1.2 var(--mono); font-stretch: 85%; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.qc-ring { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--warm); display: grid; place-items: center; flex: none; background: var(--panel-solid); }
+.qc-ring svg, .qc-mk svg { width: 17px; height: 17px; fill: none; stroke: var(--warm); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.qc-q { margin: 0; font: italic 400 clamp(23px, 2.5vw, 33px)/1.2 var(--serif); text-wrap: balance; max-width: 28em; }
+.qc-stand { margin: 0; font: 400 18px/1.45 var(--sans); max-width: 38em; text-wrap: pretty; }
+.qc-fig { margin: 14px 18px 0; }
+.qc-pic { position: relative; height: clamp(300px, 46vh, 440px); border-radius: 12px; overflow: hidden; background: var(--panel-solid); border: 1px solid var(--line); touch-action: pan-y; cursor: ew-resize; user-select: none; -webkit-user-select: none; }
+.qc-pic.two { cursor: move; touch-action: none; }
+.qc-pic canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.qc-labels { position: absolute; inset: 0; pointer-events: none; }
+.qc-lbl { position: absolute; left: 0; top: 0; font: 500 12px/1.25 var(--sans); color: var(--muted); white-space: nowrap; }
+.qc-lbl.ink { color: var(--ink); }
+.qc-lbl.bad { color: var(--bad); }
+.qc-lbl.warm { color: var(--warm); }
+.qc-cap { margin: 8px 12px 0; font: 400 14.5px/1.45 var(--sans); color: var(--muted); max-width: 46em; text-wrap: pretty; }
+.qc-band { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 28px; align-items: start; margin: 16px 30px 0; padding: 16px 0 0; border-top: 1px solid var(--line); }
+.qc-ctl { display: flex; flex-direction: column; gap: 12px; }
+.qc-hint, .qc-inlab h2, .qc-why h2, .qc-say b { margin: 0; font: 500 10.5px/1.3 var(--mono); font-stretch: 85%; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.qc-hs { display: flex; flex-direction: column; gap: 2px; }
+.qc-hs label { display: flex; gap: 7px; font: 700 14px/1.3 var(--sans); }
+.qc-ar { color: var(--accent); font-weight: 400; }
+.qc-hs input { width: 100%; accent-color: var(--accent); cursor: ew-resize; margin: 4px 0 2px; }
+.qc-ends { display: flex; justify-content: space-between; gap: 10px; font: 400 12.5px/1.2 var(--sans); color: var(--muted); }
+.qc-reads { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 22px; min-width: 0; }
+.qc-read { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.qc-read b { font: 500 20px/1.15 var(--mono); font-stretch: 85%; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.qc-read b.bad { color: var(--bad); }
+.qc-read b.good { color: var(--good); }
+.qc-read span { font: 400 13.5px/1.35 var(--sans); color: var(--muted); }
+
+/* read it: why it matters, True, Still open */
+.qc-why { padding: 24px 30px 0; }
+.qc-why h2 { margin-bottom: 10px; }
+.qc-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px; }
+.qc-why h3 { margin: 0 0 5px; font: 700 15px/1.3 var(--sans); }
+.qc-why p { margin: 0; font: 400 16px/1.55 var(--sans); text-wrap: pretty; max-width: 34em; }
+.qc-say { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; margin: 24px 30px 0; padding: 20px 0 30px; border-top: 1px solid var(--line); }
+.qc-say p { margin: 0; font: 400 16px/1.55 var(--sans); text-wrap: pretty; max-width: 34em; }
+.qc-say b { display: block; margin-bottom: 6px; }
+.qc-say i { font: italic 400 18px/1.4 var(--serif); }
+.qc-src { display: block; margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+.qc-src a { color: var(--accent); text-underline-offset: 2px; }
+.qc-kind { display: inline-block; font: 500 10px/1 var(--mono); font-stretch: 85%; letter-spacing: .04em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 4px; padding: 2px 5px; margin-left: 5px; color: var(--muted); vertical-align: 1px; }
+
+/* place it: the same question, in the lab */
+.qc-inlab { grid-area: inlab; border-left: 1px solid var(--line); padding: 24px 20px 22px 22px; display: flex; flex-direction: column; gap: 22px; background: color-mix(in srgb, var(--bg) 45%, transparent); min-width: 0; }
+.qc-inlab h2 { margin-bottom: 8px; }
+.qc-foot svg { display: block; width: 100%; height: auto; overflow: visible; }
+.qc-foot .c { fill: none; stroke: var(--line); stroke-width: 1; }
+.qc-foot .c.on { fill: var(--warm); stroke: var(--warm); cursor: pointer; }
+.qc-foot .c.on:hover, .qc-foot .c.on:focus-visible { stroke: var(--ink); stroke-width: 1.6; outline: none; }
+.qc-foot .g { stroke: var(--ink); stroke-width: 1.4; }
+.qc-foot .sh { stroke: var(--line); stroke-width: 1; }
+.qc-foot text { font: 400 9.2px var(--mono); font-stretch: 80%; fill: var(--muted); }
+.qc-foot text.st { fill: var(--ink); font-weight: 500; }
+.qc-where { margin: 8px 0 0; font: 400 14px/1.45 var(--sans); color: var(--muted); min-height: 2.9em; }
+.qc-where b { color: var(--ink); font-weight: 700; }
+.qc-mks { display: flex; flex-wrap: wrap; gap: 8px; }
+.qc-mk { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--warm); background: var(--panel-solid); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.qc-mk[aria-pressed="true"] { background: var(--warm); }
+.qc-mk[aria-pressed="true"] svg { stroke: var(--panel-solid); }
+.qc-join p { margin: 10px 0 0; font: 400 14.5px/1.45 var(--sans); }
+.qc-join .qc-pairq { margin: 6px 0 10px; font: italic 400 16px/1.4 var(--serif); }
+.qc-go { color: var(--accent); font: 700 14px/1.3 var(--sans); text-decoration: none; }
+.qc-go:hover { text-decoration: underline; text-underline-offset: 3px; }
+.qc-asks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.qc-asks li { font: italic 400 15.5px/1.38 var(--serif); }
+.qc-asks small { display: block; margin-top: 2px; font: 400 13px/1.3 var(--sans); font-style: normal; color: var(--muted); }
+.qc-counts { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font: 400 13.5px/1.3 var(--sans); color: var(--muted); }
+.qc-counts b { font: 500 13px var(--mono); font-stretch: 85%; color: var(--ink); }
+
+/* narrower: the lab under the reading; a phone: one column, the picture, the reading, the lab */
+@media (max-width: 1080px) {
+  .qc-card { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'alone' 'text' 'inlab'; }
+  .qc-inlab { border-left: 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+}
+@media (max-width: 760px) {
+  .qc-cols { grid-template-columns: 1fr; gap: 16px; }
+  .qc-band { grid-template-columns: 1fr; gap: 18px; }
+}
+@media (max-width: 640px) {
+  .qc-wrap { padding: 10px 12px 36px; }
+  .qc-head { padding: 18px 16px 2px; }
+  .qc-stand { font-size: 16.5px; }
+  .qc-fig { margin: 12px 8px 0; }
+  .qc-pic { height: 280px; }
+  .qc-band { margin: 14px 16px 0; }
+  .qc-reads { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .qc-read b { font-size: 17px; }
+  .qc-why { padding: 18px 16px 0; }
+  .qc-say { grid-template-columns: 1fr; gap: 16px; margin: 18px 16px 0; padding-bottom: 20px; }
+  .qc-inlab { padding: 16px; grid-template-columns: minmax(0, 1fr); }
+}

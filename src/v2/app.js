@@ -406,6 +406,10 @@ export function start() {
       stations.show();
     });
   }
+  /* a core question's card (#/q/<id>, src/v2/qcard.js) */
+  let qc = null;
+  function showQ(id) { showHome0(); if (hold) hold.hide(); if (blueprint) blueprint.hide(); if (stations) stations.hide(); const n = V.routeN;
+    return Promise.all([import('./qcard.js'), needWords('cards', 'atlas'), needStyles('qcard')]).then(([m]) => { if (n === V.routeN) (qc = qc || m.createQCard($('stage'), { levelHref, still })).show(id); }); }
   function showMap(from) {
     hideViews();
     const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null, pose = V.lineLeave; V.lineLeave = null;
@@ -429,7 +433,7 @@ export function start() {
      corner #/place/studio/3): the view each is (the place itself opens on the island) */
   const FLOWN_VIEW = { datacentre: 'dc', phones: 'fly', cars: 'carfly', studio: 'studio' };
   const flownOf = p => (p[0] === 'place' && /^\d+$/.test(p[2] || '') && FLOWN_VIEW[p[1]]) || null;
-  const viewOf = p => { const k = p[0]; if (!k || k === 'home' || k === 'hold' || k === 'stations' || k === 'blueprint') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
+  const viewOf = p => { const k = p[0]; if (!k || k === 'home' || k === 'hold' || k === 'stations' || k === 'blueprint' || k === 'q') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
     if (k === 'do') { const h = doPlace(chOf(decodeURIComponent(p[1] || ''))); return h ? viewOf(partsOf(h)) : ['map', 0]; }
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
@@ -463,6 +467,7 @@ export function start() {
     if (k === 'home') return showHome();
     if (k === 'stations') return showStations();
     if (k === 'blueprint') return showBlueprint();
+    if (k === 'q') return showQ(parts[1]);
     if (k === 'stack') return V.showStack(parts[1]);
     if (k === 'board') return V.showBoard();
     if (k === 'dive') return V.showDive(parts[1], parts[2]);
@@ -499,12 +504,13 @@ export function start() {
   const homeOf = p => (!p[0] || p[0] === 'hold' ? 'home' : p[0]);
   function route() {
     /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the first page */
-    if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
+    if (/^#\/?[wq]\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
     const parts = partsOf(location.hash), k = homeOf(parts), n = ++V.routeN;
     document.body.classList.toggle('firstpage', k === 'home');
     document.body.classList.toggle('langpage', k === 'home' || k === 'blueprint');
     if (k !== 'home' && hold) hold.hide();
     if (k !== 'blueprint' && blueprint) blueprint.hide();
+    if (k !== 'q' && qc) qc.hide();
     if (k !== 'stations' && stations) stations.hide(); hideSeam(); arrive(location.hash);
     /* a bet's wafer or chip stands in the scene only while its challenge is open */
     if (!/^#\/do\/(cheaper|onebad|oxen|jevons)$/.test(location.hash)) setBetScene(null, null, '');
