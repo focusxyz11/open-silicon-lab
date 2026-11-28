@@ -9,7 +9,7 @@
    (#/log); the world around the island is the way out from it (#/ecosystem).
    Routes: #/ (Hold, the first page: src/v2/hold.js; #/hold/<block> and #/hold/years/<year> where its camera is), #/blueprint (the blueprint: src/v2/home.js), #/stations (the station map: src/v2/stations.js), #/island (the island), #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
-   #/studio/<level> (the die as designed), #/bench/<level>[/<challenge>] (the studio's benches), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
+   #/studio/<level>, #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
 import { still, theme } from '../core/ui.js';
 import { t, needWords, needAllWords, lang, langName, LANGS } from '../core/i18n.js';
@@ -253,7 +253,6 @@ export function start() {
   const DIVE_LEVELS = Game.DIVE_LEVELS;
   /* a level's address: flown through where its place is (the data centre's board has a view of its own), a shared
      depth in a phone's or a car's own dive, a layer of the chip as made, or else where its depth is shown (Game.viewOfDepth) */
-  /* the studio's steps open the die as designed at the level a step shows, or the step's bench (#506) */
   const levelHref = (place, l) => { if (place === 'studio' && l.world === 'design') { const lv = Way.levelOfStep('bench', l.depth); return lv ? '#/studio/' + lv : '#/bench/' + l.depth; }
     const f = place === 'datacentre' && l.depth === 'board' ? null : (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
     if (FLAT_WORLDS.includes(l.world)) return '#/dive/' + l.depth + '/' + l.world;
@@ -341,9 +340,7 @@ export function start() {
      control unit in the footwell and its chip; past the chip the flight carries on into the dive's car chip ---- */
   const kui = $('carui');
 
-  /* ---- the studio (#/studio/<level>, src/v2/glue/studio.js, #506): your chip as designed, one die in dashed outline,
-     zoomed die → block → cells → one cell with no cut. In · out (↑ ↓, the rail, the wheel, a tap) moves through its
-     four levels; along (← →) leads to the same level as made and as used ---- */
+  /* ---- the studio: your chip as designed (src/v2/glue/studio.js, #506) ---- */
   const sui = $('studioui');
 
   /* ---- inside a chip, layer by layer: the levels of the dive as they are made (the lower half of the Make column).
@@ -423,8 +420,7 @@ export function start() {
      Going between views is never a cut: deeper zooms in, higher zooms out, the Turn turns, along slides. */
   const partsOf = h => (h.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   const doPlace = ch => (ch && !ch.need && ch.kind !== 'break' && ch.kind !== 'design' ? Way.doHome(ch) : null);
-  /* the places flown through, entered at one of their levels (#/place/datacentre/2): the view each is (the place itself
-     opens on the island) */
+  /* the places flown through, entered at one of their levels (#/place/datacentre/2) */
   const FLOWN_VIEW = { datacentre: 'dc', phones: 'fly', cars: 'carfly' };
   const flownOf = p => (p[0] === 'place' && /^\d+$/.test(p[2] || '') && FLOWN_VIEW[p[1]]) || null;
   const viewOf = p => { const k = p[0]; if (!k || k === 'home' || k === 'hold' || k === 'stations' || k === 'blueprint') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
@@ -500,8 +496,7 @@ export function start() {
   function route() {
     /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the first page */
     if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
-    /* the room walked through before the studio was the die as designed (#506): its addresses open the die, at the level
-       its corner showed */
+    /* the room walked through before (#506) */
     const room = /^#\/place\/studio\/(\d+)$/.exec(location.hash);
     if (room) history.replaceState(null, '', '#/studio/' + (Way.levelOfStep('bench', Way.stepsOf('bench')[+room[1] - 1]) || 'chip'));
     const parts = partsOf(location.hash), k = homeOf(parts), n = ++V.routeN;

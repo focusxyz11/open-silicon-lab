@@ -58,7 +58,7 @@ export function doHome(ch) {
 /* the cell an address shows: its view, place, level and stage of the loop. Your stack's rungs turn their faces along
    (#/stack/<face>/<rung>, as used if none is said) */
 const FACE = /^(design|make|use)$/;
-/* the levels the studio draws your chip at, as designed (src/v2/studio/plan.js): the atom has no design of its own */
+/* the levels the studio draws (#506) */
 export const STUDIO_LEVELS = ['chip', 'block', 'gate', 'switch'];
 export function whereOf(hash) {
   const p = parts(hash), k = p[0] || 'island';
@@ -76,7 +76,6 @@ export function whereOf(hash) {
   if (k === 'supply') return cell('supply', 'port', 'ship');
   if (k === 'build') return cell('page', 'lab');
   if (k === 'place' && p[1] === 'datacentre' && p[2] != null && p[2] !== 'inside') return cell('flight', 'datacentre', FLIGHT[+p[2]] || 'building');
-  /* the studio: your chip as designed, one die zoomed through its levels (#506) */
   if (k === 'studio') return cell('studio', 'studio', STUDIO_LEVELS.includes(p[1]) ? p[1] : 'chip', 'design');
   if (k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '')) return cell('flight', 'phones', PHONE_FLIGHT[+p[2]] || 'phone');
   if (k === 'place' && p[1] === 'cars' && /^\d+$/.test(p[2] || '')) return cell('flight', 'cars', CAR_FLIGHT[+p[2]] || 'car');
@@ -132,7 +131,6 @@ export function alongTo(where, stage) {
      level carried past a stage where it does not exist (below, carryOf) is picked up again at the next stage that has it */
   const rows = ROWS.includes(W.view), tw = rows ? (W.size ? twinOf(W.size) : null) : W.level && W.view !== 'island' ? twinOf(W.level === 'die' ? 'chip' : W.level) : W.view === 'island' && W.carry ? twinOf(W.carry) : null;
   if (tw) {
-    /* as designed: the studio draws your chip at its level (#506); the atom, which is chosen, not drawn, has none */
     if (stage === 'design' && STUDIO_LEVELS.includes(tw.used)) return '#/studio/' + tw.used;
     if (stage === 'design' && tw.designed) return '#/bench/' + tw.designed;
     /* a whole chip is made as a die on its wafer, and closed in its package on the way out; the levels inside it are
