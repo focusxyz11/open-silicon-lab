@@ -57,6 +57,6 @@ chip**, which every part reads and writes and none keeps a copy of.
 ## Building it
 
 The first task builds the record and turns the existing engines into station functions, with no view changing
-(`[Task] The chip's record`). The studio and the line then draw it (the tasks named *Studio* and *Fab*). After the
-record exists, one more design round by Claude Fable 5.2 polishes the inside of a 3D station (its machine at work,
-your die in its state, the zoom to the switch) on real data instead of stand-ins.
+(`[Task] The chip's record`). The studio and the line then draw it (the tasks named *Studio* and *Fab*). They follow
+the design guide `docs/prototypes/studio-fab/GUIDE.md`, written by Claude Fable 5.2 as the last design round for the
+studio and the fab: no further Fable round is planned.

@@ -215,3 +215,10 @@ Recorded in the repository on the day (the first version of this file); kept wor
   (`docs/CHIP.md`): every machine is a function from the chip so far to the chip after it, calculations live only in
   engines, views only draw. Then one more Fable round polishes the inside of a 3D station on real data. Why: the owner
   sees coordinating all of these as the hardest challenge; parts polished separately would disagree.
+
+## 28 November 2026
+
+- **The last Fable round for the studio and the fab happened now, not after the record:** Claude Fable 5.2 improved the
+  prototype, designed the inside of a 3D station (Print and Etch in full) and wrote `docs/prototypes/studio-fab/GUIDE.md`;
+  the nightly build follows the guide with no further Fable round (this replaces the round planned on 27 November). Why:
+  one round that guides all future work well costs less than rounds during the build.
