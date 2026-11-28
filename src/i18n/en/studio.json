@@ -93,5 +93,11 @@
  "sd.fab.fig.print": "copies spread ×{x}",
  "sd.fab.fig.etch": "copies spread ×{x} · {n} stray",
  "sd.fab.fig.specks": "{x} specks a cm²",
- "sd.fab.fig.test": "{g} of 21 good · {y}% come out whole"
+ "sd.fab.fig.test": "{g} of 21 good · {y}% come out whole",
+ "sd.care.dose": "The dose of light",
+ "sd.care.clean": "The cleanroom's air",
+ "sd.care.0": "Hurried · {v}",
+ "sd.care.1": "Today's · {v}",
+ "sd.care.2": "Careful · {v}",
+ "sd.care.both": "One setting of your stack, the line's care, sets the dose and the air together for now."
 }

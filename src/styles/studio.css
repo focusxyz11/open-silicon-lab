@@ -32,3 +32,4 @@
 #studioui .sdagent { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--warm); border-radius: 12px; }
 #studioui .sdagent p:not(.kicker) { margin: 4px 0 8px; font: italic 400 15px/1.4 var(--serif); }
 #studioui .sdctl .sdask { position: absolute; top: 8px; right: 12px; font: 600 13px var(--sans); color: var(--accent); background: none; border: 0; cursor: pointer; padding: 2px 4px; }
+#studioui .sdnote { margin: 6px 0 0; font: italic 400 13px/1.35 var(--serif); color: var(--muted); }

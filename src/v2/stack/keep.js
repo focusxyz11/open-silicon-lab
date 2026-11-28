@@ -24,3 +24,11 @@ export function keepGene(store, gene, option) {
   try { store.setItem(KEY, JSON.stringify(k)); } catch (e) { /* not kept */ }
   return A.normal(k.A.g);
 }
+
+/* set one fine setting of the stack kept (the line's care at its stations, #513): what the stack view's setFine does */
+export function keepFine(store, key, value) {
+  const k = read(store) || { F: Object.assign({}, EXAMPLE), aim: 'any', A: A.start(A.TODAY, {}), T: A.treeOf(A.TODAY), focus: [], stones: {}, first: {} };
+  k.F = Object.assign({}, EXAMPLE, k.F || {}, { [key]: value });
+  try { store.setItem(KEY, JSON.stringify(k)); } catch (e) { /* not kept */ }
+  return stackOf(k.A.g, k.F, k.aim);
+}
