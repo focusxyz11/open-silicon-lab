@@ -121,6 +121,12 @@ export default async function run() {
     const along = await page.waitForFunction(() => { if (location.hash === '#/fab/etch/switch') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
       const c = document.getElementById('studioCanvas'); return location.hash === '#/fab/implant/switch' && c.dataset.level === 'switch' && document.getElementById('studioui').dataset.fab === 'implant'; }, null, { timeout: 30000, polling: 1000 }).then(() => true, () => false);
     if (!along) problems.push(tag + ': → at the etcher\'s switch does not land on the implanter\'s switch');
+    /* the line's care at Print (#513): hurried, the copies spread wider; the stack keeps the care */
+    await page.goto(base + 'index.html#/fab/print');
+    const cared = await page.waitForFunction(() => { const u = document.getElementById('studioui'), b = document.querySelector('#studioui .sdctl [data-careset="0"]');
+      if (b && u.dataset.care !== '0') b.click(); const f = document.querySelector('#studioLabels [data-part="figure"]'), k = JSON.parse(localStorage.getItem('osl-stack') || 'null');
+      return u.dataset.fab === 'print' && u.dataset.care === '0' && !!f && /×1\.29/.test(f.textContent) && !!k && k.F.care === 0; }, null, { timeout: 60000, polling: 500 }).then(() => true, () => false);
+    if (!cared) problems.push(tag + ': setting the dose at Print does not keep the care in your stack and spread the copies');
     await page.close(); }
   /* a design that does not do its job: the die says so, and the line will not make it */
   { const tag = 'studio: a broken design'; S.at = tag;

@@ -14,7 +14,8 @@ import { build } from '../../engines/design.js';
 import * as Now from '../studio/now.js';
 import * as PL from '../../engines/placer.js';
 import { proposeArrangement } from '../../engines/floorplan.js';
-import { keepGene } from '../stack/keep.js';
+import { keepGene, keepFine } from '../stack/keep.js';
+import { CARE, CHOICES } from '../../data/path.js';
 import { mark } from '../fid.js';
 import { sizeOf } from '../../data/atlas.js';
 import { V, $, showStage, esc } from '../shell.js';
@@ -121,14 +122,29 @@ export function create() {
       V.swFrame = V.frameOf(V.sui, { up: { href: '#/line/' + fab, label: t('sd.fab.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/fab', label: t('map.fab.t') }, { href: '#/line/' + fab, label: t('depth.' + fab + '.name') }, { label: t('sd.fab.inside') }],
         rail: { label: t('sd.fab.rail'), items: FAB_LEVELS.map(k => ({ id: k, label: k === 'station' ? t('sd.fab.station') : t('depth.' + k + '.name'), size: k === 'station' ? 0.3 : sizeOf(k) })) },
         onRail: k => go(k), onLook: drawFabCard, scroll: true, caption: true });
-      V.sui.onclick = e => { const g = e.target.closest('[data-sdgo]'); if (g) { e.preventDefault(); go(g.dataset.sdgo); } };
-      V.loading(false); controls('');
-      V.sui.dataset.fab = fab; V.sui.dataset.broken = rec.designed.broken || '';
+      V.sui.onclick = e => { const g = e.target.closest('[data-sdgo]'); if (g) { e.preventDefault(); go(g.dataset.sdgo); }
+        const c = e.target.closest('[data-careset]'); if (c) { e.preventDefault(); careTo(+c.dataset.careset); } };
+      V.loading(false); careStrip();
+      V.sui.dataset.fab = fab; V.sui.dataset.care = String(rec.care); V.sui.dataset.broken = rec.designed.broken || '';
       /* along from the station before (at the same level) the camera holds its depth: it opens there, framed */
       d.show(rec, lv, true, { made: fab });
       V.swFrame.rail(lv, null, FAB_LEVELS.indexOf(lv)); V.swFrame.level(lv === 'station' ? null : lv); drawFabCard(); V.here();
       $('studioCanvas').focus({ preventScroll: true });
     });
+  }
+  /* the line's care, set where it happens (#513): the dose at Print, the cleanroom at Deposit. One setting of your stack
+     (CARE in src/data/path.js) sets both for now; each station shows the part it sets. A change remakes the record, and
+     the gates' edges, the stray copies, the failed dies and the stack follow at once */
+  function careStrip() {
+    if (!fab || (fab !== 'print' && fab !== 'deposit')) { controls(''); return; }
+    const c = rec.care;
+    controls('<div class="sdarr"><div class="sdgene"><p class="kicker">' + esc(t(fab === 'print' ? 'sd.care.dose' : 'sd.care.clean')) + '</p><div class="sdopts">' +
+      CHOICES.care.map(k => '<button type="button" class="chipb' + (c === k ? ' on' : '') + '" data-careset="' + k + '" aria-pressed="' + (c === k) + '">' + esc(t('sd.care.' + k, fab === 'print' ? { v: CARE.dose[k] + ' mJ/cm²' } : { v: 'ISO ' + CARE.clean[k] })) + '</button>').join('') +
+      '</div><p class="sdnote">' + esc(t('sd.care.both')) + '</p></div></div>');
+  }
+  function careTo(k) {
+    keepFine(localStorage, 'care', k); rec = recordNow(); if (view) view.update(rec, { made: fab });
+    V.sui.dataset.care = String(rec.care); careStrip(); drawFabCard(); V.hud();
   }
   function drawFabCard() {
     if (!V.swFrame || !rec || !fab) return;
