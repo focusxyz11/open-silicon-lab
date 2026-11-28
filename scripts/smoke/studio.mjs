@@ -25,6 +25,8 @@ export default async function run() {
     if (await page.evaluate(() => !document.getElementById('mapCanvas').hidden)) problems.push(tag + ': the island is drawn behind the studio');
     /* the masks (#509): the record's, beside the die on their road to Print, with a shared shuttle; on a phone they may
        stand beyond the edge of the view */
+    /* the questions' marks on the die (#514): Geometry by the hot spot, at most three */
+    if (!(await page.waitForFunction(() => { const m = [...document.querySelectorAll('#studioui .mark3')]; return m.length >= 1 && m.length <= 3 && m.some(x => x.dataset.lens === 'geo' && x.dataset.mword === 'hottest' && !x.hidden); }, null, { timeout: 20000 }).then(() => true, () => false))) problems.push(tag + ': the die does not carry Geometry by its hot spot');
     if (w > 700 && !(await page.evaluate(() => { const m = document.querySelector('#studioLabels [data-part="masks"]'); return !!m && !!m.querySelector('.fid') && !!document.querySelector('#studioLabels [data-part="toprint"]') && !!document.querySelector('#studioLabels [data-part="shuttle"] .fid'); })))
       problems.push(tag + ': the masks, their road to Print and the shared shuttle are not beside the die, marked');
     if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the studio scrolls sideways');
@@ -112,6 +114,8 @@ export default async function run() {
     const opened = await page.waitForFunction(() => { const c = document.getElementById('studioCanvas'), u = document.getElementById('studioui');
       return !u.hidden && u.dataset.fab === 'etch' && c.dataset.level === 'station' && !!document.querySelector('#studioLabels [data-part="machine"]') && !!document.querySelector('#studioLabels [data-part="figure"] .fid'); }, null, { timeout: 60000 }).then(() => true, () => false);
     if (!opened) problems.push(tag + ': #/fab/etch does not open the etcher at work and your wafer with its marked figure');
+    /* the marks (#514): Perfect fails by the etcher's figure, one mark, never a list */
+    if (!(await page.waitForFunction(() => { const m = [...document.querySelectorAll('#studioui .mark3')]; return m.length === 1 && m[0].dataset.lens === 'perfect' && !m[0].hidden; }, null, { timeout: 20000 }).then(() => true, () => false))) problems.push(tag + ': the etcher does not carry Perfect fails by its figure');
     await page.evaluate(() => { window.posSeen = []; const c = document.getElementById('studioCanvas'); new MutationObserver(() => window.posSeen.push(+c.dataset.pos)).observe(c, { attributes: true, attributeFilter: ['data-pos'] }); });
     const down = await page.waitForFunction(() => { const c = document.getElementById('studioCanvas'), b = document.querySelector('#studioui .rail2 [data-rail="switch"]');
       if (c.dataset.level !== 'switch' && !c.dataset.flying && b) b.click();

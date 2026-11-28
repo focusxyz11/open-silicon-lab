@@ -288,3 +288,17 @@ export const RISES = [
   { rung: 'mind', q: 'copy', w: 6, when: { more: 'mind.lam', over: 0.5 }, say: 'copyErr' },
   { rung: 'mind', q: 'copy', w: 3, when: { fine: 'bits', max: 2 }, say: 'copyBits' }
 ];
+
+/* the marks on the studio's and the line's own parts (#514, docs/prototypes/studio-fab/GUIDE.md §2, §3): at each level of
+   the studio and each station inside the line, the questions that bite there, in order (at most three show), each by the
+   part of the picture it sits by (the part a label names, src/v2/studio/draw.js and station.js): Geometry by the hot
+   spot, Only humans by the agent, Compute beats cleverness by the placer's wire, Perfect fails on the longest path and
+   at Etch, Trust without inspection by the coverage map, the next Moore's law at Print, Efficiency fuels use at Test */
+export const STUDIO_MARKS = {
+  chip: [['geo', 'hottest'], ['human', 'agent']],
+  block: [['sutton', 'wire'], ['perfect', 'path'], ['trust', 'cover']],
+  gate: [['perfect', 'path']],
+  print: [['moore', 'figure']],
+  etch: [['perfect', 'figure']],
+  test: [['eff', 'figure']]
+};

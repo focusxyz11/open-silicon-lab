@@ -90,3 +90,15 @@ test('inside a station: one more level above the chip, the wafer around your die
   assert.equal(alongTo(W, 'design'), '#/studio/gate'); assert.equal(alongTo(W, 'use'), '#/dive/gate');
   assert.equal(whereOf('#/fab/print').level, null, 'the station itself is no level of the chip');
 });
+
+test('the questions\' marks on the studio and the stations: at most three, each a question by a part the picture names (#514)', async () => {
+  const { STUDIO_MARKS, QUESTIONS } = await import('../src/data/frame.js');
+  const { readFileSync } = await import('node:fs');
+  const src = ['draw.js', 'station.js'].map(f => readFileSync(new URL('../src/v2/studio/' + f, import.meta.url), 'utf8')).join('\n') + readFileSync(new URL('../src/v2/glue/studio.js', import.meta.url), 'utf8');
+  const ids = QUESTIONS.map(q => q.id);
+  for (const [at, marks] of Object.entries(STUDIO_MARKS)) {
+    assert.ok(marks.length <= 3, at + ': at most three marks');
+    for (const [id, part] of marks) { assert.ok(ids.includes(id), at + ': ' + id + ' is one of the thirteen'); assert.ok(src.includes("part: '" + part + "'") || src.includes('data-word="' + part + '"'), at + ': a part named ' + part + ' is drawn'); }
+  }
+  assert.deepEqual(STUDIO_MARKS.print.map(m => m[0]), ['moore']); assert.deepEqual(STUDIO_MARKS.test.map(m => m[0]), ['eff']);
+});
