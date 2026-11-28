@@ -20,7 +20,7 @@ useTexts(EN, 'en');
 useLedger(collect());
 
 const str = d => ({ type: 'string', description: d });
-const WHO = { author: str(EN['api.arg.author']), kind: { type: 'string', enum: ['person', 'ai', 'both', 'program'], description: EN['api.arg.kind'] }, ai: str(EN['api.arg.ai']), about: str(EN['api.arg.about']) };
+const WHO = { author: str(EN['api.arg.author']), github: str(EN['api.arg.github']), kind: { type: 'string', enum: ['person', 'ai', 'both', 'program'], description: EN['api.arg.kind'] }, ai: str(EN['api.arg.ai']), about: str(EN['api.arg.about']) };
 /* a plan for the energy puzzle (src/engines/budget.js PLAN): every field optional, the engine checks the values */
 const PLAN_ARG = { type: 'object', description: EN['api.arg.plan'], properties: {
   home: { type: 'string', enum: ['dram', 'hbm', 'sram'] }, precision: { type: 'string', enum: ['fp16', 'fp8', 'fp4'] }, clock: { type: 'number', minimum: 0.5, maximum: 4.5 },
@@ -61,7 +61,10 @@ const TOOLS = [
   { name: 'submit_architecture', fn: a => API.submitArchitecture(a || {}), description: EN['api.tool.submitArch'], inputSchema: { type: 'object', properties: { ...ARCH_ARGS, wins: { type: 'array', description: EN['api.arg.archWins'], items: { type: 'string', enum: ['any', 'model', 'hearing', 'wildfire', 'rover', 'radio'] } }, words: str(EN['api.arg.words']), ...WHO }, required: ['start', 'years', 'kind'] } },
   { name: 'propose_gene', fn: a => API.proposeGene(a || {}), description: EN['api.tool.gene'], inputSchema: { type: 'object', properties: { gene: { type: 'string', enum: ['where', 'carrier', 'told', 'shape'], description: EN['api.arg.gene'] }, option: str(EN['api.arg.option']), name: str(EN['api.arg.optName']), what: str(EN['api.arg.optWhat']),
     effect: { type: 'object', description: EN['api.arg.effect'], properties: { energy: { type: 'number' }, flex: { type: 'number' }, exact: { type: 'number' }, rugged: { type: 'number' }, adapt: { type: 'number' }, idle: { type: 'boolean' } } },
-    carry: { type: 'object', description: EN['api.arg.carry'] }, fact: str(EN['api.arg.fact']), words: str(EN['api.arg.words']), ...WHO }, required: ['gene', 'option', 'name', 'what', 'effect', 'carry', 'kind'] } }
+    carry: { type: 'object', description: EN['api.arg.carry'] }, fact: str(EN['api.arg.fact']), words: str(EN['api.arg.words']), ...WHO }, required: ['gene', 'option', 'name', 'what', 'effect', 'carry', 'kind'] } },
+  { name: 'propose_purpose', fn: a => API.proposePurpose(a || {}), description: EN['api.tool.purpose'], inputSchema: { type: 'object', properties: { purpose: str(EN['api.arg.purpose']), name: str(EN['api.arg.optName']), what: str(EN['api.arg.purposeWhat']),
+    w: { type: 'object', description: EN['api.arg.purposeW'], properties: { energy: { type: 'number' }, flex: { type: 'number' }, exact: { type: 'number' }, rugged: { type: 'number' }, adapt: { type: 'number' } } },
+    must: { type: 'object', description: EN['api.arg.purposeMust'], properties: { energy: { type: 'number' }, flex: { type: 'number' }, exact: { type: 'number' }, rugged: { type: 'number' }, adapt: { type: 'number' } } }, words: str(EN['api.arg.words']), ...WHO }, required: ['purpose', 'name', 'what', 'w', 'kind'] } }
 ];
 
 const send = m => process.stdout.write(JSON.stringify(m) + '\n');
@@ -80,7 +83,7 @@ function handle(msg) {
   if (method === 'tools/call') {
     const tool = TOOLS.find(x => x.name === (params && params.name));
     if (!tool) return fail(id, -32602, 'Unknown tool: ' + (params && typeof params.name === 'string' ? params.name : '')); /* i18n-ok: protocol message */
-    try { const out = tool.fn(record(params.arguments) || {}); return reply(id, { content: [{ type: 'text', text: JSON.stringify(out, null, 2) }], structuredContent: out, isError: !!(out && (out.error || out.ok === false)) }); }
+    try { const args = record(params.arguments) || {}, out = API.withGithub(args.github, () => tool.fn(args)); return reply(id, { content: [{ type: 'text', text: JSON.stringify(out, null, 2) }], structuredContent: out, isError: !!(out && (out.error || out.ok === false)) }); }
     catch (e) { return reply(id, { content: [{ type: 'text', text: String(e && e.message || e) }], isError: true }); }
   }
   if (id !== undefined && id !== null) fail(id, -32601, 'Method not found: ' + (typeof method === 'string' ? method : '')); /* i18n-ok: protocol message */

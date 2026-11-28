@@ -127,7 +127,7 @@ export const PW = {
   next: { ch: 'next', name: () => w('tab.next'), k: () => w('next.n'), h: 'next.h', d: 'next.d', tryq: 'next.q', q: 'sutton', facts: ['energy-moving-data', 'landauer-measured'] },
   levels: { ch: 'arch', name: () => w('pl.levels'), k: () => w('arch.n'), h: 'arch.h', d: 'arch.d', tryq: 'arch.q1' },
   eras: { ch: 'arch', name: () => w('era.k'), k: () => w('era.k'), hx: 'eras.h', dx: 'eras.d', tryq: 'arch.q3' },
-  arr: { ch: 'arch', name: () => w('pl.arr'), k: () => w('ways.k'), hx: 'arr.h', dx: 'arr.d', tryq: 'arch.ch.q', q: 'copy' },
+  arr: { ch: 'arch', name: () => w('pl.arr'), k: () => w('ways.k'), hx: 'arr.h', dx: 'arr.d', tryq: 'arch.ch.q', q: 'copy', field: true },
   machine: { ch: 'machine', name: () => w('tab.machine'), k: () => w('mach.n'), h: 'mach.h', dx: 'mach.d', tryq: 'mach.try', q: 'human', facts: ['asic-vs-cpu', 'fpga-asic-gap'] },
   island: { ch: 'island', name: () => w('tab.island'), k: () => w('isle.n'), h: 'isle.h', dx: 'isle.d', tryq: 'isle.try', q: 'vn' }
 };
@@ -147,7 +147,7 @@ export function words(id) {
   o.head = h('div', 'w-head', '<div class="w-k mono' + (p.viol ? ' viol' : '') + '">' + (p.viol ? '✕ 0' + p.viol + ' · ' : '') + p.k() + '</div><h2 class="w-h anton">' + w(p.h || p.hx) + '</h2>');
   /* a wall says what it is in the words the blueprint uses too (wall.*, shared.json): told once */
   o.cap = h('div', 'w-cap', '<p class="w-d">' + (p.sd ? '<span data-sw="' + p.sd + '">' + sw(p.sd) + '</span>' : w(p.d || p.dx)) + ' ' + src(...(p.facts || [])) + '</p>' + (p.note ? '<p class="w-note mono">' + w(p.note) + '</p>' : ''));
-  o.try = h('div', 'w-try', '<div class="w-k mono"><i></i>' + w('try.k') + '</div><p class="w-p">' + w(p.tryq) + '</p><div class="w-out" data-out="' + id + '">' + (S.out[id] || '') + '</div>' + (p.lab ? lab(w('play') + ': ' + w(p.lab[0]), p.lab[1]) : ''));
+  o.try = h('div', 'w-try', '<div class="w-k mono"><i></i>' + w('try.k') + '</div><p class="w-p">' + w(p.tryq) + '</p><div class="w-out" data-out="' + id + '">' + (S.out[id] || '') + '</div>' + (p.lab ? lab(w('play') + ': ' + w(p.lab[0]), p.lab[1]) : '') + (p.field ? '<p class="w-field" data-field hidden></p>' : ''));
   if (p.q) o.q = h('div', 'w-q', '<span class="mono">' + w('q.label') + '</span><p>' + Q(p.q) + '</p>' + lab(w('q.meet'), (p.lab && p.lab[1]) || '#/log'));
   if (p.ways && p.ways.length) { o.ways = h('div', 'w-ways', '<span class="mono">' + w('ways.k') + '</span>' + p.ways.map(([wid, st]) => '<button type="button" data-way="' + wid + '" hidden><small class="' + st + '">' + w('status.' + st) + '</small><b></b><span></span></button>').join(''));
     o.ways.onclick = e => { const b = e.target.closest('button'); if (b) b.classList.toggle('open'); }; }

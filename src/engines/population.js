@@ -22,6 +22,7 @@
    since(prev, atts, cen): what changed since your last visit, against what this browser kept then (snapOf): the attempts
    kept since, and the niches whose champion was deposed. */
 import * as A from './arch.js';
+import { PAST } from '../data/field.js';
 
 /* who counts as an agent: an AI alone, or a program that searches (the ledger keeps their attempts apart from people's) */
 export const ARCH_AGENTS = ['ai', 'program'];
@@ -34,10 +35,12 @@ export const builtAttempts = () => A.KNOWN.map(k => ({ key: A.keyOf(k.g), g: k.g
 export function ledgerAttempts(entries) {
   const out = [];
   for (const e of Array.isArray(entries) ? entries : []) {
-    if (!e || typeof e !== 'object' || typeof e.id !== 'string' || !A.histOk(e.arch)) continue;
+    /* the current season's scored attempts only (#480): a closed season's stand in its record (pastChampions), and an
+       entry over its author's day's cap is kept, not scored */
+    if (!e || typeof e !== 'object' || typeof e.id !== 'string' || !A.histOk(e.arch) || e.over || e.past || (e.ok == null && A.seasonOf(e) !== A.VERSION)) continue;
     const R = A.replay(e.arch);
     out.push({ key: A.keyOf(R.st.g), g: R.st.g, st: R.st, by: 'ledger', id: e.id, who: typeof e.by === 'string' ? e.by : '', made: e.made, agent: ARCH_AGENTS.includes(e.made),
-      day: (DAY.exec(e.id) || [])[1] || null, first: !!e.firstTry, firstIn: Array.isArray(e.firstIn) ? e.firstIn : [], draft: !!e.draft, years: R.st.year });
+      day: (DAY.exec(e.id) || [])[1] || null, first: !!e.firstTry, firstIn: Array.isArray(e.firstIn) ? e.firstIn : [], firstFor: Array.isArray(e.firstFor) ? e.firstFor : [], draft: !!e.draft, years: R.st.year });
   }
   return out;
 }
@@ -45,7 +48,7 @@ export const population = entries => builtAttempts().concat(ledgerAttempts(entri
 
 /* the census. atts in the order kept (built, the ledger's, then yours: a tie stays with the earlier) */
 export function census(atts) {
-  const at = A.NEEDS.map(() => new Map()), champ = A.NEEDS.map(() => [null, null, null, null, null]), tried = new Set();
+  const at = A.NEEDS.map(() => new Map()), champ = A.NEEDS.map(() => [null, null, null, null, null]), tried = new Set(), beat = new Set();
   let wins = 0;
   for (const a of atts) {
     const sc = A.scoreOf(a.st), d = A.novelty(a.g); a.sc = sc; tried.add(a.key);
@@ -56,10 +59,10 @@ export function census(atts) {
       if (!cur || a.mine || (!cur.a.mine && sc[n].now > cur.now)) at[ni].set(a.key, { a, now: sc[n].now, could: sc[n].could });
       if (sc[n].wins && d > 0) won = true;
     });
-    if (won) wins++;
+    if (won) { wins++; beat.add(a.key); }
   }
   A.NEEDS.forEach((n, ni) => at[ni].forEach((e, key) => { const d = A.novelty(e.a.g), c = champ[ni][d]; if (!c || e.now > c.now) champ[ni][d] = { key, need: n, d, now: e.now, a: e.a }; }));
-  return { at, champ, tried: tried.size, wins };
+  return { at, champ, tried: tried.size, wins, beat: beat.size };
 }
 /* every niche's champion away from today's computer (today's own row has one recipe: nothing to hold) */
 export const champions = cen => cen.champ.flatMap(row => row.filter((c, d) => c && d > 0));
@@ -82,4 +85,29 @@ export function since(prev, atts, cen) {
     if (c && d > 0 && !c.a.mine && typeof was === 'string' && was !== holderOf(c.a)) deposed.push({ need: A.NEEDS[ni], d, was, now: c.a });
   }));
   return { first: false, at: typeof prev.at === 'string' ? prev.at : null, fresh, deposed };
+}
+
+/* the field in one line, for the first page (#480): how many of the recipes have been tried (built or attempted) and how
+   many beat today's computer in some niche, in the current season */
+export function summary(entries) { const c = census(population(entries)); return { tried: c.tried, beat: c.beat, of: A.RECIPES, season: A.VERSION }; }
+
+/* the closed seasons' champions, as history (src/data/field.js PAST, written when each season closed): the season, the
+   niche (a need at a distance from today's computer), the entry or built recipe that held it, how far it had come.
+   Never deleted: a champion of season 1 stays one */
+export function pastChampions(past = PAST) {
+  const out = [];
+  for (const v of Object.keys(past || {}).map(Number).filter(Number.isInteger).sort((a, b) => a - b)) {
+    const R = past[v]; if (!R || !Array.isArray(R.champ)) continue;
+    for (const c of R.champ) if (c && A.NEEDS.includes(c.need) && Number.isInteger(c.d) && c.d > 0 && typeof c.id === 'string') out.push({ season: v, need: c.need, d: c.d, id: c.id, built: !!c.built, who: typeof c.who === 'string' ? c.who : '', now: typeof c.now === 'number' ? c.now : null, closed: R.closed || null });
+  }
+  return out;
+}
+/* a closed season's record, as scripts/season.mjs writes it into PAST: every scored attempt's facts and credit, and
+   each niche's champion, from the settled ledger W at the season's end */
+export function seasonRecord(W, closed) {
+  const L = (W.arch || []).map(id => W.byId[id]), facts = {};
+  L.forEach(e => { facts[e.id] = Object.assign({}, e.facts, { state: e.state, firstTry: !!e.firstTry, firstIn: (e.firstIn || []).slice() }); });
+  const cen = census(population(L));
+  const champ = champions(cen).map(c => ({ need: c.need, d: c.d, id: c.a.id, built: !!c.a.built, who: c.a.built ? '' : c.a.who, now: Math.round(c.now * 1000) / 1000 }));
+  return { closed: closed || null, facts, champ };
 }

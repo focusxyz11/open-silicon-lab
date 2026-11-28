@@ -6,6 +6,10 @@
    knows the loop alone (src/v2/loop.js). */
 export * as Game from './game.js';
 export { useLedger, reportsAt, SAYS, PLACE } from '../engines/ledger.js';
+import { settled } from '../engines/ledger.js';
+import { summary } from '../engines/population.js';
+/* the field of every attempt, in one line for the first page (#480): the current season's scored attempts */
+export const fieldSummary = () => { const W = settled(); return summary((W.arch || []).map(id => W.byId[id])); };
 export { childrenOf } from '../engines/build.js';
 export { model as chipModel } from '../engines/chip.js';
 export { EXPERIMENTS, stateOf } from '../engines/experiments.js';
