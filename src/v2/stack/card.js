@@ -161,6 +161,8 @@ export function wear(V, host, view, o = {}) {
       fr.level(k);
       /* reached from a challenge of Grow an architecture: its Do, at once */
       if (k === 'stack' && view.mine() && toGrow()) doFace();
+      /* reached out and up from the dive's chip: what the rung is, first; its controls one tap away */
+      else if (isRung(k) && view.rose && view.rose()) { view.ctl.remove(); fr.look(); if (el.peekDown) el.peekDown(); }
       /* a rung opened is played: its controls in hand. Leaving it, back to Look */
       else if (isRung(k) && view.mine() && (!isRung(was) || fr.mode() === 'do')) doFace();
       /* out on the field, every attempt: no question opened, the caption says where you stand */

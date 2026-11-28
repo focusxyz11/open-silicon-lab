@@ -68,3 +68,29 @@ test('the lattice\'s words are whole, and say no number no fact holds', () => {
   const bad = Object.entries(EN).filter(([k]) => k.startsWith('page.lat.')).flatMap(([k, v]) => (String(v).match(/\d[\d,.]*/g) || []).filter(n => !held.has(n)).map(n => k + ': ' + n));
   assert.deepEqual(bad, []);
 });
+
+/* one ladder (#450, docs/PATH.md "How it joins the lab"): the lattice is not a picture of its own but an arrangement of
+   Your stack's ladder. Its layers are the stack's rungs, drawn as plates from the mind down to the atom, each opening
+   its rung; silicon, the stack's matter, stands beside them as the spine and every other matter is a fork of it; and
+   every cell opens the rung of its row */
+test('the lattice is an arrangement of your stack\'s ladder: every layer and every cell opens its rung, silicon the spine', async () => {
+  const { useTexts } = await import('../src/core/i18n.js'); useTexts(EN, 'en');
+  const { latticeHtml } = await import('../src/v2/lattice.js');
+  const { RUNGS, LAYER } = await import('../src/data/path.js');
+  assert.deepEqual(RUNGS.map(r => LAYER[r]), LAYERS, 'the layers, from the bottom up, are the rungs, from the atom up');
+  assert.equal(MATTERS[0], 'silicon', 'silicon stands next to the rungs, as the spine');
+  const h = latticeHtml({ path: null, matter: 'silicon', FACT, been: {}, chOf: id => CHALLENGES.find(c => c.id === id) || null, titleOf: c => c.id, doHref: c => '#/do/' + c.id, isDone: () => false, levelHref: (p, d) => '#/dive/' + d, proposals: [] });
+  /* the plates, top down: mind to atom, each a way onto its rung, named as the stack names it */
+  const plates = [...h.matchAll(/<a class="lat-lh" data-l="(\w+)" data-rung="(\w+)" href="([^"]+)"[^>]*><span class="lat-plate"><b>([^<]+)<\/b>/g)];
+  assert.deepEqual(plates.map(m => m[2]), RUNGS.slice().reverse(), 'one plate per rung, from the mind down');
+  for (const [, l, r, href, nm] of plates) { assert.equal(LAYER[r], l); assert.equal(href, '#/stack/' + r); assert.equal(nm, r === 'machine' ? EN['page.lat.machine'] : EN['depth.' + r + '.name']); }
+  /* every cell carries its row's rung */
+  const rows = h.split('<a class="lat-lh"').slice(1);
+  assert.equal(rows.length, LAYERS.length);
+  rows.forEach((row, i) => { const r = plates[i][2], tags = [...row.matchAll(/<a class="lat-rt" href="([^"]+)"/g)].map(m => m[1]);
+    assert.equal(tags.length, MATTERS.length, r + ': every cell opens its rung'); assert.ok(tags.every(x => x === '#/stack/' + r), r); });
+  /* silicon the spine, the others its forks: said once each at the head of its column */
+  const heads = [...h.matchAll(/<div class="lat-mh[^"]*" data-m="(\w+)"><span class="lat-sp">([^<]+)<\/span>/g)];
+  assert.deepEqual(heads.map(m => m[1]), MATTERS);
+  heads.forEach(([, m, w]) => assert.equal(w, EN[m === 'silicon' ? 'page.lat.spine' : 'page.lat.fork'], m));
+});
