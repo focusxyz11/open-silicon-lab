@@ -73,7 +73,7 @@ export function createStudio(canvas, labelsEl, o) {
   /* fly to a level (its target), or cut there with reduced motion or when asked */
   function go(level, jump) {
     if (!P) return Promise.resolve();
-    const to = fit(P.targets[LEVELS.includes(level) ? level : 'chip']);
+    const LV = P.levels || LEVELS, to = fit(P.targets[LV.includes(level) ? level : LV[0]]);
     if (jump || (o.still && o.still()) || !W) { fly = null; cam = to; draw(); return Promise.resolve(); }
     const a = centre(cam), b = centre(to), far = Math.abs(Math.log(b.s / a.s));
     return new Promise(res => { fly = { a, b, to, t0: performance.now(), ms: Math.min(1350, 900 * (1 + far / 12)), done: res }; tell(); kick(); });
@@ -94,16 +94,16 @@ export function createStudio(canvas, labelsEl, o) {
   const up = e => { if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = 0;
     /* a cell dragged onto another swaps with it (#508) */
     if (dragCell) { const a = dragCell, b = cellAt(e.clientX, e.clientY); dragCell = null; canvas.dataset.drag = ''; if (moved > 4) { if (b && b !== a) o.swap(a, b); return; } }
-    if (moved <= 4 && ptrs.size === 0 && P) { const i = LEVELS.indexOf(canvas.dataset.level); if (i >= 0 && i < LEVELS.length - 1 && o.tap) o.tap(LEVELS[i + 1]); } };
+    if (moved <= 4 && ptrs.size === 0 && P) { const LV = P.levels || LEVELS, i = LV.indexOf(canvas.dataset.level); if (i >= 0 && i < LV.length - 1 && o.tap) o.tap(LV[i + 1]); } };
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', e => { ptrs.delete(e.pointerId); pinch = 0; });
 
   /* day and night change the palette */
   const mo = new MutationObserver(() => { C = null; draw(); }); mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   return {
-    show(record, level, jump, extra) { shown = true; P = Object.assign(planOf(record), extra || {}); C = null; resize(); return go(level, jump || !lastLv); },
+    show(record, level, jump, extra) { shown = true; P = Object.assign(planOf(record, extra && extra.made), extra || {}); C = null; resize(); return go(level, jump || !lastLv); },
     /* the record changed (a gene, a design): drawn again where the camera is */
-    update(record, extra) { P = Object.assign(planOf(record), extra || {}); draw(); },
+    update(record, extra) { P = Object.assign(planOf(record, extra && extra.made), extra || {}); draw(); },
     /* what a session adds to the drawing: the coverage map, the wire once settled */
     extra(x) { if (P) { Object.assign(P, x); draw(); } },
     go,

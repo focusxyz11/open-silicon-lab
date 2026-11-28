@@ -20,6 +20,8 @@ import { sizeOf } from '../../data/atlas.js';
 import { V, $, showStage, esc } from '../shell.js';
 
 export const STUDIO_LEVELS = ['chip', 'block', 'gate', 'switch'];
+/* inside a station of the line (#512): the station (its machine and your wafer), then your die as made, down to a switch */
+export const FAB_LEVELS = ['station', 'chip', 'block', 'gate', 'switch'], FAB_STEPS = ['crystal', 'deposit', 'print', 'etch', 'implant', 'wires', 'test'];
 /* Arrange (#507): the recipe's shape and where it computes, four options each, set here and kept in your stack */
 export const ARRANGE = ['shape', 'where'];
 /* the record of your chip now, shared with the line (src/v2/studio/now.js) */
@@ -37,7 +39,7 @@ function inset() {
   return I;
 }
 export function create() {
-  let view = null, viewP = null, rec = null, lv = 'chip';
+  let view = null, viewP = null, rec = null, lv = 'chip', fab = null;
   /* the session's checks of the block (#508): the states tested and what they found, the wire once settled */
   let cover = null, settled = null, settling = 0, runs = 0;
   /* an agent's proposal waiting for the person (#510): shown, never applied until Take it */
@@ -45,11 +47,11 @@ export function create() {
   const extra = () => ({ cover, settled });
   const ensure = () => viewP || (viewP = import('../studio/view.js').then(m => {
     view = m.createStudio($('studioCanvas'), $('studioLabels'), { words: t, mark, still, inset,
-      level: (l, pos) => { if (V.swFrame) { V.swFrame.rail(l, null, pos); if (l !== lv) { lv = l; V.swFrame.level(l); history.replaceState(null, '', '#/studio/' + l); V.here(); if (V.swFrame.mode() === 'look') drawCard(); } } },
-      tap: l => go(l), swap: (a, b) => placeTo(PL.swapOf(B(), placeNow(), +a.slice(1), +b.slice(1))) });
+      level: (l, pos) => { if (V.swFrame) { V.swFrame.rail(l, null, pos); if (l !== lv) { lv = l; V.swFrame.level(l === 'station' ? null : l); history.replaceState(null, '', fab ? '#/fab/' + fab + '/' + l : '#/studio/' + l); V.here(); if (V.swFrame.mode() === 'look') (fab ? drawFabCard : drawCard)(); } } },
+      tap: l => go(l), swap: (a, b) => fab ? null : placeTo(PL.swapOf(B(), placeNow(), +a.slice(1), +b.slice(1))) });
     return view;
   }));
-  const go = l => { if (!view || !STUDIO_LEVELS.includes(l)) return; view.go(l); };
+  const go = l => { if (!view || !(fab ? FAB_LEVELS : STUDIO_LEVELS).includes(l)) return; view.go(l); };
   /* the card: where you are in one line, then in, out and along */
   function drawCard() {
     if (!V.swFrame || !rec) return;
@@ -80,6 +82,7 @@ export function create() {
       D.broken === 'empty' || D.broken === 'design' ? '<a class="chipb" href="#/bench/logic">' + esc(t('sd.toBench')) + '</a>' : ''));
   }
   function showStudio(level, from) {
+    fab = null;
     V.hideAll();
     $('studioCanvas').hidden = $('studioLabels').hidden = false; V.sui.hidden = false; showStage(true); document.body.classList.add('immersive');
     V.loading(true); V.lastPlace = 'studio';
@@ -105,6 +108,39 @@ export function create() {
       V.swFrame.rail(lv, null, STUDIO_LEVELS.indexOf(lv)); V.swFrame.level(lv); drawCard(); V.here();
       $('studioCanvas').focus({ preventScroll: true });
     });
+  }
+  /* ---- inside a station (#512, GUIDE.md §3): the machine at work and your wafer, then your die as made down to one
+     switch, one camera; ← → slide to the next station at the same depth, holding the part ---- */
+  function showFab(step, level, from) {
+    V.hideAll();
+    $('studioCanvas').hidden = $('studioLabels').hidden = false; V.sui.hidden = false; showStage(true); document.body.classList.add('immersive');
+    V.loading(true); V.lastPlace = 'fab';
+    const rn = V.routeN; fab = FAB_STEPS.includes(step) ? step : 'print'; lv = FAB_LEVELS.includes(level) ? level : 'station';
+    return Promise.all([V.withFrame(), ensure()]).then(([, d]) => { if (rn !== V.routeN) return;
+      rec = recordNow(); proposal = null; cover = null; settled = null;
+      V.swFrame = V.frameOf(V.sui, { up: { href: '#/line/' + fab, label: t('sd.fab.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/fab', label: t('map.fab.t') }, { href: '#/line/' + fab, label: t('depth.' + fab + '.name') }, { label: t('sd.fab.inside') }],
+        rail: { label: t('sd.fab.rail'), items: FAB_LEVELS.map(k => ({ id: k, label: k === 'station' ? t('sd.fab.station') : t('depth.' + k + '.name'), size: k === 'station' ? 0.3 : sizeOf(k) })) },
+        onRail: k => go(k), onLook: drawFabCard, scroll: true, caption: true });
+      V.sui.onclick = e => { const g = e.target.closest('[data-sdgo]'); if (g) { e.preventDefault(); go(g.dataset.sdgo); } };
+      V.loading(false); controls('');
+      V.sui.dataset.fab = fab; V.sui.dataset.broken = rec.designed.broken || '';
+      /* along from the station before (at the same level) the camera holds its depth: it opens there, framed */
+      d.show(rec, lv, true, { made: fab });
+      V.swFrame.rail(lv, null, FAB_LEVELS.indexOf(lv)); V.swFrame.level(lv === 'station' ? null : lv); drawFabCard(); V.here();
+      $('studioCanvas').focus({ preventScroll: true });
+    });
+  }
+  function drawFabCard() {
+    if (!V.swFrame || !rec || !fab) return;
+    const i = FAB_LEVELS.indexOf(lv), k = FAB_STEPS.indexOf(fab), nm = l => (l === 'station' ? t('sd.fab.station') : t('depth.' + l + '.name')), st = s => t('depth.' + s + '.name');
+    const prev = FAB_STEPS[k - 1], next = FAB_STEPS[k + 1], D = rec.designed;
+    const line = D.broken && k >= 2 ? t('sd.fab.stopped') : t('sd.fab.line.' + fab);
+    V.swFrame.dock.innerHTML = V.lineHtml(t('sd.fab.k') + ' · ' + st(fab) + (lv !== 'station' ? ' · ' + nm(lv) : ''), line, null, V.aroundRow(
+      i > 0 ? '<button type="button" class="chipb" data-out data-sdgo="' + FAB_LEVELS[i - 1] + '">↑ ' + esc(nm(FAB_LEVELS[i - 1])) + '</button>' : '',
+      i < FAB_LEVELS.length - 1 ? '<button type="button" class="chipb" data-in data-inname="' + esc(nm(FAB_LEVELS[i + 1])) + '" data-sdgo="' + FAB_LEVELS[i + 1] + '">↓ ' + esc(nm(FAB_LEVELS[i + 1])) + '</button>' : '',
+      prev ? '<a class="chipb" data-key="back" href="#/fab/' + prev + '/' + lv + '">← ' + esc(st(prev)) + '</a>' : '',
+      next ? '<a class="chipb" data-key="next" data-along data-alongname="' + esc(st(next)) + '" href="#/fab/' + next + '/' + lv + '">→ ' + esc(st(next)) + '</a>' : '<a class="chipb" data-key="next" data-along href="#/line/test">→ ' + esc(t('sd.fab.toLine')) + '</a>',
+      lv !== 'station' ? '<a class="chipb" href="#/studio/' + esc(lv) + '">' + esc(t('sd.fab.toStudio', { level: nm(lv) })) + '</a>' : ''));
   }
   /* the strip of controls over the picture, made with the frame and filled for the level in view */
   function controls(html) {
@@ -177,5 +213,5 @@ export function create() {
   /* what the checks read from the picture */
   function tellBlock() { const D = rec && rec.designed; if (!D) return; V.sui.dataset.late = D.late ? '1' : ''; V.sui.dataset.wire = D.wire ? String(Math.round(D.wire.now)) : ''; V.sui.dataset.tested = cover ? String(cover.tested.size) : '0'; V.sui.dataset.found = cover && cover.found ? '1' : ''; V.sui.dataset.settled = settled != null ? String(Math.round(settled)) : ''; }
   const hideSw = () => { $('studioCanvas').hidden = $('studioLabels').hidden = true; V.sui.hidden = true; if (view) view.hide(); };
-  Object.assign(V, { showStudio, hideSw, studioRecord: () => rec, studioLevel: () => lv });
+  Object.assign(V, { showStudio, showFab, hideSw, studioRecord: () => rec, studioLevel: () => lv, fabNow: () => (fab ? { step: fab, level: lv } : null) });
 }

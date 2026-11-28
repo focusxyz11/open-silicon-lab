@@ -44,3 +44,4 @@ export function madeDie(ctx, P, cam, o) {
   ctx.restore();
   return [];
 }
+

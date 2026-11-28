@@ -47,7 +47,7 @@ export function start() {
   V.hidePh = V.hideCa = () => {};
   waits('island', ['openMover', 'openPlace', 'drawPlace', 'openQuestion']);
   waits('frame', ['frameOf', 'withFrame', 'aroundRow', 'lineHtml', 'seekHtml', 'seekTap', 'seekWhere', 'seekLit', 'frameInset', 'askedHtml']);
-  waits('studio', ['showStudio'], true);
+  waits('studio', ['showStudio', 'showFab'], true);
   V.hideSw = () => {};
   waits('chip', ['ensureChip']); waits('chip', ['showChip'], true);
   waits('flat', ['levelsOf', 'ensureDive', 'diveInset']); waits('flat', ['openBench', 'showFlat'], true);
@@ -171,7 +171,7 @@ export function start() {
   const hudEl = $('loop');
   /* the address of what is in view now: moving inside a view (deeper, along the line) changes it too */
   const liveHash = () => !vui.hidden && V.flatKind !== 'supply' && V.WE && V.diveD >= 0 && diveId() ? (V.flatKind === 'dive' ? '#/dive/' + diveId() + (V.diveWorld !== 'datacentre' ? '/' + V.diveWorld : '') : '#/' + V.flatKind + '/' + diveId())
-    : !cui.hidden ? '#/chip/' + V.chipRow + '/build' : !pui.hidden ? '#/place/datacentre/' + V.dcLv : !fui.hidden ? '#/place/phones/' + V.phLv : !kui.hidden ? '#/place/cars/' + V.caLv : !sui.hidden ? '#/studio/' + (V.studioLevel ? V.studioLevel() : 'chip') : location.hash;
+    : !cui.hidden ? '#/chip/' + V.chipRow + '/build' : !pui.hidden ? '#/place/datacentre/' + V.dcLv : !fui.hidden ? '#/place/phones/' + V.phLv : !kui.hidden ? '#/place/cars/' + V.caLv : !sui.hidden ? (V.fabNow && V.fabNow() ? '#/fab/' + V.fabNow().step + '/' + V.fabNow().level : '#/studio/' + (V.studioLevel ? V.studioLevel() : 'chip')) : location.hash;
   /* a level dropped along at a stage where it does not exist (no gate at the Lab) is carried while you stay there (Way.carryOf) */
   const whereNow = () => { const k = partsOf(location.hash)[0], W0 = Way.whereOf(k === 'ask' || k === 'do' || k === 'supply' ? location.hash : liveHash()), W = W0.view === 'island' && V.cur && !sheet.hidden ? Way.whereOf('#/place/' + V.cur.place) : W0; if (V.alongCarry && V.alongCarry.at !== location.hash) V.alongCarry = null; return Way.carried(W, V.alongCarry); };
   /* the address always says where you are (so it can be shared, and a reload comes back here), and the loop in the
@@ -430,6 +430,7 @@ export function start() {
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
     if (k === 'studio') return ['studio', 1];
+    if (k === 'fab') return ['fab', 2];
     return k === 'board' ? ['board', 2] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
       : flownOf(p) ? [flownOf(p), 1] : ['map', 0]; };
   let shownAt = null;   /* the address of the view now made, so a question at the same level only changes the dock */
@@ -462,6 +463,7 @@ export function start() {
     if (k === 'blueprint') return showBlueprint();
     if (k === 'stack') return V.showStack(parts[1]);
     if (k === 'studio') return V.showStudio(parts[1], from);
+    if (k === 'fab') return V.showFab(parts[1], parts[2], from);
     if (k === 'board') return V.showBoard();
     if (k === 'dive') return V.showDive(parts[1], parts[2]);
     if (k === 'supply') return V.showSupply(parts[1]);

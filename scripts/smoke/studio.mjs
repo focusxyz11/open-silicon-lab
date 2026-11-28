@@ -102,6 +102,26 @@ export default async function run() {
       if (!drawn) problems.push(tag + ': at ' + st + ' your wafer does not carry your design in its state after that step');
     }
     await page.close(); }
+  /* inside a station (#512): the machine at work and your wafer with the step's figure from the record; in, one camera, to
+     your die and a switch, a cut through it at the switch; → at the switch lands on the next station's switch */
+  { const tag = 'studio: inside a station'; S.at = tag;
+    const page = await browser3d.newPage({ viewport: { width: 1280, height: 820 } });
+    page.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await page.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await page.goto(base + 'index.html#/fab/etch');
+    const opened = await page.waitForFunction(() => { const c = document.getElementById('studioCanvas'), u = document.getElementById('studioui');
+      return !u.hidden && u.dataset.fab === 'etch' && c.dataset.level === 'station' && !!document.querySelector('#studioLabels [data-part="machine"]') && !!document.querySelector('#studioLabels [data-part="figure"] .fid'); }, null, { timeout: 60000 }).then(() => true, () => false);
+    if (!opened) problems.push(tag + ': #/fab/etch does not open the etcher at work and your wafer with its marked figure');
+    await page.evaluate(() => { window.posSeen = []; const c = document.getElementById('studioCanvas'); new MutationObserver(() => window.posSeen.push(+c.dataset.pos)).observe(c, { attributes: true, attributeFilter: ['data-pos'] }); });
+    const down = await page.waitForFunction(() => { const c = document.getElementById('studioCanvas'), b = document.querySelector('#studioui .rail2 [data-rail="switch"]');
+      if (c.dataset.level !== 'switch' && !c.dataset.flying && b) b.click();
+      return c.dataset.level === 'switch' && !c.dataset.flying && location.hash === '#/fab/etch/switch' && !!document.querySelector('#studioLabels [data-part="section"]'); }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
+    if (!down) problems.push(tag + ': the camera does not reach the switch inside the station, with a cut through it');
+    else if (!(await page.evaluate(() => window.posSeen.some(p => p > 0.2 && p < 3.8)))) problems.push(tag + ': the switch is reached with a cut, not one camera');
+    const along = await page.waitForFunction(() => { if (location.hash === '#/fab/etch/switch') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      const c = document.getElementById('studioCanvas'); return location.hash === '#/fab/implant/switch' && c.dataset.level === 'switch' && document.getElementById('studioui').dataset.fab === 'implant'; }, null, { timeout: 30000, polling: 1000 }).then(() => true, () => false);
+    if (!along) problems.push(tag + ': → at the etcher\'s switch does not land on the implanter\'s switch');
+    await page.close(); }
   /* a design that does not do its job: the die says so, and the line will not make it */
   { const tag = 'studio: a broken design'; S.at = tag;
     const page = await browser3d.newPage({ viewport: { width: 1280, height: 820 }, reducedMotion: 'reduce' });
