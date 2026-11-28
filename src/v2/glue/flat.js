@@ -77,8 +77,8 @@ export function create() {
        step shows, if any (src/engines/way.js, steps and levels) */
     if (rowsOf(V.flatKind)) { const lv = Way.levelOfStep(V.flatKind, id), R = Way.levelsOfSteps(V.flatKind); V.diveFrame.steps(id); V.diveFrame.rail(lv, lv ? R.indexOf(lv) / (R.length - 1) : 0); }
     else V.diveFrame.rail(id, L.indexOf(id) / (L.length - 1));
-    /* the bench's way up goes back to its corner of the studio, out of its screen */
-    if (V.flatKind === 'bench') { const up = V.vui.querySelector('.homebtn'), n = Way.stepsOf('bench').indexOf(id) + 1; if (up && n > 0) up.setAttribute('href', '#/place/studio/' + n); }
+    /* the bench's way up goes back to the die as designed, at the level the step shows (#506) */
+    if (V.flatKind === 'bench') { const up = V.vui.querySelector('.homebtn'); if (up) up.setAttribute('href', '#/studio/' + (Way.levelOfStep('bench', id) || 'chip')); }
     V.diveFrame.level(id); diveNotes(); V.here();
     if (V.diveFrame.mode() === 'look' && !V.benchCh) drawDive();
   }

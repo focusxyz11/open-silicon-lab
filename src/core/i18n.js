@@ -43,7 +43,7 @@ export const AREAS = {
     'hear',
     /* how true is each thing, one mark everywhere (#325, src/v2/fid.js) */
     'fid'],
-  place: ['place', 'game', 'grow', 'look', 'dial', 'carry', 'door', 'around', 'follow', 'room', 'studio',
+  place: ['place', 'game', 'grow', 'look', 'dial', 'carry', 'door', 'around', 'follow', 'studio',
     'board', 'story', 'chipx', 'lab', 'society', 'fab', 'whatif',
     /* your chip's settings and the life it lives at a place: dials on the island, the challenges and the reading pages */
     'chip', 'life'],
@@ -70,6 +70,7 @@ export const AREAS = {
   /* Hold, the first page (src/v2/hold.js) */
   hold: ['hd'],
   stack: ['sk'],
+  studio: ['sd'],
   /* what more than one page says, written once: the four walls (Hold and the blueprint) and the needs a machine is made
      for (Hold and the machines page); the first page loads it when it is first touched, as it does the blueprint's */
   shared: ['wall', 'machines.need'],

@@ -43,7 +43,7 @@ export const VIEW_PARTS = {
   /* the flight through a car (src/v2/car3d-flight.js) */
   car: { sensors: 'car.sensors', wheels: 'car.wheels', battery: 'car.battery', motor: 'car.motor', controllers: 'car.controllers', wiring: 'car.wiring',
     case: 'ecu.case', connector: 'ecu.connector', mcu: 'ecu.mcu', drivers: 'ecu.drivers', cores: 'mcu.cores', flash: 'mcu.flash', sram: 'mcu.sram', periph: 'mcu.periph' },
-  /* the studio walked inside (src/v2/studio3d.js): the screen at each corner, where its bench opens (src/data/studio.js) */
+  /* the studio's room on the island: the screen at each corner, where its bench opens (src/data/studio.js) */
   studio: { notes: 'need.notes', code: 'logic.desk', results: 'check.wall', gates: 'gates.drawing', screentable: 'layout.screentable', lighttable: 'masks.lighttable' },
   board: { chip: 'board.bigchip', die: 'pkg.die', hbm: 'pkg.memory', vrm: 'board.power', links: 'board.connectors' },
   chip: { lid: 'pkg.lid', bumps: 'pkg.bumps', wires: 'block.wires', contacts: 'gate.metal', gates: 'gate.gates', sheets: 'switch.channel', wells: 'atom.dopant', silicon: 'atom.lattice' },

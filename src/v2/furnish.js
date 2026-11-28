@@ -1,6 +1,6 @@
-/* Furnishing, drawn small but whole, shared by the island (src/v2/map3d.js) and the studio walked inside
-   (src/v2/studio3d.js), so a room seen from outside and the same room walked through are one room: the same desks,
-   screens, chairs, plants and people, from one plan (src/data/studio.js).
+/* Furnishing, drawn small but whole, for the island (src/v2/map3d.js): its rooms' desks, screens, chairs, plants and
+   people, from one plan (src/data/studio.js). The studio walked inside that shared it retired for the die as designed
+   (#506, src/v2/studio/); the island's room goes with the studio's door (#514).
 
    Screens show the work in shapes, never words (words are HTML over the scene): code as indented lines, a simulation
    as waveforms, the circuit as gates, the layout as its two metals, a rack's front as its servers, a mask as its

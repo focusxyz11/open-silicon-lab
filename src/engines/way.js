@@ -58,6 +58,8 @@ export function doHome(ch) {
 /* the cell an address shows: its view, place, level and stage of the loop. Your stack's rungs turn their faces along
    (#/stack/<face>/<rung>, as used if none is said) */
 const FACE = /^(design|make|use)$/;
+/* the levels the studio draws (#506) */
+export const STUDIO_LEVELS = ['chip', 'block', 'gate', 'switch'];
 export function whereOf(hash) {
   const p = parts(hash), k = p[0] || 'island';
   if (k === 'ask') return Object.assign(whereOf(viewOfDepth(p[2] || 'chip')), { ask: p[1] || null });
@@ -74,8 +76,7 @@ export function whereOf(hash) {
   if (k === 'supply') return cell('supply', 'port', 'ship');
   if (k === 'build') return cell('page', 'lab');
   if (k === 'place' && p[1] === 'datacentre' && p[2] != null && p[2] !== 'inside') return cell('flight', 'datacentre', FLIGHT[+p[2]] || 'building');
-  /* the studio walked inside (src/v2/studio3d.js): 0 is outside over the opened floor, then the corners, one per step */
-  if (k === 'place' && p[1] === 'studio' && /^\d+$/.test(p[2] || '')) { const step = stepsOf('bench')[+p[2] - 1] || null; return cell('room', 'studio', step, null, { step, size: levelOfStep('bench', step) }); }
+  if (k === 'studio') return cell('studio', 'studio', STUDIO_LEVELS.includes(p[1]) ? p[1] : 'chip', 'design');
   if (k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '')) return cell('flight', 'phones', PHONE_FLIGHT[+p[2]] || 'phone');
   if (k === 'place' && p[1] === 'cars' && /^\d+$/.test(p[2] || '')) return cell('flight', 'cars', CAR_FLIGHT[+p[2]] || 'car');
   if (k === 'place' && PLACES.includes(p[1])) return cell('island', p[1]);
@@ -130,6 +131,7 @@ export function alongTo(where, stage) {
      level carried past a stage where it does not exist (below, carryOf) is picked up again at the next stage that has it */
   const rows = ROWS.includes(W.view), tw = rows ? (W.size ? twinOf(W.size) : null) : W.level && W.view !== 'island' ? twinOf(W.level === 'die' ? 'chip' : W.level) : W.view === 'island' && W.carry ? twinOf(W.carry) : null;
   if (tw) {
+    if (stage === 'design' && STUDIO_LEVELS.includes(tw.used)) return '#/studio/' + tw.used;
     if (stage === 'design' && tw.designed) return '#/bench/' + tw.designed;
     /* a whole chip is made as a die on its wafer, and closed in its package on the way out; the levels inside it are
        made layer by layer, and the stack shows each as made, in the same row (the dive is the only way down) */
@@ -157,7 +159,7 @@ export function seamOf(from, to) {
 /* whether that move holds the depth you are at (the bar says so before you take it) */
 /* From a row of steps, a move that walks the same row to another step (print → test on the line) holds no level, unless
    the step it lands on shows the same one: Around here offers a level at another stage only where it exists there. */
-const ROWS = ['bench', 'line', 'room'];
+const ROWS = ['bench', 'line'];
 const sizeOfCell = W => (ROWS.includes(W.view) ? W.size : W.level === 'die' ? 'chip' : W.level);
 export const holds = (where, stage) => { const h = alongTo(where, stage); if (!h || h.startsWith('#/place/')) return false;
   if (!where || !ROWS.includes(where.view)) return true;

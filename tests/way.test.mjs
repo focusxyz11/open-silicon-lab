@@ -30,7 +30,7 @@ test('along lands in the stage asked, from anywhere', () => {
   for (const h of from) for (const s of STAGES) {
     const W = whereOf(h), to = alongTo(W, s);
     if (to == null) { assert.equal(W.stage, s, h + ' → ' + s + ' goes nowhere'); continue; }
-    assert.match(to, /^#\/(place|bench|line|dive|chip)\//, h + ' → ' + s + ': ' + to);
+    assert.match(to, /^#\/(place|bench|line|dive|chip|studio)\//, h + ' → ' + s + ': ' + to);
     assert.equal(whereOf(to).stage, s, h + ' → ' + s + ' lands at ' + to);
   }
 });
@@ -40,7 +40,9 @@ test('along holds the depth: a level seen as used, made and designed is the same
     const used = whereOf('#/dive/' + tw.used);
     const made = alongTo(used, 'make'); assert.ok(holds(used, 'make'), tw.used + ' is not held at the factory');
     assert.equal(alongTo(whereOf(made), 'use'), '#/dive/' + tw.used, tw.used + ' made → used');
-    if (tw.designed) { const des = alongTo(used, 'design'); assert.equal(des, '#/bench/' + tw.designed); assert.equal(alongTo(whereOf(des), 'use'), '#/dive/' + tw.used, tw.used + ' designed → used'); }
+    /* as designed, the studio draws the level on your die (#506); the atom is chosen, not drawn */
+    if (tw.used !== 'atom') { const des = alongTo(used, 'design'); assert.equal(des, '#/studio/' + tw.used); assert.equal(alongTo(whereOf(des), 'use'), '#/dive/' + tw.used, tw.used + ' designed → used');
+      assert.equal(alongTo(whereOf(alongTo(whereOf(des), 'make')), 'design'), des, tw.used + ' designed → made → designed'); }
     else assert.ok(!holds(used, 'design'));
   }
   /* on the line, testing and shipping are stations of the same walk */
@@ -71,7 +73,7 @@ test('one way down through a chip: the dive is Use, the stack is the same levels
   assert.equal(alongTo(whereOf('#/dive/chip'), 'make'), '#/dive/die/made'); assert.equal(alongTo(whereOf('#/chip/0/build'), 'use'), '#/dive/chip');
   /* designed → made holds the level too: the gates you wrote, as printed */
   assert.equal(alongTo(whereOf('#/bench/gates'), 'make'), '#/chip/2/build'); assert.equal(alongTo(whereOf('#/bench/layout'), 'make'), '#/chip/1/build');
-  assert.equal(alongTo(whereOf('#/chip/2/build'), 'design'), '#/bench/gates');
+  assert.equal(alongTo(whereOf('#/chip/2/build'), 'design'), '#/studio/gate');
 });
 
 test('a challenge is played where its level is shown, or met at its place', () => {
@@ -134,17 +136,20 @@ test('Around here offers a level at another stage only where the step shows one'
   for (const s of ['slice', 'clean', 'deposit', 'test', 'ship']) for (const st of STAGES) assert.ok(!holds(whereOf('#/line/' + s), st), s + ' → ' + st);
 });
 
-test('the studio walked inside is the same row of steps: outside holds nothing, each corner holds what its step holds', async () => {
-  const { stepsOf, levelOfStep } = await import('../src/engines/way.js');
-  const out = whereOf('#/place/studio/0');
-  assert.equal(out.view, 'room'); assert.equal(out.stage, 'design'); assert.equal(out.step, null); assert.equal(out.size, null);
-  for (const st of STAGES) assert.ok(!holds(out, st), 'outside the studio holds a level at ' + st);
+test('the studio is your chip as designed: four levels, each held as made and as used (#506)', async () => {
+  const { STUDIO_LEVELS, levelOfStep } = await import('../src/engines/way.js');
+  assert.deepEqual(STUDIO_LEVELS, ['chip', 'block', 'gate', 'switch']);
+  assert.equal(whereOf('#/studio').level, 'chip', 'the studio opens on the die');
+  assert.equal(whereOf('#/studio/atom').level, 'chip', 'a level it does not draw is the die');
   assert.equal(levelOfStep('bench', null), null); assert.equal(levelOfStep('bench', undefined), null);
-  stepsOf('bench').forEach((s, i) => { const W = whereOf('#/place/studio/' + (i + 1)), B = whereOf('#/bench/' + s);
-    assert.equal(W.step, s); assert.equal(W.size, B.size, s);
-    for (const st of STAGES) { assert.equal(holds(W, st), holds(B, st), s + ' → ' + st); if (holds(W, st)) assert.equal(alongTo(W, st), alongTo(B, st)); } });
-  /* and along from any corner lands in the stage asked */
-  for (let i = 0; i <= 6; i++) for (const s of STAGES) { const W = whereOf('#/place/studio/' + i), to = alongTo(W, s); if (to) assert.equal(whereOf(to).stage, s, i + ' → ' + s); }
+  for (const lv of STUDIO_LEVELS) {
+    const W = whereOf('#/studio/' + lv);
+    assert.equal(W.view, 'studio'); assert.equal(W.stage, 'design'); assert.equal(W.place, 'studio'); assert.equal(W.level, lv);
+    assert.equal(alongTo(W, 'design'), null, lv + ' is already Design');
+    for (const st of ['make', 'use']) assert.ok(holds(W, st), lv + ' is held at ' + st);
+    assert.equal(alongTo(W, 'use'), '#/dive/' + lv);
+    for (const s of STAGES) { const to = alongTo(W, s); if (to) assert.equal(whereOf(to).stage, s, lv + ' → ' + s); }
+  }
 });
 
 test('along keeps the level round the loop: dropped at Open, where it does not exist, it is picked up at the next stage that has it', async () => {
@@ -154,7 +159,7 @@ test('along keeps the level round the loop: dropped at Open, where it does not e
     for (let i = 0; i < n; i++) { const s = alongStep(W, dir); to.push(s.to); W = Object.assign(whereOf(s.to), s.carry ? { carry: s.carry } : {}); }
     return to; };
   /* Use → Open (the Lab: no gate there) → Design: the gate as you designed it */
-  assert.deepEqual(walk('#/dive/gate', 1, 2), ['#/place/lab', '#/bench/gates']);
+  assert.deepEqual(walk('#/dive/gate', 1, 2), ['#/place/lab', '#/studio/gate']);
   assert.equal(carryOf(whereOf('#/dive/gate'), '#/place/lab'), 'gate');
   /* and back again: ← from the Lab returns to the gate in use */
   assert.equal(alongTo(Object.assign(whereOf('#/place/lab'), { carry: 'gate' }), 'use'), '#/dive/gate');
@@ -163,7 +168,7 @@ test('along keeps the level round the loop: dropped at Open, where it does not e
   /* every level with a twin goes the whole way round and comes back to itself, held wherever it exists */
   for (const tw of TWINS) { const round = walk('#/dive/' + tw.used, 1, STAGES.length);
     assert.equal(round.at(-1), '#/dive/' + tw.used, tw.used + ' round the loop: ' + round.join(' → '));
-    if (tw.designed) assert.ok(round.includes('#/bench/' + tw.designed), tw.used + ' is not met as designed'); }
+    if (tw.used !== 'atom') assert.ok(round.includes('#/studio/' + tw.used), tw.used + ' is not met as designed'); }
   /* a move that lands on a level carries nothing (the address says it), and a step that shows none has nothing to carry */
   assert.equal(carryOf(whereOf('#/dive/gate'), '#/bench/gates'), null);
   assert.equal(carryOf(whereOf('#/bench/check'), '#/place/fab'), null);
