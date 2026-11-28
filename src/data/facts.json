@@ -2692,6 +2692,15 @@
    "status": "new",
    "url": "https://www.livescience.com/technology/electronics/new-lighttok-chip-converts-light-directly-into-tokens-for-ai-slashing-energy-use-in-drones-and-other-autonomous-machines",
    "value": "A 32 × 32 sensor that turns light into AI tokens on the chip",
+   "id": "tt-roads",
+   "topic": "tiny",
+   "detail": "After Efabless closed (efabless-close), Tiny Tapeout runs on several foundries: SkyWater 130 through ChipFoundry (TTSKY26b on the CI2605 shuttle, started by Efabless's founders), IHP's SG13G2 (TTIHP26b: 123 designs, closed 21 September 2026) and GlobalFoundries' GF180MCU through wafer.space (its first GF180 tapeout confirmed functional). Its plan for 2026 is quarterly shuttles on whichever foundry is ready.",
+   "kind": "reported",
+   "label": "The roads to real silicon",
+   "source": "Tiny Tapeout",
+   "status": "new",
+   "url": "https://www.tinytapeout.com/runs",
+   "value": "Three roads after Efabless: SkyWater 130 (ChipFoundry), IHP SG13G2, GF180 (wafer.space)",
    "verified": "2026-11-28"
   }
  ],
