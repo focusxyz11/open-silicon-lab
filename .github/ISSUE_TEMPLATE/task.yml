@@ -15,6 +15,20 @@ body:
     attributes:
       label: Where it lives
       description: The place and level, or the files, for example "the factory, level print; src/v2/labs/".
+  - type: input
+    id: touches
+    attributes:
+      label: Touches
+      description: The files or views this will change, for example "src/v2/labs/vote.js, src/engines/redundancy.js" or "the vote lab". The nightly build reads it to tell which tasks can be built side by side; a task that changes a shared file (the shell, base.css, frame.css, src/core/) is built on its own.
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      description: Small is one view or lab, no shared file, and a clear spec; the nightly build gives it a lighter helper. Anything else is normal.
+      options:
+        - normal
+        - small
+      default: 0
   - type: textarea
     id: material
     attributes:
