@@ -41,7 +41,7 @@ export function createStudio(canvas, labelsEl, o) {
   /* the level and the position along the levels, told when they change; the canvas says them for checks */
   function tell() {
     if (!P) return;
-    const L = levelAt(P, cam.s, Math.max(80, W - inset().l - inset().r)), pos = Math.round(L.pos * 100) / 100;
+    const L = levelAt(P, cam.s, l => fit(P.targets[l]).s), pos = Math.round(L.pos * 100) / 100;
     canvas.dataset.level = L.level; canvas.dataset.pos = pos.toFixed(2); canvas.dataset.flying = fly ? '1' : '';
     if (L.level !== lastLv || pos !== lastPos) { lastLv = L.level; lastPos = pos; if (o.level) o.level(L.level, L.pos); }
   }
@@ -80,14 +80,18 @@ export function createStudio(canvas, labelsEl, o) {
   /* the pointer: the wheel and a pinch zoom about the pointer, a drag pans, a tap goes one level in */
   const zoomAt = (x, y, k) => { fly = null; const s = Math.max(0.02, Math.min(4000, cam.s * k)); cam = { ox: x - (x - cam.ox) * s / cam.s, oy: y - (y - cam.oy) * s / cam.s, s }; kick(); };
   canvas.addEventListener('wheel', e => { if (!shown) return; e.preventDefault(); const r = canvas.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-Math.max(-60, Math.min(60, e.deltaY)) * 0.004)); }, { passive: false });
-  const ptrs = new Map(); let moved = 0, pinch = 0;
-  canvas.addEventListener('pointerdown', e => { if (!shown) return; canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); moved = 0; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); } });
+  const ptrs = new Map(); let moved = 0, pinch = 0, dragCell = null;
+  /* the cell under a point of the view, at the block and closer, where cells are drawn */
+  const cellAt = (cx, cy) => { if (!P || !['block', 'gate', 'switch'].includes(canvas.dataset.level)) return null; const r = canvas.getBoundingClientRect(), x = (cx - r.left - cam.ox) / cam.s, y = (cy - r.top - cam.oy) / cam.s; const c = P.cells.find(q => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); return c ? c.id : null; };
+  canvas.addEventListener('pointerdown', e => { if (!shown) return; canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); moved = 0; dragCell = o.swap && ptrs.size === 1 ? cellAt(e.clientX, e.clientY) : null; canvas.dataset.drag = dragCell || ''; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); } });
   canvas.addEventListener('pointermove', e => {
     if (!ptrs.has(e.pointerId)) return; const p = ptrs.get(e.pointerId), dx = e.clientX - p[0], dy = e.clientY - p[1]; ptrs.set(e.pointerId, [e.clientX, e.clientY]);
     if (ptrs.size === 2) { const [a, b] = [...ptrs.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), r = canvas.getBoundingClientRect(); if (pinch) zoomAt((a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top, d / pinch); pinch = d; moved += 10; return; }
-    moved += Math.abs(dx) + Math.abs(dy); if (moved > 4) { fly = null; cam = { ox: cam.ox + dx, oy: cam.oy + dy, s: cam.s }; kick(); }
+    moved += Math.abs(dx) + Math.abs(dy); if (dragCell) return; if (moved > 4) { fly = null; cam = { ox: cam.ox + dx, oy: cam.oy + dy, s: cam.s }; kick(); }
   });
   const up = e => { if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = 0;
+    /* a cell dragged onto another swaps with it (#508) */
+    if (dragCell) { const a = dragCell, b = cellAt(e.clientX, e.clientY); dragCell = null; canvas.dataset.drag = ''; if (moved > 4) { if (b && b !== a) o.swap(a, b); return; } }
     if (moved <= 4 && ptrs.size === 0 && P) { const i = LEVELS.indexOf(canvas.dataset.level); if (i >= 0 && i < LEVELS.length - 1 && o.tap) o.tap(LEVELS[i + 1]); } };
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', e => { ptrs.delete(e.pointerId); pinch = 0; });
 
@@ -95,9 +99,11 @@ export function createStudio(canvas, labelsEl, o) {
   const mo = new MutationObserver(() => { C = null; draw(); }); mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   return {
-    show(record, level, jump) { shown = true; P = planOf(record); C = null; resize(); return go(level, jump || !lastLv); },
+    show(record, level, jump, extra) { shown = true; P = Object.assign(planOf(record), extra || {}); C = null; resize(); return go(level, jump || !lastLv); },
     /* the record changed (a gene, a design): drawn again where the camera is */
-    update(record) { P = planOf(record); draw(); },
+    update(record, extra) { P = Object.assign(planOf(record), extra || {}); draw(); },
+    /* what a session adds to the drawing: the coverage map, the wire once settled */
+    extra(x) { if (P) { Object.assign(P, x); draw(); } },
     go,
     at: () => ({ level: canvas.dataset.level || null, pos: +canvas.dataset.pos || 0, flying: !!fly }),
     plan: () => P,

@@ -17,7 +17,7 @@
    - test: the dies of the wafer (chip.js, dieOf): how many fit, how many no speck hits, what a good one costs, and
      which of the frame's dies fail, each by its own seed.
    Package waits for its engine (#500): it keeps its place in STATIONS and has no function yet.
-   Not yet read: the design's timing (a path that misses the clock fails every die at Test; the guide's Late state). */
+   A design whose path misses its clock (the record's late, #508) is made anyway, and Test fails every die for speed. */
 import { pullRun } from './crystal.js';
 import { depoRun, isoLimit, overlay, OVERLAY_DEFAULTS } from './fabline.js';
 import { euv } from './litho.js';
@@ -52,7 +52,7 @@ const JUNCTION = once(() => implant(SETTINGS.implant)), LANDING = once(() => ove
 /* plan: { area (cm², the die your stack makes; none for the line alone), cells ([{ id, type }]), masks ({ drawn,
    total } or null), vias, broken (null, 'empty', 'design' or 'switch') } */
 export function bareChip(plan) {
-  const p = Object.assign({ area: null, cells: [], masks: null, vias: 0, broken: null }, plan || {});
+  const p = Object.assign({ area: null, cells: [], masks: null, vias: 0, broken: null, late: false }, plan || {});
   return { plan: p, done: [], stopped: null };
 }
 
@@ -105,10 +105,11 @@ export const dieAt = (area, specks, pace) => dieOf(area, specks, pace);
 function test(chip) {
   const A = chip.plan.area;
   if (!(A > 0)) return { chip: step(chip, 'test', { test: null }), report: report('test', { wrong: [{ what: 'noDie' }] }) };
-  const d = dieAt(A, chip.specks, chip.pace), good = Array.from({ length: WAFER_DIES }, (_, i) => hashOf('die' + i) < d.yield);
-  const strays = (chip.cells || []).filter(x => x.stray).length, t = { area: d.area, dies: d.dies, yield: d.yield, cost: d.cost, wafer: d.wafer, good, strays };
+  /* a design whose path misses its clock is made anyway, and every die fails Test for speed (GUIDE.md §7, Late) */
+  const late = !!chip.plan.late && !chip.stopped, d = dieAt(A, chip.specks, chip.pace), good = Array.from({ length: WAFER_DIES }, (_, i) => !late && hashOf('die' + i) < d.yield);
+  const strays = (chip.cells || []).filter(x => x.stray).length, t = { area: d.area, dies: d.dies, yield: d.yield, cost: d.cost, wafer: d.wafer, good, strays, slow: late };
   return { chip: step(chip, 'test', { test: t }),
-    report: report('test', { adds: ['test'], wrong: good.some(g => !g) ? [{ what: 'dies', n: good.filter(g => !g).length }] : [], cost: { goodDie: d.cost },
+    report: report('test', { adds: ['test'], wrong: late ? [{ what: 'speed', n: WAFER_DIES }] : good.some(g => !g) ? [{ what: 'dies', n: good.filter(g => !g).length }] : [], cost: { goodDie: d.cost },
       figures: { good: good.filter(Boolean).length, yield: d.yield, cost: d.cost }, fid: { area: IDEA('bet'), dies: C('chip'), yield: C('chip'), cost: C('chip'), good: C('chip') } }) };
 }
 

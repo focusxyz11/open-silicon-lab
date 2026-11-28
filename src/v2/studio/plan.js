@@ -69,13 +69,16 @@ export function planOf(record) {
     const r = targets[l], k = Math.min(1, targets[up].w * 0.5 / r.w);
     if (k < 1) targets[l] = { x: ax + (r.x - ax) * k, y: ay + (r.y - ay) * k, w: r.w * k, h: r.h * k };
   }
-  return { shape, where, n, layers: fp.layers, heat: (D && D.heat) || null, units, mem, memKind: M.kind, block, regs, ctl, cells, wires, pins, trips, pads: padsAt, targets, empty: !cells.length, broken: (D && D.broken) || null };
+  /* the longest path on the layout and its slack, the wire, and whether the block misses its clock (#508) */
+  const T = D && D.timing, onPath = new Set(T ? T.path : []);
+  wires.forEach(w => { w.path = !!T && onPath.has(w.to) && (w.from == null ? T.path[0] === w.to : onPath.has(w.from) && T.path.indexOf(w.from) === T.path.indexOf(w.to) - 1); });
+  return { shape, where, n, layers: fp.layers, heat: (D && D.heat) || null, timing: T || null, late: !!(D && D.late), wire: (D && D.wire) || null, fid: (D && D.fid) || {}, units, mem, memKind: M.kind, block, regs, ctl, cells, wires, pins, trips, pads: padsAt, targets, empty: !cells.length, broken: (D && D.broken) || null };
 }
 
-/* the level a scale stands at, and how far along the levels it is (0 = chip, 3 = switch), continuously: from the
-   width each level's target asks for on a view of a given width */
-export function levelAt(plan, scale, viewW) {
-  const s = LEVELS.map(l => Math.log(viewW / plan.targets[l].w)), v = Math.log(scale);
+/* the level a scale stands at, and how far along the levels it is (0 = chip, 3 = switch), continuously: from the scale
+   that frames each level's target (fit: a function of the level, or a view's width, the target framed across it) */
+export function levelAt(plan, scale, fit) {
+  const s = LEVELS.map(l => Math.log(typeof fit === 'function' ? fit(l) : fit / plan.targets[l].w)), v = Math.log(scale);
   if (v <= s[0]) return { level: 'chip', pos: 0 };
   for (let i = 1; i < s.length; i++) if (v <= s[i]) { const f = (v - s[i - 1]) / (s[i] - s[i - 1]); return { level: LEVELS[f < 0.5 ? i - 1 : i], pos: i - 1 + f }; }
   return { level: 'switch', pos: LEVELS.length - 1 };

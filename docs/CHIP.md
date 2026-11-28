@@ -42,6 +42,7 @@ chip**, which every part reads and writes and none keeps a copy of.
 | --- | --- | --- |
 | Recipe and fine settings | `stackOf`, `recipeOf`, `fineOf` (`src/engines/path.js`) | as designed |
 | Floorplan and its heat | `floorplanOf`, `heatOf` (`src/engines/floorplan.js`, #507) | as designed |
+| Placement, timing on the layout, coverage | `handOf`, `settleFrames`, `timeLayout`, `coverageOf` (`src/engines/placer.js`, #508) | as designed; a late block fails Test |
 | Design, placement, routing | `build`, `simulate` (`src/engines/design.js`, `tinychip.js`), `timing.js`, `evolve.js` | as designed |
 | Masks | `maskSet` (`src/engines/rules.js`) | as designed, read by Print |
 | Crystal | `src/engines/crystal.js` | a station function |

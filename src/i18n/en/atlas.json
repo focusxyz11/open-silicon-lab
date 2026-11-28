@@ -1656,6 +1656,7 @@
  "fid.by.arch": "the architecture engine, which grows a recipe of four genes against today's computer",
  "fid.by.path": "the stack's model, each rung made of what the rung below hands up",
  "fid.by.floorplan": "the floorplan engine: where the units and the memory sit on the die, and a model of its heat and of the trips to memory",
+ "fid.by.placer": "the placer engine: your block's cells placed in rows, the wire between them, and its timing on the layout, with a model of a wire's delay",
  "fid.by.machine": "the machine engine, which scores every machine of shared blocks",
  "fid.by.budget": "the energy budget engine, on a 45 nm table of energies",
  "fid.by.plan": "the block's own plan (where its parts sit and how long its wires run)",

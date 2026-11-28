@@ -15,6 +15,7 @@
 import { build, normalDesign } from './design.js';
 import { maskSet } from './rules.js';
 import { floorplanOf, heatOf } from './floorplan.js';
+import { handOf, normalPlace, timeLayout, clocksOf, wireOf, CLOCKS, CLOCK_EXAMPLE } from './placer.js';
 import { stackOf, recipeOf, fineOf, aimOf, carry, carryWith, areaOf } from './path.js';
 import { STATION_FNS, runLine, bareChip, careOf } from './stations.js';
 import { KIND, VERSION, STEPS } from '../data/chiprecord.js';
@@ -29,6 +30,9 @@ function designIn(design) {
   const d = normalDesign(design), out = { p: d.p, code: d.code };
   if (d.p === 'core' && typeof design.slice === 'string') out.slice = design.slice;
   if (d.p === 'core' && design.regs) out.regs = { bit: typeof design.regs.bit === 'string' ? design.regs.bit : null, select: typeof design.regs.select === 'string' ? design.regs.select : null };
+  /* your placement (cell by cell: its site and row) and the clock you set (one of CLOCKS), if you changed them (#508) */
+  if (design.place && typeof design.place === 'object') out.place = Object.fromEntries(Object.entries(design.place).map(([i, p]) => [i, { x: +p.x, r: +p.r }]));
+  if (Number.isInteger(design.clock) && design.clock >= 0 && design.clock < CLOCKS.length) out.clock = design.clock;
   return out;
 }
 
@@ -45,10 +49,10 @@ export function designedOf(stack, design) {
   const K = R.rungs.chip && R.rungs.chip.hands, G = R.rungs.gate && R.rungs.gate.hands;
   const die = K && Number.isFinite(K.gates) && G && Number.isFinite(G.switches) ? { gates: K.gates, switches: G.switches, area: areaOf(K.gates, G.switches, G.area) } : null;
   const built = !!(B && B.M);
-  const cells = built ? B.M.cells.map((c, i) => {
-    const p = B.PL && B.PL.pos && B.PL.pos[i];
-    return { id: 'c' + i, type: c.type, ins: c.ins.slice(), out: c.out, slot: p ? { x: p.x, r: p.r, w: p.w } : null };
-  }) : [];
+  /* the block placed (yours, or by hand: the lab's example) and timed on its layout against the clock you set (#508) */
+  const place = built ? normalPlace(B, d.place) || handOf(B) : null, ck = d && d.clock != null ? d.clock : CLOCK_EXAMPLE;
+  const timing = built && !B.M.regs.length ? timeLayout(B, place, clocksOf(B)[ck]) : null;
+  const cells = built ? B.M.cells.map((c, i) => ({ id: 'c' + i, type: c.type, ins: c.ins.slice(), out: c.out, slot: { x: place[i].x, r: place[i].r, w: place[i].w } })) : [];
   const M = built ? maskSet(B) : null;
   const masks = M ? { total: M.total, drawn: M.drawn, cells: M.cells, groups: M.groups.map(g => ({ id: g.id, masks: g.masks.slice(), n: g.n, drawn: g.drawn.slice() })) } : null;
   const broken = R.broken === 'switch' ? 'switch' : !B ? 'empty' : !B.ok ? 'design' : null;
@@ -58,14 +62,16 @@ export function designedOf(stack, design) {
     recipe: recipeOf(st), fine: fineOf(st), aim: aimOf(st), design: d, ok: !broken, broken, errs: B ? B.errs.slice() : [],
     cells, vias: built && B.RT ? B.RT.vias : 0, coverage: built && Number.isFinite(B.coverage) ? B.coverage : null,
     transistors: built && Number.isFinite(B.transistors) ? B.transistors : null, area: built ? B.area : null, masks, die, floorplan: fp, heat,
-    fid: { cells: C('design'), vias: C('design'), coverage: C('design'), transistors: C('design'), area: C('design'), masks: C('rules'), die: { f: 'idea', by: 'bet' }, hottest: heat.fid.hottest, trip: heat.fid.trip }
+    place, wire: built ? { now: wireOf(B, place), hand: wireOf(B, handOf(B)) } : null, clock: ck,
+    timing: timing ? { path: timing.path.map(i => 'c' + i), arrival: timing.arrival, period: timing.period, slack: timing.slack, meets: timing.meets, wire: timing.wire } : null, late: !!timing && !timing.meets,
+    fid: { cells: C('design'), vias: C('design'), coverage: C('design'), transistors: C('design'), area: C('design'), masks: C('rules'), die: { f: 'idea', by: 'bet' }, hottest: heat.fid.hottest, trip: heat.fid.trip, timing: { f: 'idea', by: 'placer' }, wire: { f: 'computed', by: 'placer' } }
   };
 }
 
 /* ---- the record ---- */
 export function recordOf(stack, design, care) {
   const st = care == null ? (stack || stackOf()) : withCare(stack, care), c = fineOf(st).care, D = designedOf(st, design);
-  const plan = { area: D.die ? D.die.area : null, cells: D.cells.map(x => ({ id: x.id, type: x.type })), masks: D.masks ? { drawn: D.masks.drawn, total: D.masks.total } : null, vias: D.vias, broken: D.broken };
+  const plan = { area: D.die ? D.die.area : null, cells: D.cells.map(x => ({ id: x.id, type: x.type })), masks: D.masks ? { drawn: D.masks.drawn, total: D.masks.total } : null, vias: D.vias, broken: D.broken, late: D.late };
   const made = runLine(bareChip(plan), c);
   return { kind: KIND, v: VERSION, care: c, designed: D, made, used: carryWith(st, made) };
 }

@@ -41,7 +41,7 @@ export const ENGINES = {
   noise: 'src/engines/lens.js', lens: 'src/engines/lens.js',
   switch: 'src/engines/switch.js', strands: 'src/engines/strands.js',
   timing: 'src/engines/timing.js', rules: 'src/engines/rules.js', arch: 'src/engines/arch.js', path: 'src/engines/path.js',
-  floorplan: 'src/engines/floorplan.js'
+  floorplan: 'src/engines/floorplan.js', placer: 'src/engines/placer.js'
 };
 
 const C = by => ({ f: 'computed', by });

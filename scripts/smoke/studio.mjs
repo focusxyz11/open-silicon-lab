@@ -3,7 +3,8 @@
    bench), the island not drawn behind it; the rail and the address say the level; ↓ and a tap on the rail go in,
    continuously (the camera passes between the levels, never jumping); ↑ comes out; along (→) leads to the same level as
    made; an old address of the room walked through opens the die at its corner's level; a design that does not do its
-   job is said on the die; Arrange sets the recipe in your stack and the hot spot follows (#507); no sideways scroll. Desktop at night, phone by day */
+   job is said on the die; Arrange sets the recipe in your stack and the hot spot follows (#507); the block scrambled turns
+   late, settled is on time, every state finds the planted bug (#508); no sideways scroll. Desktop at night, phone by day */
 import { S } from './shared.mjs';
 
 export const about = 'The studio (#/studio): your chip as designed from the record, the die zoomed to block, gate and switch with no cut, the rail and the address, along to the same level as made, the room\'s old addresses, a broken design, desktop and phone';
@@ -41,6 +42,19 @@ export default async function run() {
       return c.dataset.level === 'block' && !c.dataset.flying && location.hash === '#/studio/block'; }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
     if (!inBlock) problems.push(tag + ': ↓ does not go in from the die to the block');
     else if (!(await page.evaluate(() => window.posSeen.some(p => p > 0.05 && p < 0.95)))) problems.push(tag + ': the die is entered with a cut, not a flight (' + (await page.evaluate(() => window.posSeen.join(' '))) + ')');
+    /* your block (#508): scrambled, the wire grows and the longest path turns late; let to settle, it comes back on time;
+       a few random tests miss the bug planted in a corner, every state finds it */
+    const blockOk = await page.waitForFunction(() => { const u = document.getElementById('studioui').dataset, b = document.querySelector('#studioui .sdctl [data-place="scramble"]');
+      if (b && !u.late) b.click(); const p = document.querySelector('#studioLabels [data-part="path"]');
+      return u.late === '1' && !!p && p.classList.contains('bad') && !!p.querySelector('.fid'); }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
+    if (!blockOk) problems.push(tag + ': scrambling your block does not make its longest path late, marked');
+    const settledOk = await page.waitForFunction(() => { const u = document.getElementById('studioui').dataset, b = document.querySelector('#studioui .sdctl [data-place="settle"]');
+      if (b && !b.disabled && !u.settled) b.click(); return !!u.settled && u.late === '' && +u.wire === +u.settled; }, null, { timeout: 30000, polling: 1000 }).then(() => true, () => false);
+    if (!settledOk) problems.push(tag + ': letting your block settle does not bring it back on time');
+    const covered = await page.waitForFunction(() => { const u = document.getElementById('studioui').dataset, b = document.querySelector('#studioui .sdctl [data-tests="all"]');
+      if (b && u.tested !== '64') b.click(); return u.tested === '64' && u.found === '1' && !!document.querySelector('#studioLabels [data-part="found"].bad'); }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
+    if (!covered) problems.push(tag + ': testing every state does not find the bug planted in a corner');
+    await page.evaluate(() => { const b = document.querySelector('#studioui .sdctl [data-place="hand"]'); if (b) b.click(); });
     /* the rail takes you to any level: the switch, one cell close, with its words */
     const atSwitch = await page.waitForFunction(() => { const c = document.getElementById('studioCanvas'), b = document.querySelector('#studioui .rail2 [data-rail="switch"]');
       if (c.dataset.level !== 'switch' && !c.dataset.flying && b) b.click();
