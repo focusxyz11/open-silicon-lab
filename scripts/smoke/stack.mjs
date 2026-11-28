@@ -74,11 +74,12 @@ export default async function run() {
     await sp.waitForFunction(() => { const v = window.__stack; if (v.face() !== 'use') { const b = document.querySelector('#loop [data-stage="use"]'); if (b) b.click(); }
       return v.face() === 'use' && location.hash === '#/stack/switch' && v.view.level === 'rung' && v.view.i === 1; }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': Use in the loop does not turn the switch back to as used (#/stack/switch)'));
-    await sp.evaluate(() => { location.hash = '#/stack'; });
-    await sp.waitForFunction(() => window.__stack.view.level === 'stack' && !window.__stack.busy(), null, { timeout: 20000 }).catch(() => {});
+    /* each move is redone on every poll (#489): on a slow renderer the camera may still be on its way when the address is
+       set, and the stack writes the address of where it is while it flies, so an address set once can be overwritten */
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.view.level !== 'stack' && location.hash !== '#/stack') location.hash = '#/stack'; return v.view.level === 'stack' && !v.busy(); }, null, { timeout: 30000, polling: 500 }).catch(() => {});
     /* a rung by its address, the controls under it */
-    await sp.evaluate(() => { location.hash = '#/stack/switch'; });
-    await sp.waitForFunction(() => { const v = window.__stack; return v.view.level === 'rung' && v.view.i === 1 && !!document.querySelector('#stackv .sk-ctl:not([hidden]) [data-k="mat"], #stackv .sk-ctl:not([hidden]) #sk-volt'); }, null, { timeout: 20000 })
+    await sp.waitForFunction(() => { const v = window.__stack; if (!(v.view.level === 'rung' && v.view.i === 1) && location.hash !== '#/stack/switch') location.hash = '#/stack/switch';
+      return v.view.level === 'rung' && v.view.i === 1 && !!document.querySelector('#stackv .sk-ctl:not([hidden]) [data-k="mat"], #stackv .sk-ctl:not([hidden]) #sk-volt'); }, null, { timeout: 30000, polling: 500 })
       .catch(() => problems.push(tag + ': #/stack/switch does not open the switch with its controls'));
     /* Do is the rung's challenge on its plate, its controls the card's Do face (the side panel on a desktop); Look and back */
     {
