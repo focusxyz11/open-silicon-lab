@@ -74,11 +74,12 @@ export default async function run() {
     await sp.waitForFunction(() => { const v = window.__stack; if (v.face() !== 'use') { const b = document.querySelector('#loop [data-stage="use"]'); if (b) b.click(); }
       return v.face() === 'use' && location.hash === '#/stack/switch' && v.view.level === 'rung' && v.view.i === 1; }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': Use in the loop does not turn the switch back to as used (#/stack/switch)'));
-    await sp.evaluate(() => { location.hash = '#/stack'; });
-    await sp.waitForFunction(() => window.__stack.view.level === 'stack' && !window.__stack.busy(), null, { timeout: 20000 }).catch(() => {});
+    /* each move is redone on every poll (#489): on a slow renderer the camera may still be on its way when the address is
+       set, and the stack writes the address of where it is while it flies, so an address set once can be overwritten */
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.view.level !== 'stack' && location.hash !== '#/stack') location.hash = '#/stack'; return v.view.level === 'stack' && !v.busy(); }, null, { timeout: 30000, polling: 500 }).catch(() => {});
     /* a rung by its address, the controls under it */
-    await sp.evaluate(() => { location.hash = '#/stack/switch'; });
-    await sp.waitForFunction(() => { const v = window.__stack; return v.view.level === 'rung' && v.view.i === 1 && !!document.querySelector('#stackv .sk-ctl:not([hidden]) [data-k="mat"], #stackv .sk-ctl:not([hidden]) #sk-volt'); }, null, { timeout: 20000 })
+    await sp.waitForFunction(() => { const v = window.__stack; if (!(v.view.level === 'rung' && v.view.i === 1) && location.hash !== '#/stack/switch') location.hash = '#/stack/switch';
+      return v.view.level === 'rung' && v.view.i === 1 && !!document.querySelector('#stackv .sk-ctl:not([hidden]) [data-k="mat"], #stackv .sk-ctl:not([hidden]) #sk-volt'); }, null, { timeout: 30000, polling: 500 })
       .catch(() => problems.push(tag + ': #/stack/switch does not open the switch with its controls'));
     /* Do is the rung's challenge on its plate, its controls the card's Do face (the side panel on a desktop); Look and back */
     {
@@ -147,6 +148,16 @@ export default async function run() {
       .catch(() => problems.push(tag + ': the rail does not reach your niche'));
     await sp.waitForFunction(() => { const v = window.__stack; if (!v.busy() && v.view.level !== 'stack') { const b = document.querySelector('#stackv .sk-rail [data-go="stack"]'); if (b) b.click(); } return v.view.level === 'stack' && !v.busy() && location.hash === '#/stack'; }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': the rail does not bring the camera back to your stack (#/stack)'));
+    /* a lens repaints the whole stack (#449): Perfect fails paints every plate from the carry, with the gate's own chance
+       of a wrong copy, and the plates above it at least as painted; closed again, the stack is plain */
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.busy()) return false; v.setLens({ rung: 'gate', id: 'perfect' });
+      const P = v.paintNow(), R = v.carry().R, g = R.rungs.gate.hands; if (!P || Object.keys(P).length !== 7) return false;
+      /* the numbers are the carry's own: the gate's chance as a power of ten, and the plates above at least as painted */
+      if (!g) return P.gate.v === null; const k = Math.log10(g.fail);
+      return (k <= -40 ? P.gate.say === 'rarer' : k >= -3 ? P.gate.say === 'pct' : P.gate.n === Math.round(-k)) && (P.chip.v == null || P.chip.v >= P.gate.v - 1e-9); }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': Perfect fails does not repaint every plate from the carry'));
+    await sp.waitForFunction(() => { const v = window.__stack; v.setLens(null); return v.paintNow() === null; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': closing the lens does not leave the stack plain'));
     /* the keyboard: the mirror's plots move under the arrows and Enter opens one */
     await sp.evaluate(() => { window.__stack.goField(); });
     await sp.waitForFunction(() => !window.__stack.busy() && window.__stack.view.level === 'field', null, { timeout: 20000 }).catch(() => {});
